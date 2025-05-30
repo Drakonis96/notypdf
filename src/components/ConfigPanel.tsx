@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { NotionConfig, NotionProperty, TranslationConfig, TranslationProvider, TranslationModel } from '../types';
+import { NotionConfig, NotionProperty, TranslationConfig, TranslationProvider, TranslationModel, OpenAIModel, OpenRouterModel, GeminiModel } from '../types';
 import notionService from '../services/notionService';
 import translationService from '../services/translationService';
 import { Settings, Save, Database, X, HelpCircle, Eye, EyeOff, TestTube } from 'lucide-react';
@@ -18,6 +18,35 @@ interface ConfigPanelProps {
   onClose?: () => void;
 }
 
+// Translation options constants
+const OPENAI_MODELS: { label: string; value: OpenAIModel }[] = [
+  { label: 'gpt-4.1', value: 'gpt-4.1' },
+  { label: 'gpt-4.1-mini', value: 'gpt-4.1-mini' },
+  { label: 'gpt-4o', value: 'gpt-4o' },
+  { label: 'gpt-4o-mini', value: 'gpt-4o-mini' },
+];
+
+const OPENROUTER_MODELS: { label: string; value: OpenRouterModel }[] = [
+  { label: 'Gemma 3 27B IT (free)', value: 'google/gemma-3-27b-it:free' },
+  { label: 'Gemini 2.0 Flash Exp (free)', value: 'google/gemini-2.0-flash-exp:free' },
+  { label: 'Llama 4 Maverick (free)', value: 'meta-llama/llama-4-maverick:free' },
+  { label: 'Llama 4 Scout (free)', value: 'meta-llama/llama-4-scout:free' },
+];
+
+const GEMINI_MODELS: { label: string; value: GeminiModel }[] = [
+  { label: 'Gemini 2.0 Pro', value: 'gemini-2.0-pro' },
+  { label: 'Gemini 2.0 Flash', value: 'gemini-2.0-flash' },
+];
+
+const DEEPSEEK_MODELS: { label: string; value: 'deepseek-chat' | 'deepseek-reasoner' }[] = [
+  { label: 'DeepSeek Chat', value: 'deepseek-chat' },
+  { label: 'DeepSeek Reasoner', value: 'deepseek-reasoner' },
+];
+
+const LANGUAGE_OPTIONS = [
+  'English', 'Spanish', 'French', 'German', 'Italian', 'Portuguese', 'Chinese', 'Japanese', 'Korean', 'Russian', 'Arabic', 'Hindi', 'Other...'
+];
+
 const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange, selectedText, translationConfig, setTranslationConfig, onClearSelection, onClose }) => {
   const [properties, setProperties] = useState<NotionProperty[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -34,6 +63,54 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange, selec
 
   // Helper: filter for dropdowns (title, rich_text, multi_select)
   const dropdownColumnTypes = ['title', 'rich_text', 'multi_select'];
+
+  // Helper: get model options based on provider
+  const getModelOptions = () => {
+    switch (translationConfig.provider) {
+      case 'openai':
+        return OPENAI_MODELS;
+      case 'openrouter':
+        return OPENROUTER_MODELS;
+      case 'gemini':
+        return GEMINI_MODELS;
+      case 'deepseek':
+        return DEEPSEEK_MODELS;
+      default:
+        return [];
+    }
+  };
+
+  // Helper: handle provider change with default model selection
+  const handleProviderChange = (provider: TranslationProvider) => {
+    let defaultModel: TranslationModel = '';
+    if (provider === 'openai') defaultModel = 'gpt-4o-mini';
+    if (provider === 'openrouter') defaultModel = 'google/gemma-3-27b-it:free';
+    if (provider === 'gemini') defaultModel = 'gemini-2.0-flash';
+    if (provider === 'deepseek') defaultModel = 'deepseek-chat';
+    
+    setTranslationConfig({ 
+      ...translationConfig, 
+      provider, 
+      model: defaultModel 
+    });
+  };
+
+  // Helper: handle translation enabled change with default language selection
+  const handleTranslationEnabledChange = (enabled: boolean) => {
+    if (enabled && !translationConfig.targetLanguage) {
+      // If enabling translation and no target language is set, default to Spanish
+      setTranslationConfig({ 
+        ...translationConfig, 
+        enabled, 
+        targetLanguage: 'Spanish' 
+      });
+    } else {
+      setTranslationConfig({ 
+        ...translationConfig, 
+        enabled 
+      });
+    }
+  };
 
   const loadProperties = useCallback(async () => {
     if (!config.databaseId) {
@@ -442,7 +519,7 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange, selec
                 type="checkbox"
                 id="translationEnabled"
                 checked={translationConfig.enabled}
-                onChange={(e) => setTranslationConfig({ ...translationConfig, enabled: e.target.checked })}
+                onChange={(e) => handleTranslationEnabledChange(e.target.checked)}
                 className="config-checkbox-input"
               />
               <label htmlFor="translationEnabled" className="config-checkbox-label">
@@ -457,7 +534,7 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange, selec
                   <select
                     id="translationProvider"
                     value={translationConfig.provider}
-                    onChange={(e) => setTranslationConfig({ ...translationConfig, provider: e.target.value as TranslationProvider })}
+                    onChange={(e) => handleProviderChange(e.target.value as TranslationProvider)}
                     className="config-select"
                   >
                     <option value="">Select provider</option>
@@ -470,26 +547,32 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange, selec
 
                 <div className="config-field">
                   <label htmlFor="translationModel" className="config-label">Model</label>
-                  <input
+                  <select
                     id="translationModel"
-                    type="text"
                     value={translationConfig.model}
                     onChange={(e) => setTranslationConfig({ ...translationConfig, model: e.target.value as TranslationModel })}
-                    placeholder="e.g., gpt-4, gemini-pro"
-                    className="config-input"
-                  />
+                    className="config-select"
+                  >
+                    <option value="">Select model</option>
+                    {getModelOptions().map(opt => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
                 </div>
 
                 <div className="config-field">
                   <label htmlFor="targetLanguage" className="config-label">Target Language</label>
-                  <input
+                  <select
                     id="targetLanguage"
-                    type="text"
                     value={translationConfig.targetLanguage}
                     onChange={(e) => setTranslationConfig({ ...translationConfig, targetLanguage: e.target.value })}
-                    placeholder="e.g., Spanish, French, German"
-                    className="config-input"
-                  />
+                    className="config-select"
+                  >
+                    <option value="">Select language</option>
+                    {LANGUAGE_OPTIONS.map(lang => (
+                      <option key={lang} value={lang}>{lang}</option>
+                    ))}
+                  </select>
                 </div>
 
                 <div className="config-field">
