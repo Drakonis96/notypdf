@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  notypdf:
+    build: .
+    ports:
+      - "5026:5026"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+      - NOTION_API_KEY=${NOTION_API_KEY}
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    restart: unless-stopped
+    networks:
+      - default
+
+networks:
+  default:
+    name: pdf-reader-network

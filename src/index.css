@@ -1,0 +1,487 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f5f5f5;
+}
+
+/* Remove gray background on mobile for cleaner experience */
+@media (max-width: 768px) {
+  body {
+    background-color: white;
+  }
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.container {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+.header {
+  background: white;
+  padding: 10px;
+  border-radius: 0;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin-bottom: 0;
+  width: 100%;
+  position: relative;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 40px;
+}
+
+.header-logo {
+  width: 80px;
+  height: 100px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.header-text {
+  flex: 1;
+}
+
+.header-text h1 {
+  margin: 0 0 5px 0;
+  font-size: 1.8rem;
+}
+
+.header-text p {
+  margin: 0;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.config-toggle-btn {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.config-toggle-btn:hover {
+  background: #0056b3;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+}
+
+.main-content {
+  display: flex;
+  flex-direction: row;
+  gap: 0;
+  height: calc(100vh - 120px);
+  overflow: hidden;
+}
+
+.sidebar {
+  background: white;
+  padding: 20px;
+  border-radius: 0;
+  box-shadow: 2px 0 4px rgba(0,0,0,0.1);
+  overflow-y: auto;
+  width: 320px;
+  flex-shrink: 0;
+  border-right: 1px solid #e0e0e0;
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 1200; /* Mismo z-index que en modo móvil */
+}
+
+.sidebar-visible {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.sidebar-hidden {
+  transform: translateX(-100%);
+  opacity: 0;
+  width: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.pdf-viewer {
+  background: white;
+  border-radius: 0;
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  overflow: hidden;
+  padding: 0;
+  transition: all 0.3s ease;
+}
+
+/* Ensure clean white background on mobile */
+@media (max-width: 768px) {
+  .pdf-viewer {
+    background: white;
+  }
+}
+
+.upload-area {
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  padding: 40px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  /* Centrado absoluto en viewport */
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  z-index: 1050;
+  min-width: 320px;
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.10);
+}
+
+.upload-area:hover {
+  border-color: #007bff;
+  background-color: rgba(0, 123, 255, 0.05);
+}
+
+.upload-area.dragover {
+  border-color: #007bff;
+  background-color: rgba(0, 123, 255, 0.1);
+  transform: translate(-50%, -50%) scale(1.02);
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.15);
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+}
+
+.btn {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s;
+}
+
+.btn:hover {
+  background: #0056b3;
+}
+
+.btn:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: #6c757d;
+}
+
+.btn-secondary:hover {
+  background: #545b62;
+}
+
+.pdf-container {
+  flex: 1;
+  overflow: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+}
+
+.loading {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+}
+
+.error {
+  background: #f8d7da;
+  color: #721c24;
+  padding: 12px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+}
+
+.success {
+  background: #d4edda;
+  color: #155724;
+  padding: 12px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+}
+
+.selected-text {
+  background: #fff3cd;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  border-left: 4px solid #ffc107;
+}
+
+.notion-status {
+  font-size: 12px;
+  color: #666;
+  margin-top: 10px;
+}
+
+.file-input {
+  display: none;
+}
+
+/* Mobile sidebar backdrop */
+.sidebar-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1100;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.sidebar-backdrop.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+@media (max-width: 768px) {
+  .sidebar-backdrop {
+    display: block;
+  }
+}
+
+@media (min-width: 769px) {
+  .sidebar-backdrop {
+    display: none;
+  }
+}
+
+/* Responsive design */
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 280px;
+  }
+  
+  .header-text h1 {
+    font-size: 1.6rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    flex-direction: column;
+    height: auto;
+    overflow: visible;
+    position: relative;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 1200;
+    background: white;
+    padding: 80px 20px 20px;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    box-shadow: none;
+    border-right: none;
+  }
+
+  .sidebar-visible {
+    transform: translateX(0);
+  }
+
+  .sidebar-hidden {
+    transform: translateX(-100%);
+    width: 100vw;
+    padding: 80px 20px 20px;
+    opacity: 1;
+  }
+
+  .pdf-viewer {
+    height: calc(100vh - 120px);
+    padding: 0;
+  }
+
+  .container {
+    padding: 0;
+  }
+
+  .header {
+    padding: 15px 20px;
+    position: relative;
+    z-index: 1001;
+  }
+
+  .header-content {
+    min-height: 60px;
+  }
+
+  .header-logo {
+    width: 48px;
+    height: 48px;
+  }
+
+  .header-text h1 {
+    font-size: 1.4rem;
+  }
+
+  .header-text p {
+    font-size: 0.8rem;
+  }
+
+  .config-toggle-btn {
+    padding: 6px;
+  }
+
+  /* PDF viewer responsive adjustments */
+  .pdf-container {
+    padding: 0;
+  }
+
+  .upload-area {
+    padding: 30px 20px;
+  }
+
+  .upload-area h3 {
+    font-size: 1.2rem;
+  }
+
+  /* Form adjustments for mobile */
+  .form-group {
+    margin-bottom: 12px;
+  }
+
+  .form-group label {
+    font-size: 14px;
+  }
+
+  .form-group input,
+  .form-group select {
+    padding: 10px 12px;
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+
+  .btn {
+    padding: 12px 20px;
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    padding: 10px 15px;
+  }
+
+  .header-content {
+    min-height: 50px;
+    gap: 10px;
+  }
+
+  .header-logo {
+    width: 40px;
+    height: 40px;
+  }
+
+  .header-text h1 {
+    font-size: 1.2rem;
+  }
+
+  .header-text p {
+    display: none; /* Hide subtitle on very small screens */
+  }
+
+  .pdf-viewer {
+    height: calc(100vh - 90px);
+    padding: 0;
+  }
+
+  .sidebar {
+    padding: 70px 15px 15px;
+  }
+
+  .upload-area {
+    padding: 20px 15px;
+  }
+
+  .upload-area h3 {
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+  }
+}
+
+/* Landscape mobile optimization */
+@media (max-width: 768px) and (orientation: landscape) {
+  .header-text p {
+    display: none;
+  }
+
+  .pdf-viewer {
+    height: calc(100vh - 80px);
+  }
+
+  .sidebar {
+    padding: 60px 20px 20px;
+  }
+}

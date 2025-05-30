@@ -1,0 +1,33 @@
+# Node modules
+node_modules/
+
+# Build output
+build/
+
+# Environment variables
+.env
+.env.*
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Python cache
+__pycache__/
+*.pyc
+
+# VSCode settings
+.vscode/
+
+# LibreTranslate/LLM/Notion documentation (if sensitive)
+libre_translate_documentation/
+llm_documentation/
+notion_documentation/
+
+# Others
+*.log

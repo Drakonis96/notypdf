@@ -1,0 +1,1659 @@
+.App {
+  min-height: 100vh;
+}
+
+.react-pdf__Page {
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  position: relative;
+}
+
+.react-pdf__Page__textContent {
+  user-select: text !important;
+  opacity: 0.9;
+  line-height: 1.5;
+}
+
+/* Elimino hacks de superposición y fondo amarillo, dejo solo lo necesario para selección */
+.react-pdf__Page__textContent {
+  user-select: text !important;
+  opacity: 1;
+  line-height: 1.5;
+  pointer-events: auto;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+}
+
+.react-pdf__Page__textContent span {
+  user-select: text !important;
+  pointer-events: auto;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+}
+
+.react-pdf__Page {
+  position: relative;
+}
+
+/* Text selection indicator styles */
+::selection {
+  background-color: rgba(0, 123, 255, 0.3);
+  color: inherit;
+}
+
+/* Custom text highlight indicator */
+.text-selection-active .react-pdf__Page__textContent span {
+  transition: background-color 0.2s ease;
+}
+
+.react-pdf__Document {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+/* Fix for React PDF viewer */
+.react-pdf__Document > div {
+  max-width: 100%;
+  overflow: visible;
+}
+
+/* Make the PDF page responsive */
+.react-pdf__Page {
+  max-width: 100%;
+  height: auto !important;
+}
+
+/* Improved page navigation controls */
+.page-controls {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin: 15px 0;
+}
+
+/* Translation Modal Styles */
+.translation-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  backdrop-filter: blur(2px);
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+/* Mobile modal overlay adjustments */
+@media (max-width: 768px) {
+  .translation-modal-overlay {
+    z-index: 10000;
+    padding: 5px;
+    align-items: flex-start;
+    padding-top: 20px;
+    overflow-y: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .translation-modal-overlay {
+    padding: 2px;
+    padding-top: 10px;
+  }
+}
+
+.translation-modal {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  max-width: 80vw;
+  max-height: 80vh;
+  width: 800px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: modalFadeIn 0.2s ease-out;
+}
+
+/* Mobile responsive modal styles */
+@media (max-width: 768px) {
+  .translation-modal {
+    max-width: 95vw;
+    max-height: 90vh;
+    width: 95vw;
+    margin: 0 10px;
+    border-radius: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .translation-modal {
+    max-width: 98vw;
+    max-height: 95vh;
+    width: 98vw;
+    margin: 0 5px;
+    border-radius: 6px;
+  }
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.translation-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #e1e5e9;
+  background: #f8f9fa;
+  flex-shrink: 0;
+}
+
+.translation-modal-header h3 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+/* Mobile header adjustments */
+@media (max-width: 768px) {
+  .translation-modal-header {
+    padding: 16px 16px 12px;
+  }
+  
+  .translation-modal-header h3 {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .translation-modal-header {
+    padding: 12px 12px 8px;
+  }
+  
+  .translation-modal-header h3 {
+    font-size: 14px;
+    line-height: 1.2;
+  }
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #6c757d;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.close-button:hover {
+  background-color: #e9ecef;
+  color: #495057;
+}
+
+/* Mobile close button adjustments */
+@media (max-width: 768px) {
+  .close-button {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .close-button {
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
+  }
+}
+
+.translation-modal-content {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+  min-height: 300px;
+}
+
+/* Mobile content adjustments */
+@media (max-width: 768px) {
+  .translation-modal-content {
+    padding: 16px;
+    min-height: 200px;
+  }
+}
+
+@media (max-width: 480px) {
+  .translation-modal-content {
+    padding: 12px;
+    min-height: 150px;
+  }
+}
+
+.text-display {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  max-height: 400px;
+  overflow-y: auto;
+  user-select: text;
+  cursor: text;
+  transition: border-color 0.2s ease;
+  word-wrap: break-word;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+}
+
+.text-display:focus-within {
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+}
+
+.text-display::selection {
+  background-color: rgba(0, 123, 255, 0.3);
+}
+
+/* Mobile text-display optimizations */
+@media (max-width: 768px) {
+  .text-display {
+    padding: 16px;
+    margin-bottom: 16px;
+    max-height: 300px;
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-touch-callout: default;
+    touch-action: manipulation;
+  }
+  
+  .selection-preview {
+    padding: 12px;
+    margin-top: 12px;
+  }
+  
+  .selection-preview h4 {
+    font-size: 13px;
+  }
+  
+  .selected-text-preview {
+    padding: 10px;
+    font-size: 13px;
+    line-height: 1.4;
+  }
+}
+
+@media (max-width: 480px) {
+  .text-display {
+    padding: 12px;
+    margin-bottom: 12px;
+    max-height: 250px;
+    font-size: 15px;
+    line-height: 1.4;
+    border-radius: 6px;
+  }
+  
+  .selection-preview {
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 6px;
+  }
+  
+  .selection-preview h4 {
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+  
+  .selected-text-preview {
+    padding: 8px;
+    font-size: 12px;
+    border-radius: 3px;
+  }
+}
+
+.selection-preview {
+  background: #e3f2fd;
+  border: 1px solid #bbdefb;
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 16px;
+}
+
+.selection-preview h4 {
+  margin: 0 0 8px 0;
+  color: #1976d2;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.selected-text-preview {
+  margin: 0;
+  color: #424242;
+  font-style: italic;
+  background: white;
+  padding: 12px;
+  border-radius: 4px;
+  border-left: 3px solid #2196f3;
+  word-wrap: break-word;
+}
+
+.translation-modal-actions {
+  display: flex;
+  gap: 12px;
+  padding: 20px 24px;
+  border-top: 1px solid #e1e5e9;
+  background: #f8f9fa;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+
+/* Mobile actions adjustments */
+@media (max-width: 768px) {
+  .translation-modal-actions {
+    padding: 16px;
+    gap: 8px;
+    flex-direction: column-reverse;
+  }
+}
+
+@media (max-width: 480px) {
+  .translation-modal-actions {
+    padding: 12px;
+    gap: 6px;
+  }
+}
+
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 100px;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background-color: #007bff;
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: #0056b3;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+}
+
+.btn-secondary {
+  background-color: #28a745;
+  color: white;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: #1e7e34;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+}
+
+.btn-tertiary {
+  background-color: #6c757d;
+  color: white;
+}
+
+.btn-tertiary:hover {
+  background-color: #545b62;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(108, 117, 125, 0.3);
+}
+
+/* Button active state for focus mode */
+.btn-active {
+  background-color: #ffc107 !important;
+  color: #212529 !important;
+  box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.5);
+}
+
+.btn-active:hover {
+  background-color: #ffca2c !important;
+  color: #212529 !important;
+}
+
+/* Compact button styles for PDF viewer */
+.btn-compact {
+  padding: 8px 12px;
+  min-width: 36px;
+  min-height: 36px;
+  font-size: 12px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Adjust icon size inside buttons for mobile */
+@media (max-width: 768px) {
+  .btn-compact {
+    min-width: 38px; /* 29px * 1.3 ≈ 38px */
+    min-height: 38px;
+    padding: 9px 10px;
+    font-size: 17px;
+  }
+  
+  .btn-compact svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .btn-compact {
+    min-width: 30px; /* 23px * 1.3 ≈ 30px */
+    min-height: 30px;
+    padding: 7px 8px;
+    font-size: 14px;
+  }
+  
+  .btn-compact svg {
+    width: 15px;
+    height: 15px;
+  }
+}
+
+.btn-compact:hover {
+  transform: translateY(-1px);
+  background-color: #f0f0f0;
+}
+
+/* Mobile-first responsive improvements */
+@media (max-width: 1024px) {
+  .btn-compact {
+    padding: 8px 10px;
+    min-width: 36px;
+  }
+}
+
+@media (max-width: 768px) {
+  /* PDF viewer mobile controls */
+  .page-controls {
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 10px 0;
+    justify-content: center;
+  }
+
+  /* Smaller buttons for mobile devices - half size */
+  .btn-compact {
+    padding: 5px 6px;
+    min-width: 22px;
+    min-height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+  }
+
+  /* Hide fullscreen and reset zoom buttons on mobile */
+  .btn-fullscreen,
+  .btn-reset-zoom {
+    display: none !important;
+  }
+
+  /* Improve text readability on small screens */
+  .selected-text-preview {
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  /* Better spacing for form elements on mobile */
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  /* Optimize loading spinner for mobile */
+  .loading {
+    padding: 30px 20px;
+    font-size: 14px;
+  }
+
+  /* Better error and success message styling */
+  .error, .success {
+    padding: 12px 16px;
+    font-size: 14px;
+    border-radius: 6px;
+  }
+
+  /* PDF Viewer responsive layout styles */
+  .pdf-file-info {
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch;
+  }
+
+  .file-info-content {
+    justify-content: center;
+  }
+
+  .file-name {
+    font-size: 13px;
+  }
+
+  .pdf-controls-bar {
+    padding: 10px 15px;
+  }
+
+  .document-title-section {
+    margin-bottom: 6px; /* Even more compact on mobile */
+  }
+
+  .file-name-centered {
+    max-width: 200px;
+    font-size: 13px;
+  }
+
+  .controls-grid {
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .control-group {
+    padding: 4px;
+    border-right: none;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    flex-wrap: wrap;
+  }
+
+  .bottom-controls {
+    background-color: #e9ecef;
+    border-radius: 8px;
+    padding: 6px 10px;
+  }
+
+  .bottom-controls .page-info {
+    font-size: 13px;
+  }
+
+  /* Very small screens adjustments - smaller buttons */
+  .btn-compact {
+    padding: 4px;
+    min-width: 20px;
+    min-height: 20px;
+    font-size: 9px;
+  }
+
+  .page-controls {
+    gap: 6px;
+  }
+
+  /* Compact form styling */
+  .form-group label {
+    font-size: 13px;
+    margin-bottom: 4px;
+  }
+
+  .selected-text-preview {
+    font-size: 12px;
+    padding: 10px;
+  }
+
+  .controls-grid {
+    justify-content: center;
+    gap: 4px;
+  }
+
+  .control-group {
+    margin-bottom: 4px;
+  }
+
+  .zoom-indicator {
+    font-size: 10px;
+    min-width: 40px;
+  }
+
+  .page-info {
+    font-size: 12px;
+  }
+}
+
+/* High DPI displays optimization */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .header-logo {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+}
+
+/* Accessibility improvements for touch devices */
+@media (pointer: coarse) {
+  .btn, .btn-compact {
+    min-height: 44px;
+  }
+
+  .config-toggle-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .close-button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+/* PDF Controls Layout */
+.pdf-controls-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background-color: white;
+  padding: 12px 20px;
+  border-bottom: 1px solid #e0e0e0;
+  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* --- FIXED & CENTERED VERTICAL TOOLBAR (RIGHT) --- */
+.pdf-controls-bar.pdf-controls-right {
+  position: fixed;
+  top: 50%;
+  right: 16px; /* deja margen para la barra de desplazamiento */
+  left: auto;
+  transform: translateY(-50%);
+  width: 80px;
+  min-width: 80px;
+  height: auto;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+  overflow-x: visible;
+  border-left: 1px solid #e0e0e0;
+  border-bottom: none;
+  box-shadow: -2px 0 4px rgba(0,0,0,0.1);
+  padding: 8px;
+  z-index: 100; /* Aumentado para estar sobre otros elementos */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 0; /* Eliminado margin-top */
+  justify-content: center; /* centra los botones verticalmente */
+}
+
+/* Asegura que el header esté por encima */
+.header {
+  z-index: 100;
+  position: relative;
+}
+
+/* Ajusta el contenido para no quedar debajo de la barra */
+.pdf-layout-right .pdf-document-container {
+  margin-right: 96px; /* 80px ancho barra + 16px margen */
+  margin-left: 0;
+  width: calc(100% - 96px);
+  overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+  .pdf-controls-bar.pdf-controls-right {
+    width: 60px;
+    min-width: 60px;
+    padding: 4px;
+    max-height: calc(100vh - 120px);
+    margin-top: 0;
+    right: 8px;
+    overflow-y: auto;
+    overflow-x: visible;
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+    scrollbar-width: none; /* Hide scrollbar on Firefox */
+    -ms-overflow-style: none; /* Hide scrollbar on IE/Edge */
+    z-index: 100;
+  }
+  
+  /* Hide scrollbar on WebKit browsers */
+  .pdf-controls-bar.pdf-controls-right::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .pdf-layout-right .pdf-document-container {
+    margin-right: 68px; /* 60px barra + 8px margen */
+    width: calc(100% - 68px);
+  }
+}
+
+/* Mobile optimization for vertical toolbar */
+@media (max-width: 480px) {
+  .pdf-controls-bar.pdf-controls-right {
+    width: 50px;
+    min-width: 50px;
+    padding: 2px;
+    right: 4px;
+    max-height: calc(100vh - 100px);
+    margin-top: 0;
+  }
+  
+  .pdf-controls-bar.pdf-controls-right .controls-grid {
+    gap: 4px;
+    padding: 2px 0;
+    max-height: calc(100vh - 80px);
+  }
+  
+  .pdf-controls-bar.pdf-controls-right .control-group {
+    padding: 4px 0;
+  }
+  
+  .pdf-controls-bar.pdf-controls-right .btn-compact {
+    min-width: 18px;
+    min-height: 18px;
+    padding: 3px;
+    font-size: 8px;
+  }
+  
+  .pdf-layout-right .pdf-document-container {
+    margin-right: 54px; /* 50px toolbar + 4px margin */
+    width: calc(100% - 54px);
+  }
+}
+
+/* Centered container for PDF and toolbar */
+.pdf-centered-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; /* Cambiado de 'center' a 'flex-start' para alinear a la izquierda */
+  margin: 0; /* Eliminado 'auto' para que no se centre */
+  width: 100%;
+  max-width: 100%;
+  padding: 0; /* Elimina todo el padding */
+}
+
+/* Remove forced width for top/bottom toolbar so it matches parent */
+.pdf-controls-bar.pdf-controls-top,
+.pdf-controls-bar.pdf-controls-bottom {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 12px 0; /* Mantiene padding vertical pero elimina horizontal */
+  margin: 0;
+}
+
+.pdf-document-container {
+  max-width: 100%;
+  /* Elimina padding izquierdo para alinear el PDF */
+  padding-left: 0;
+}
+
+/* Document title section - centered at top */
+.document-title-section {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-bottom: 8px; /* Reduced from 12px for more compact layout */
+}
+
+.file-info-centered {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+}
+
+.file-name-centered {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 250px;
+  text-align: center;
+}
+
+/* Controls header - now minimal */
+.controls-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 0; /* Removed margin for compact layout */
+  gap: 15px;
+}
+
+/* Bottom controls group - page info and upload aligned with other controls */
+.bottom-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: center;
+  border-right: none !important;
+  padding: 0 6px;
+}
+
+.bottom-controls .page-info {
+  font-size: 14px;
+  color: #555;
+  font-weight: 500;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.file-info-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0; /* Allow text truncation */
+}
+
+.file-name-inline {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 200px;
+}
+
+.pdf-file-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.file-info-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.file-name {
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 250px;
+}
+
+.page-info {
+  text-align: center;
+  font-size: 14px;
+  color: #555;
+  font-weight: 500;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+/* New layout styles for buttons row and page counter row */
+.buttons-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.page-counter-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.page-counter-row .page-info {
+  text-align: center;
+  font-size: 14px;
+  color: #555;
+  font-weight: 500;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.controls-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.control-group {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  padding: 0 6px;
+  border-right: 1px solid #eaeaea;
+}
+
+.control-group:last-child {
+  border-right: none;
+}
+
+.control-group button {
+  transition: all 0.2s ease;
+}
+
+.control-group button:active {
+  transform: scale(0.95);
+}
+
+.zoom-indicator {
+  min-width: 50px;
+  font-size: 12px;
+  color: #666;
+  text-align: center;
+}
+
+.pdf-document-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  overflow: auto;
+  padding: 0 20px 20px 20px;
+}
+
+/* Media queries for responsive controls */
+@media (max-width: 768px) {
+  .pdf-controls-bar {
+    padding: 8px 0; /* Remove horizontal padding to match PDF width */
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .document-title-section {
+    margin-bottom: 4px; /* More compact */
+  }
+
+  .file-name-centered {
+    max-width: 200px;
+    font-size: 13px;
+  }
+
+  /* Buttons row styling for mobile */
+  .buttons-row {
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 6px;
+    padding: 0 8px; /* Add some padding for better spacing */
+  }
+  
+  /* Page counter row styling for mobile */
+  .page-counter-row {
+    margin-top: 4px;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .page-counter-row .page-info {
+    font-size: 12px;
+    text-align: center;
+  }
+
+  .controls-grid {
+    gap: 6px; /* Reduced gap */
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  /* Remove decorative styling on mobile */
+  .control-group {
+    padding: 2px; /* Minimal padding */
+    border: none; /* Remove borders */
+    background: none; /* Remove background colors */
+    border-radius: 0; /* Remove border radius */
+    flex-wrap: nowrap;
+  }
+
+  /* Remove decorative styling from bottom controls */
+  .bottom-controls {
+    background: none; /* Remove background color */
+    border-radius: 0; /* Remove border radius */
+    padding: 4px 6px; /* Minimal padding */
+  }
+
+  .bottom-controls .page-info {
+    font-size: 12px;
+  }
+
+  /* Compact button styling for mobile - ensure centering */
+  .btn-compact {
+    padding: 6px 8px; /* Reduced padding for mobile */
+    min-width: 32px; /* Smaller minimum width */
+    min-height: 32px; /* Smaller minimum height */
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+  }
+  
+  /* Ensure zoom indicator is centered */
+  .zoom-indicator {
+    min-width: 40px;
+    font-size: 10px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .pdf-controls-bar {
+    padding: 6px 8px; /* Even more compact */
+    height: auto; /* Allow height to adjust to content */
+  }
+
+  .document-title-section {
+    margin-bottom: 2px;
+  }
+
+  .file-name-centered {
+    max-width: 150px;
+    font-size: 12px;
+  }
+
+  /* Enhanced mobile centering for buttons row */
+  .buttons-row {
+    gap: 4px;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    padding: 0 4px;
+    margin-bottom: 4px;
+  }
+  
+  /* Enhanced mobile centering for page counter */
+  .page-counter-row {
+    justify-content: center;
+    align-items: center;
+    margin-top: 4px;
+  }
+
+  .page-counter-row .page-info {
+    font-size: 11px;
+    text-align: center;
+  }
+  
+  /* Legacy controls grid - keep minimal for compatibility but prioritize buttons-row */
+  .controls-grid {
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  /* Remove old control group styling that conflicts with new structure */
+  .control-group {
+    display: none; /* Hide old control groups since we're using direct buttons now */
+  }
+  
+  /* Remove old bottom controls styling */
+  .bottom-controls {
+    display: none; /* Hide old bottom controls since we have page-counter-row now */
+  }
+
+  /* Extra compact buttons for very small screens */
+  .btn-compact {
+    padding: 6px; /* Very compact */
+    min-width: 32px;
+    min-height: 32px;
+    font-size: 11px;
+    border-radius: 4px;
+  }
+
+  /* Hide zoom indicator on very small screens */
+  .zoom-indicator {
+    display: none;
+  }
+}
+
+/* PDF document container adjustments for different toolbar positions */
+.pdf-layout-top .pdf-document-container {
+  flex: 1;
+  overflow: auto;
+  width: 100%;
+  padding: 0 20px 20px 20px;
+}
+
+.pdf-layout-right .pdf-document-container {
+  margin-right: 96px; /* 80px ancho barra + 16px margen */
+  margin-left: 0;
+  width: calc(100% - 96px);
+  flex: 1;
+  overflow: auto;
+  padding: 20px;
+}
+
+.pdf-layout-bottom .pdf-document-container {
+  flex: 1;
+  overflow: auto;
+  width: 100%;
+  padding: 20px 20px 140px 20px; /* Extra padding bottom to account for fixed toolbar */
+}
+
+/* On mobile, make sure PDF and toolbar have same width without side padding */
+@media (max-width: 768px) {
+  .pdf-layout-top .pdf-document-container,
+  .pdf-layout-bottom .pdf-document-container {
+    padding: 0 0 20px 0;
+  }
+}
+
+/* Responsive adjustments for vertical toolbar */
+@media (max-width: 768px) {
+  .pdf-controls-right {
+    width: 60px; /* Compact on mobile */
+    min-width: 60px;
+    padding: 4px 2px; /* Minimal padding */
+    right: 8px;
+  }
+
+  .pdf-layout-right .pdf-document-container {
+    margin-right: 68px; /* 60px barra + 8px margen */
+    width: calc(100% - 68px);
+    padding: 12px; /* Reduced padding */
+  }
+
+  .pdf-controls-right .file-name-inline {
+    display: none; /* Hide completely in mobile vertical mode */
+  }
+
+  .pdf-controls-right .btn-compact {
+    padding: 2px; /* Very compact */
+    min-width: 14px;
+    min-height: 14px;
+    font-size: 7px;
+  }
+}
+
+@media (max-width: 480px) and (orientation: landscape) {
+  /* Force horizontal layout on very small screens in landscape mode */
+  .pdf-layout-right {
+    flex-direction: column;
+  }
+  
+  .pdf-controls-right {
+    position: relative;
+    width: 100%;
+    height: auto;
+    max-height: 65px; /* Slightly increased for better scrolling */
+    padding: 8px 0; /* Reduced horizontal padding for more space */
+    border-left: none;
+    border-bottom: 1px solid #e0e0e0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    top: auto;
+    right: auto;
+    transform: none;
+    margin-top: 0;
+    justify-content: flex-start;
+    overflow-x: auto; /* Enable horizontal scrolling */
+    overflow-y: hidden; /* Hide vertical overflow */
+  }
+
+  /* Hide the document title section on mobile */
+  .pdf-controls-right .controls-header,
+  .pdf-controls-right .document-title-section {
+    display: none;
+  }
+
+  /* Scrollable single row layout for all controls */
+  .pdf-controls-right .controls-grid {
+    flex-direction: row;
+    flex-wrap: nowrap; /* Force single row */
+    gap: 6px;
+    justify-content: flex-start; /* Align to start for scrolling */
+    align-items: center;
+    width: 100%;
+    overflow-x: auto; /* Enable horizontal scrolling */
+    overflow-y: hidden;
+    padding: 8px 12px; /* Add padding for better touch area */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+    /* Smooth scrolling */
+    scroll-behavior: smooth;
+    /* Add momentum scrolling for iOS */
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Hide scrollbar for WebKit browsers */
+  .pdf-controls-right .controls-grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Remove all decorative styling from control groups */
+  .pdf-controls-right .control-group {
+    flex-direction: row;
+    border: none;
+    background: none;
+    padding: 0;
+    margin: 0;
+    width: auto;
+    gap: 6px;
+    flex-shrink: 0; /* Prevent shrinking - important for scrolling */
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Compact button styling with consistent sizing - half size for mobile */
+  .pdf-controls-right .btn-compact {
+    padding: 4px;
+    width: 20px; /* Fixed width for consistency */
+    height: 20px; /* Fixed height for consistency */
+    min-width: 20px;
+    min-height: 20px;
+    font-size: 8px;
+    border-radius: 3px;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    margin: 0;
+    flex-shrink: 0; /* Prevent button shrinking */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Style zoom indicator as a compact element */
+  .pdf-controls-right .zoom-indicator {
+    min-width: 45px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: #666;
+    background: #f0f0f0;
+    border-radius: 4px;
+    flex-shrink: 0;
+    padding: 0 4px;
+  }
+
+  /* Full width document container */
+  .pdf-layout-right .pdf-document-container {
+    width: 100%;
+    margin: 0;
+    padding: 12px;
+  }
+}
+
+/* Mejoras adicionales para los controles del PDF */
+.pdf-controls-bar {
+  transition: all 0.3s ease;
+}
+
+.control-group button {
+  transition: all 0.2s ease;
+}
+
+.control-group button:active {
+  transform: scale(0.95);
+}
+
+/* Ajustes adicionales para optimizar en pantallas táctiles */
+@media (hover: none) and (pointer: coarse) {
+  .btn-compact {
+    padding: 4px; /* Reduced touch target */
+    min-width: 20px; /* Half size */
+    min-height: 20px;
+  }
+  
+  .control-group {
+    padding: 1px 2px;
+    margin: 0;
+  }
+  
+  /* For very small screens, prioritize compactness over touch targets */
+  @media (max-width: 480px) {
+    .btn-compact {
+      padding: 3px;
+      min-width: 18px;
+      min-height: 18px;
+    }
+  }
+}
+
+/* Mejora para dispositivos móviles en orientación landscape */
+@media (max-height: 500px) and (orientation: landscape) {
+  .pdf-controls-bar {
+    padding: 5px 0;
+  }
+  
+  .page-info {
+    margin-bottom: 5px;
+    font-size: 9px;
+  }
+  
+  .controls-grid {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 5px;
+    gap: 2px;
+  }
+  
+  .control-group {
+    flex-shrink: 0;
+    gap: 2px;
+  }
+  
+  .btn-compact {
+    padding: 3px;
+    min-width: 18px;
+    min-height: 18px;
+    font-size: 8px;
+  }
+}
+
+/* Translation Config Panel Styles */
+.translation-config-panel {
+  margin-bottom: 20px;
+}
+
+.translation-config-panel h3 {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* Checkbox alignment styles */
+.checkbox-label {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 0 !important;
+  cursor: pointer;
+  font-weight: 500 !important;
+}
+
+.checkbox-input {
+  width: auto !important;
+  margin: 0 !important;
+  flex-shrink: 0;
+}
+
+.checkbox-text {
+  user-select: none;
+}
+
+/* Radio button group styles */
+.radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.radio-label {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 0 !important;
+  cursor: pointer;
+  font-weight: normal !important;
+}
+
+.radio-input {
+  width: auto !important;
+  margin: 0 !important;
+  flex-shrink: 0;
+}
+
+.radio-text {
+  user-select: none;
+}
+
+/* Hover effects for better UX */
+.checkbox-label:hover .checkbox-text,
+.radio-label:hover .radio-text {
+  color: #007bff;
+}
+
+/* Layout styles for different toolbar positions */
+.pdf-layout {
+  display: flex;
+  height: 100%;
+  width: 100%;
+}
+
+.pdf-layout-top {
+  flex-direction: column;
+}
+
+.pdf-layout-right {
+  flex-direction: row;
+}
+
+.pdf-layout-bottom {
+  flex-direction: column;
+}
+
+/* Specific styles for toolbar positions */
+.pdf-controls-bar.pdf-controls-right {
+  width: 80px; /* Reduced from 120px to match button width + margins */
+  min-width: 80px;
+  height: auto; /* Changed from 100vh to auto */
+  max-height: calc(100vh - 120px); /* Limit maximum height */
+  overflow-y: auto;
+  overflow-x: visible;
+  border-left: 1px solid #e0e0e0;
+  border-bottom: none;
+  box-shadow: -2px 0 4px rgba(0,0,0,0.1);
+  order: 2;
+  padding: 8px; /* Reduced padding for more compact layout */
+  z-index: 100; /* Ensure toolbar is above content */
+}
+
+.pdf-controls-bar.pdf-controls-right .controls-header {
+  display: none; /* Hide header completely in vertical mode */
+}
+
+.pdf-controls-bar.pdf-controls-right .document-title-section {
+  display: none; /* Hide document title in vertical mode */
+}
+
+.pdf-controls-bar.pdf-controls-right .controls-grid {
+  flex-direction: column;
+  gap: 8px; /* Reduced from 12px */
+  width: 100%;
+  align-items: center;
+  overflow-y: auto; /* Enable vertical scrolling */
+  overflow-x: hidden;
+  max-height: calc(100vh - 120px); /* Limit height to enable scrolling */
+  padding: 4px 0;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+  /* Smooth scrolling */
+  scroll-behavior: smooth;
+  /* Add momentum scrolling for iOS */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Hide scrollbar for WebKit browsers */
+.pdf-controls-bar.pdf-controls-right .controls-grid::-webkit-scrollbar {
+  display: none;
+}
+
+.pdf-controls-bar.pdf-controls-right .control-group {
+  flex-direction: column;
+  border-right: none;
+  border-bottom: 1px solid #eaeaea;
+  padding: 6px 0; /* Reduced from 10px */
+  width: 100%;
+  align-items: center;
+}
+
+.pdf-controls-bar.pdf-controls-right .control-group:last-child {
+  border-bottom: none;
+}
+
+/* Hide bottom controls (page info and upload) in vertical mode */
+.pdf-controls-bar.pdf-controls-right .bottom-controls {
+  display: none;
+}
+
+.pdf-controls-bar.pdf-controls-bottom {
+  position: sticky;
+  bottom: 0;
+  order: 2;
+  border-top: 1px solid #e0e0e0;
+  border-bottom: none;
+  box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
+  margin-top: auto;
+  padding: 12px 20px; /* Match PDF document container padding */
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.pdf-layout-right .pdf-document-container {
+  order: 1;
+  flex: 1;
+  width: calc(100% - 80px); /* Updated from 120px to match new toolbar width */
+}
+
+.pdf-layout-bottom .pdf-document-container {
+  order: 1;
+  flex: 1;
+  overflow: auto;
+  padding: 20px 20px 140px 20px; /* Extra padding bottom to account for fixed toolbar */
+}
+
+.sidebar-toggle-btn-fixed {
+  position: absolute;
+  top: 50%;
+  left: 320px;
+  transform: translateY(-50%);
+  z-index: 1200;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: left 0.3s, background 0.2s;
+}
+
+.sidebar-toggle-btn-fixed:hover {
+  background: #f0f0f0;
+  border-color: #007bff;
+}
+
+@media (max-width: 1024px) {
+  .sidebar-toggle-btn-fixed {
+    left: 280px;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar-toggle-btn-fixed {
+    left: 0;
+    top: 60px;
+    transform: none;
+  }
+}
+
+/* Mobile-specific text selection improvements */
+@media (max-width: 768px) {
+  .text-selection-active {
+    -webkit-touch-callout: default !important;
+    -webkit-user-select: text !important;
+    -khtml-user-select: text !important;
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
+    user-select: text !important;
+    touch-action: manipulation;
+  }
+  
+  .react-pdf__Page__textContent {
+    -webkit-touch-callout: default !important;
+    touch-action: manipulation;
+  }
+  
+  .react-pdf__Page__textContent span {
+    -webkit-touch-callout: default !important;
+    touch-action: manipulation;
+  }
+}
+
+/* Ensure PDF document container does not exceed parent width */
+.pdf-document-container {
+  max-width: 100%;
+  padding: 0; /* Elimina todo el padding */
+}
+
+/* Ocultar botones específicos en móviles */
+@media (max-width: 768px) {
+  .btn-fullscreen, 
+  .btn-reset-zoom {
+    display: none !important;
+  }
+}
+
+/* Responsive: on small screens, let the container fill the width */
+@media (max-width: 900px) {
+  .pdf-centered-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  .pdf-document-container,
+  .pdf-controls-bar {
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  
+  .controls-grid {
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+}
