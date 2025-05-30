@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { NotionConfig, NotionProperty, TranslationConfig } from '../types';
+import { NotionConfig, NotionProperty, TranslationConfig, TranslationProvider, TranslationModel } from '../types';
 import notionService from '../services/notionService';
 import translationService from '../services/translationService';
-import { Settings, Save, Database, X, HelpCircle } from 'lucide-react';
+import { Settings, Save, Database, X, HelpCircle, Eye, EyeOff, TestTube } from 'lucide-react';
 import LoadingSpinner from './LoadingSpinner';
 import SuccessMessage from './SuccessMessage';
 import TranslationModal from './TranslationModal';
@@ -67,6 +67,10 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange, selec
       !showTextModal &&
       !translating
     ) {
+      // Limpiar selección visual antes de mostrar el modal
+      if (window.getSelection) {
+        window.getSelection()?.removeAllRanges();
+      }
       if (translationConfig.enabled) {
         // Translation is enabled - check if fully configured
         if (
@@ -268,436 +272,468 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange, selec
   };
 
   return (
-    <div className="config-panel">
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Settings size={20} />
-          <h2 style={{ margin: 0 }}>Configuration</h2>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          {/* Help Button */}
-          <button
-            onClick={() => setShowHelpModal(true)}
-            style={{
-              background: 'none',
-              border: '1px solid #2196f3',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              width: '36px',
-              height: '36px',
-              borderRadius: '50%',
-              backgroundColor: '#e3f2fd',
-              color: '#2196f3',
-              boxShadow: '0 1px 3px rgba(33, 150, 243, 0.2)',
-              transition: 'all 0.2s ease'
-            }}
-            onMouseOver={(e) => {
-              (e.currentTarget as HTMLElement).style.backgroundColor = '#bbdefb';
-              (e.currentTarget as HTMLElement).style.boxShadow = '0 2px 5px rgba(33, 150, 243, 0.3)';
-            }}
-            onMouseOut={(e) => {
-              (e.currentTarget as HTMLElement).style.backgroundColor = '#e3f2fd';
-              (e.currentTarget as HTMLElement).style.boxShadow = '0 1px 3px rgba(33, 150, 243, 0.2)';
-            }}
-            aria-label="Open help guide"
-            title="Help Guide"
-          >
-            <HelpCircle size={20} />
-          </button>
-          {/* Close Button */}
-          <button
-            onClick={onClose}
-            style={{
-              background: 'none',
-              border: '1px solid #e53935',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              width: '36px',
-              height: '36px',
-              borderRadius: '50%',
-              backgroundColor: '#fff0f0',
-              color: '#e53935',
-              boxShadow: '0 1px 3px rgba(229, 57, 53, 0.2)',
-              transition: 'all 0.2s ease'
-            }}
-            onMouseOver={(e) => {
-              (e.currentTarget as HTMLElement).style.backgroundColor = '#ffebeb';
-              (e.currentTarget as HTMLElement).style.boxShadow = '0 2px 5px rgba(229, 57, 53, 0.3)';
-            }}
-            onMouseOut={(e) => {
-              (e.currentTarget as HTMLElement).style.backgroundColor = '#fff0f0';
-              (e.currentTarget as HTMLElement).style.boxShadow = '0 1px 3px rgba(229, 57, 53, 0.2)';
-            }}
-            aria-label="Close configuration panel"
-          >
-            <X size={20} />
-          </button>
-        </div>
-      </div>
-
-      {error && <div className="error">{error}</div>}
-      {success && <SuccessMessage message={success} onClose={() => setSuccess('')} />}
-
-      <div className="form-group">
-        <label>Notion API Key Status</label>
-        <div className="notion-status" style={{ 
-          padding: '8px', 
-          backgroundColor: getApiKeyStatus() ? '#d4edda' : '#f8d7da', 
-          borderRadius: '4px',
-          color: getApiKeyStatus() ? '#155724' : '#721c24'
-        }}>
-          {getApiKeyStatus() 
-            ? '✅ API Key configured via environment variable' 
-            : '❌ API Key not found. Please set NOTION_API_KEY environment variable.'
-          }
-        </div>
-        {getApiKeyStatus() && (
-          <>
+    <div className="config-panel-modern">
+      <div className="config-content">
+        {/* Header (moved inside scrollable area) */}
+        <div className="config-header">
+          <div className="config-header-left">
+            <Settings className="config-icon" />
+            <h2 className="config-title">Config.</h2>
+          </div>
+          <div className="config-header-actions">
             <button
-              className="btn"
-              onClick={testConnection}
-              disabled={testingConnection}
-              style={{ marginTop: '8px', width: '100%' }}
+              onClick={() => setShowHelpModal(true)}
+              className="config-action-btn config-help-btn"
+              aria-label="Open help guide"
+              title="Help Guide"
             >
-              {testingConnection ? (
-                <>
-                  <LoadingSpinner size={16} />
-                  Testing...
-                </>
-              ) : (
-                '🔗 Test Notion Connection'
-              )}
+              <HelpCircle size={18} />
             </button>
             <button
-              className="btn"
-              onClick={loadProperties}
-              disabled={!config.databaseId || loading}
-              style={{ marginTop: '8px', width: '100%' }}
+              onClick={onClose}
+              className="config-action-btn config-close-btn"
+              aria-label="Close configuration panel"
             >
-              {loading ? (
-                <>
-                  <LoadingSpinner size={16} />
-                  Loading...
-                </>
-              ) : (
-                <>
-                  <Database size={16} style={{ marginRight: '8px' }} />
-                  Load Database Properties
-                </>
-              )}
+              <X size={18} />
             </button>
-          </>
-        )}
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="databaseId">Database ID</label>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <input
-            id="databaseId"
-            type={showDatabaseId ? 'text' : 'password'}
-            value={config.databaseId}
-            onChange={(e) => handleConfigChange('databaseId', e.target.value)}
-            placeholder="32-character database ID"
-            style={{ flex: 1 }}
-          />
-          <button
-            type="button"
-            aria-label={showDatabaseId ? 'Ocultar ID' : 'Mostrar ID'}
-            onClick={() => setShowDatabaseId((v) => !v)}
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              padding: 0,
-              width: 32,
-              height: 32,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-            tabIndex={0}
-          >
-            {showDatabaseId ? (
-              // Eye-off SVG
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-5 0-9.27-3.11-11-7.5a11.05 11.05 0 0 1 5.17-5.92"/><path d="M1 1l22 22"/><path d="M9.53 9.53A3.5 3.5 0 0 0 12 15.5c.96 0 1.84-.38 2.47-1"/></svg>
-            ) : (
-              // Eye SVG
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12S5 5 12 5s11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
-            )}
-          </button>
+          </div>
         </div>
-      </div>
 
-      <div className="form-group">
-        <label htmlFor="identifierPattern">Identifier Pattern</label>
-        <input
-          id="identifierPattern"
-          type="text"
-          value={config.identifierPattern}
-          onChange={(e) => handleConfigChange('identifierPattern', e.target.value)}
-          placeholder="e.g., LV001_RF001"
-        />
-      </div>
+        {/* Añadir margen entre el header y el primer bloque de sección */}
+        <div style={{ height: 16 }} />
 
-      <div className="form-group">
-        <label htmlFor="annotation">Add Annotation</label>
-        <textarea
-          id="annotation"
-          value={config.annotation}
-          onChange={(e) => handleConfigChange('annotation', e.target.value)}
-          placeholder="Add your annotation here (optional)"
-          rows={3}
-          style={{
-            width: '100%',
-            minHeight: '60px',
-            resize: 'vertical',
-            fontFamily: 'inherit',
-            fontSize: '14px',
-            padding: '8px',
-            border: '1px solid #ddd',
-            borderRadius: '4px'
-          }}
-        />
-      </div>
+        {/* Status Messages */}
+        {error && <div className="config-message config-error">{error}</div>}
+        {success && <SuccessMessage message={success} onClose={() => setSuccess('')} />}
 
-      <div className="form-group">
-        <label htmlFor="pageNumber">Add Page Number</label>
-        <input
-          id="pageNumber"
-          type="text"
-          value={config.pageNumber || ''}
-          onChange={(e) => handleConfigChange('pageNumber', e.target.value)}
-          placeholder="Enter page number (optional)"
-          style={{
-            width: '100%',
-            padding: '8px',
-            border: '1px solid #ddd',
-            borderRadius: '4px',
-            fontSize: '14px'
-          }}
-        />
-      </div>
-
-      {loading && (
-        <div className="loading">Loading database properties...</div>
-      )}
-
-      {properties.length > 0 && (
-        <>
-          <div className="form-group">
-            <label htmlFor="identifierColumn">Identifier Column</label>
-            <select
-              id="identifierColumn"
-              value={config.identifierColumn}
-              onChange={(e) => handleConfigChange('identifierColumn', e.target.value)}
-            >
-              <option value="">Select column for identifier</option>
-              {properties
-                .filter(prop => dropdownColumnTypes.includes(prop.type))
-                .map(prop => (
-                  <option key={prop.id} value={prop.name}>
-                    {prop.name} ({prop.type})
-                  </option>
-                ))}
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="textColumn">Text Column</label>
-            <select
-              id="textColumn"
-              value={config.textColumn}
-              onChange={(e) => handleConfigChange('textColumn', e.target.value)}
-            >
-              <option value="">Select column for text</option>
-              {properties
-                .filter(prop => dropdownColumnTypes.includes(prop.type))
-                .map(prop => (
-                  <option key={prop.id} value={prop.name}>
-                    {prop.name} ({prop.type})
-                  </option>
-                ))}
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="annotationColumn">Annotation Column</label>
-            <select
-              id="annotationColumn"
-              value={config.annotationColumn}
-              onChange={(e) => handleConfigChange('annotationColumn', e.target.value)}
-            >
-              <option value="">Select column for annotations (optional)</option>
-              {properties
-                .filter(prop => dropdownColumnTypes.includes(prop.type))
-                .map(prop => (
-                  <option key={prop.id} value={prop.name}>
-                    {prop.name} ({prop.type})
-                  </option>
-                ))}
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="pageColumn">Page Column</label>
-            <select
-              id="pageColumn"
-              value={config.pageColumn}
-              onChange={(e) => handleConfigChange('pageColumn', e.target.value)}
-            >
-              <option value="">Select column for page numbers (optional)</option>
-              {properties
-                .filter(prop => dropdownColumnTypes.includes(prop.type))
-                .map(prop => (
-                  <option key={prop.id} value={prop.name}>
-                    {prop.name} ({prop.type})
-                  </option>
-                ))}
-            </select>
-          </div>
-
-          {/* New: Document identifier insertion column */}
-          <div className="form-group">
-            <label htmlFor="documentIdInsertionColumn">Document identifier insertion column</label>
-            <select
-              id="documentIdInsertionColumn"
-              value={config.documentIdInsertionColumn || ''}
-              onChange={e => handleConfigChange('documentIdInsertionColumn', e.target.value)}
-            >
-              <option value="">Select column for document ID insertion (usually multi-select)</option>
-              {properties
-                .filter(prop => dropdownColumnTypes.includes(prop.type))
-                .map(prop => (
-                  <option key={prop.id} value={prop.name}>
-                    {prop.name} ({prop.type})
-                  </option>
-                ))}
-            </select>
-          </div>
-
-          {/* New: Enable document ID insertion checkbox */}
-          <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-            <input
-              type="checkbox"
-              id="enableDocumentIdInsertion"
-              checked={!!config.enableDocumentIdInsertion}
-              onChange={e => handleConfigChange('enableDocumentIdInsertion', e.target.checked ? 'true' : '')}
-              style={{ marginRight: 8, width: 18, height: 18 }}
-            />
-            <label htmlFor="enableDocumentIdInsertion" style={{ margin: 0, fontWeight: 500, fontSize: 15 }}>
-              Enable document ID insertion
-            </label>
-          </div>
-        </>
-      )}
-
-      {selectedText && (
-        <div>
-          <h3>Selected Text</h3>
-          <div className="selected-text">
-            <p style={{ margin: 0, fontSize: '14px', lineHeight: '1.4' }}>
-              {selectedText.length > 200 ? `${selectedText.substring(0, 200)}...` : selectedText}
-            </p>
-          </div>
-          
-          {translationConfig.enabled ? (
-            <div style={{ marginTop: '10px' }}>
-              {translating && (
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '8px', 
-                  marginBottom: '10px',
-                  padding: '8px',
-                  backgroundColor: '#e3f2fd',
-                  borderRadius: '4px',
-                  fontSize: '14px',
-                  color: '#1976d2'
-                }}>
-                  <LoadingSpinner size={16} />
-                  Translating to {translationConfig.targetLanguage}...
-                </div>
-              )}
-              
-              <button
-                className="btn"
-                onClick={handleSaveText}
-                disabled={saving || !config.identifierColumn || !config.textColumn}
-                style={{ width: '100%', backgroundColor: '#6c757d' }}
-              >
-                {saving ? (
-                  <>
-                    <LoadingSpinner size={16} />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Save size={16} style={{ marginRight: '8px' }} />
-                    Save Original to Notion
-                  </>
-                )}
-              </button>
+        {/* Content */}
+        <div className="config-content">
+          {/* API Key Status */}
+          <div className="config-section">
+            <h3 className="config-section-title">Notion API Connection</h3>
+            <div className={`api-status ${getApiKeyStatus() ? 'api-status-success' : 'api-status-error'}`}>
+              <div className="api-status-indicator">
+                {getApiKeyStatus() ? '✅' : '❌'}
+              </div>
+              <div className="api-status-text">
+                {getApiKeyStatus() 
+                  ? 'API Key configured via environment variable' 
+                  : 'API Key not found. Please set NOTION_API_KEY environment variable.'
+                }
+              </div>
             </div>
-          ) : (
-            <button
-              className="btn"
-              onClick={handleSaveText}
-              disabled={saving || !config.identifierColumn || !config.textColumn}
-              style={{ width: '100%', marginTop: '10px' }}
-            >
-              {saving ? (
-                <>
-                  <LoadingSpinner size={16} />
-                  Saving...
-                </>
+            
+            {getApiKeyStatus() && (
+              <div className="config-actions">
+                <button
+                  className="config-btn config-btn-secondary"
+                  style={{ color: '#fff' }}
+                  onClick={testConnection}
+                  disabled={testingConnection}
+                >
+                  {testingConnection ? (
+                    <>
+                      <LoadingSpinner size={16} color="#fff" />
+                      <span style={{ color: '#fff' }}>Testing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <TestTube size={16} style={{ color: '#fff' }} />
+                      <span style={{ color: '#fff' }}>Test Connection</span>
+                    </>
+                  )}
+                </button>
+                <button
+                  className="config-btn config-btn-primary"
+                  style={{ color: '#fff' }}
+                  onClick={loadProperties}
+                  disabled={!config.databaseId || loading}
+                >
+                  {loading ? (
+                    <>
+                      <LoadingSpinner size={16} color="#fff" />
+                      <span style={{ color: '#fff' }}>Loading...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Database size={16} style={{ color: '#fff' }} />
+                      <span style={{ color: '#fff' }}>Load Properties</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Database Configuration */}
+          <div className="config-section">
+            <h3 className="config-section-title">Database Configuration</h3>
+            
+            <div className="config-field">
+              <label htmlFor="databaseId" className="config-label">Database ID</label>
+              <div className="config-input-group">
+                <input
+                  id="databaseId"
+                  type={showDatabaseId ? 'text' : 'password'}
+                  value={config.databaseId}
+                  onChange={(e) => handleConfigChange('databaseId', e.target.value)}
+                  placeholder="32-character database ID"
+                  className="config-input"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowDatabaseId(!showDatabaseId)}
+                  className="config-input-action"
+                  aria-label={showDatabaseId ? 'Hide ID' : 'Show ID'}
+                >
+                  {showDatabaseId ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </div>
+
+            <div className="config-field">
+              <label htmlFor="identifierPattern" className="config-label">Identifier Pattern</label>
+              <input
+                id="identifierPattern"
+                type="text"
+                value={config.identifierPattern}
+                onChange={(e) => handleConfigChange('identifierPattern', e.target.value)}
+                placeholder="e.g., LV001_RF001"
+                className="config-input"
+              />
+            </div>
+          </div>
+
+          {/* Optional Fields */}
+          <div className="config-section">
+            <h3 className="config-section-title">Optional Information</h3>
+            
+            <div className="config-field">
+              <label htmlFor="annotation" className="config-label">Add Annotation</label>
+              <textarea
+                id="annotation"
+                value={config.annotation}
+                onChange={(e) => handleConfigChange('annotation', e.target.value)}
+                placeholder="Add your annotation here (optional)"
+                rows={3}
+                className="config-textarea"
+              />
+            </div>
+
+            <div className="config-field">
+              <label htmlFor="pageNumber" className="config-label">Page Number</label>
+              <input
+                id="pageNumber"
+                type="text"
+                value={config.pageNumber || ''}
+                onChange={(e) => handleConfigChange('pageNumber', e.target.value)}
+                placeholder="Enter page number (optional)"
+                className="config-input"
+              />
+            </div>
+          </div>
+
+          {/* Translation Configuration */}
+          <div className="config-section">
+            <h3 className="config-section-title">Translation Options</h3>
+            
+            <div className="config-checkbox">
+              <input
+                type="checkbox"
+                id="translationEnabled"
+                checked={translationConfig.enabled}
+                onChange={(e) => setTranslationConfig({ ...translationConfig, enabled: e.target.checked })}
+                className="config-checkbox-input"
+              />
+              <label htmlFor="translationEnabled" className="config-checkbox-label">
+                Enable translation
+              </label>
+            </div>
+
+            {translationConfig.enabled && (
+              <>
+                <div className="config-field">
+                  <label htmlFor="translationProvider" className="config-label">Translation Provider</label>
+                  <select
+                    id="translationProvider"
+                    value={translationConfig.provider}
+                    onChange={(e) => setTranslationConfig({ ...translationConfig, provider: e.target.value as TranslationProvider })}
+                    className="config-select"
+                  >
+                    <option value="">Select provider</option>
+                    <option value="openai">OpenAI</option>
+                    <option value="openrouter">OpenRouter</option>
+                    <option value="gemini">Gemini</option>
+                    <option value="deepseek">DeepSeek</option>
+                  </select>
+                </div>
+
+                <div className="config-field">
+                  <label htmlFor="translationModel" className="config-label">Model</label>
+                  <input
+                    id="translationModel"
+                    type="text"
+                    value={translationConfig.model}
+                    onChange={(e) => setTranslationConfig({ ...translationConfig, model: e.target.value as TranslationModel })}
+                    placeholder="e.g., gpt-4, gemini-pro"
+                    className="config-input"
+                  />
+                </div>
+
+                <div className="config-field">
+                  <label htmlFor="targetLanguage" className="config-label">Target Language</label>
+                  <input
+                    id="targetLanguage"
+                    type="text"
+                    value={translationConfig.targetLanguage}
+                    onChange={(e) => setTranslationConfig({ ...translationConfig, targetLanguage: e.target.value })}
+                    placeholder="e.g., Spanish, French, German"
+                    className="config-input"
+                  />
+                </div>
+
+                <div className="config-field">
+                  <label htmlFor="sendMode" className="config-label">Send Mode</label>
+                  <select
+                    id="sendMode"
+                    value={translationConfig.sendMode}
+                    onChange={(e) => setTranslationConfig({ ...translationConfig, sendMode: e.target.value as any })}
+                    className="config-select"
+                  >
+                    <option value="original">Send original text</option>
+                    <option value="translated">Send translated text</option>
+                  </select>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Database Properties */}
+          {loading && (
+            <div className="config-loading">
+              <LoadingSpinner size={20} />
+              <span>Loading database properties...</span>
+            </div>
+          )}
+
+          {properties.length > 0 && (
+            <div className="config-section">
+              <h3 className="config-section-title">Column Mapping</h3>
+              
+              <div className="config-field">
+                <label htmlFor="identifierColumn" className="config-label config-label-required">
+                  Identifier Column
+                </label>
+                <select
+                  id="identifierColumn"
+                  value={config.identifierColumn}
+                  onChange={(e) => handleConfigChange('identifierColumn', e.target.value)}
+                  className="config-select"
+                >
+                  <option value="">Select column for identifier</option>
+                  {properties
+                    .filter(prop => dropdownColumnTypes.includes(prop.type))
+                    .map(prop => (
+                      <option key={prop.id} value={prop.name}>
+                        {prop.name} ({prop.type})
+                      </option>
+                    ))}
+                </select>
+              </div>
+
+              <div className="config-field">
+                <label htmlFor="textColumn" className="config-label config-label-required">
+                  Text Column
+                </label>
+                <select
+                  id="textColumn"
+                  value={config.textColumn}
+                  onChange={(e) => handleConfigChange('textColumn', e.target.value)}
+                  className="config-select"
+                >
+                  <option value="">Select column for text</option>
+                  {properties
+                    .filter(prop => dropdownColumnTypes.includes(prop.type))
+                    .map(prop => (
+                      <option key={prop.id} value={prop.name}>
+                        {prop.name} ({prop.type})
+                      </option>
+                    ))}
+                </select>
+              </div>
+
+              <div className="config-field">
+                <label htmlFor="annotationColumn" className="config-label">
+                  Annotation Column
+                </label>
+                <select
+                  id="annotationColumn"
+                  value={config.annotationColumn}
+                  onChange={(e) => handleConfigChange('annotationColumn', e.target.value)}
+                  className="config-select"
+                >
+                  <option value="">Select column for annotations (optional)</option>
+                  {properties
+                    .filter(prop => dropdownColumnTypes.includes(prop.type))
+                    .map(prop => (
+                      <option key={prop.id} value={prop.name}>
+                        {prop.name} ({prop.type})
+                      </option>
+                    ))}
+                </select>
+              </div>
+
+              <div className="config-field">
+                <label htmlFor="pageColumn" className="config-label">
+                  Page Column
+                </label>
+                <select
+                  id="pageColumn"
+                  value={config.pageColumn}
+                  onChange={(e) => handleConfigChange('pageColumn', e.target.value)}
+                  className="config-select"
+                >
+                  <option value="">Select column for page numbers (optional)</option>
+                  {properties
+                    .filter(prop => dropdownColumnTypes.includes(prop.type))
+                    .map(prop => (
+                      <option key={prop.id} value={prop.name}>
+                        {prop.name} ({prop.type})
+                      </option>
+                    ))}
+                </select>
+              </div>
+
+              <div className="config-field">
+                <label htmlFor="documentIdInsertionColumn" className="config-label">
+                  Document ID Column
+                </label>
+                <select
+                  id="documentIdInsertionColumn"
+                  value={config.documentIdInsertionColumn || ''}
+                  onChange={e => handleConfigChange('documentIdInsertionColumn', e.target.value)}
+                  className="config-select"
+                >
+                  <option value="">Select column for document ID insertion (usually multi-select)</option>
+                  {properties
+                    .filter(prop => dropdownColumnTypes.includes(prop.type))
+                    .map(prop => (
+                      <option key={prop.id} value={prop.name}>
+                        {prop.name} ({prop.type})
+                      </option>
+                    ))}
+                </select>
+              </div>
+
+              <div className="config-checkbox">
+                <input
+                  type="checkbox"
+                  id="enableDocumentIdInsertion"
+                  checked={!!config.enableDocumentIdInsertion}
+                  onChange={e => handleConfigChange('enableDocumentIdInsertion', e.target.checked ? 'true' : '')}
+                  className="config-checkbox-input"
+                />
+                <label htmlFor="enableDocumentIdInsertion" className="config-checkbox-label">
+                  Enable document ID insertion
+                </label>
+              </div>
+            </div>
+          )}
+
+          {/* Selected Text */}
+          {selectedText && (
+            <div className="config-section config-selected-text">
+              <h3 className="config-section-title">Selected Text</h3>
+              <div className="selected-text-preview">
+                <p className="selected-text-content">
+                  {selectedText.length > 200 ? `${selectedText.substring(0, 200)}...` : selectedText}
+                </p>
+              </div>
+              
+              {translationConfig.enabled ? (
+                <div className="config-translation-actions">
+                  {translating && (
+                    <div className="translation-status">
+                      <LoadingSpinner size={16} />
+                      <span>Translating to {translationConfig.targetLanguage}...</span>
+                    </div>
+                  )}
+                  
+                  <button
+                    className="config-btn config-btn-save"
+                    onClick={handleSaveText}
+                    disabled={saving || !config.identifierColumn || !config.textColumn}
+                  >
+                    {saving ? (
+                      <>
+                        <LoadingSpinner size={16} />
+                        <span>Saving...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Save size={16} />
+                        <span>Save Original to Notion</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               ) : (
-                <>
-                  <Save size={16} style={{ marginRight: '8px' }} />
-                  Save to Notion
-                </>
+                <button
+                  className="config-btn config-btn-save"
+                  onClick={handleSaveText}
+                  disabled={saving || !config.identifierColumn || !config.textColumn}
+                >
+                  {saving ? (
+                    <>
+                      <LoadingSpinner size={16} />
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save size={16} />
+                      <span>Save to Notion</span>
+                    </>
+                  )}
+                </button>
               )}
-            </button>
+            </div>
           )}
         </div>
-      )}
 
-      <TranslationModal
-        isOpen={showTranslationModal}
-        onClose={handleCloseModal}
-        originalText={selectedText}
-        translatedText={translatedText}
-        onAddEverything={handleAddEverything}
-        onAddSelection={handleAddSelection}
-        translationConfig={translationConfig}
-        annotation={config.annotation}
-        pageNumber={config.pageNumber}
-        onAddEverythingWithAnnotation={handleAddEverythingWithAnnotation}
-        onAddSelectionWithAnnotation={handleAddSelectionWithAnnotation}
-      />
+        {/* Modals */}
+        <TranslationModal
+          isOpen={showTranslationModal}
+          onClose={handleCloseModal}
+          originalText={selectedText}
+          translatedText={translatedText}
+          onAddEverything={handleAddEverything}
+          onAddSelection={handleAddSelection}
+          translationConfig={translationConfig}
+          annotation={config.annotation}
+          pageNumber={config.pageNumber}
+          onAddEverythingWithAnnotation={handleAddEverythingWithAnnotation}
+          onAddSelectionWithAnnotation={handleAddSelectionWithAnnotation}
+        />
 
-      <TranslationModal
-        isOpen={showTextModal}
-        onClose={handleCloseTextModal}
-        originalText={selectedText}
-        translatedText={selectedText}
-        onAddEverything={handleAddEverythingText}
-        onAddSelection={handleAddSelection}
-        translationConfig={{ ...translationConfig, enabled: false }}
-        annotation={config.annotation}
-        pageNumber={config.pageNumber}
-        onAddEverythingWithAnnotation={handleAddEverythingTextWithAnnotation}
-        onAddSelectionWithAnnotation={handleAddSelectionWithAnnotation}
-      />
+        <TranslationModal
+          isOpen={showTextModal}
+          onClose={handleCloseTextModal}
+          originalText={selectedText}
+          translatedText={selectedText}
+          onAddEverything={handleAddEverythingText}
+          onAddSelection={handleAddSelection}
+          translationConfig={{ ...translationConfig, enabled: false }}
+          annotation={config.annotation}
+          pageNumber={config.pageNumber}
+          onAddEverythingWithAnnotation={handleAddEverythingTextWithAnnotation}
+          onAddSelectionWithAnnotation={handleAddSelectionWithAnnotation}
+        />
 
-      <HelpModal
-        isOpen={showHelpModal}
-        onClose={() => setShowHelpModal(false)}
-      />
+        <HelpModal
+          isOpen={showHelpModal}
+          onClose={() => setShowHelpModal(false)}
+        />
+      </div>
     </div>
   );
 };

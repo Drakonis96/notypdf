@@ -1,7 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import PDFViewer from './components/PDFViewer';
 import ConfigPanel from './components/ConfigPanel';
-import TranslationConfigPanel from './components/TranslationConfigPanel';
 import { NotionConfig, TranslationConfig } from './types';
 import { ChevronRight } from 'lucide-react';
 import './App.css';
@@ -83,10 +82,6 @@ function App() {
               setTranslationConfig={setTranslationConfig}
               onClearSelection={handleClearSelection}
               onClose={() => setShowConfigPanel(false)}
-            />
-            <TranslationConfigPanel
-              config={translationConfig}
-              onConfigChange={setTranslationConfig}
             />
           </aside>
 

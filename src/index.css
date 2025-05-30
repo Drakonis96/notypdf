@@ -100,10 +100,10 @@ code {
 
 .sidebar {
   background: white;
-  padding: 20px;
+  padding: 0;
   border-radius: 0;
   box-shadow: 2px 0 4px rgba(0,0,0,0.1);
-  overflow-y: auto;
+  overflow-y: hidden; /* Changed to hidden - let config-content handle scrolling */
   width: 320px;
   flex-shrink: 0;
   border-right: 1px solid #e0e0e0;
