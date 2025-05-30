@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   notypdf:
-    image: drakonis96/notypdf:latest
+    build: .
     ports:
       - "5026:5026"
     environment:
@@ -11,6 +11,8 @@ services:
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
       - NOTION_API_KEY=${NOTION_API_KEY}
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
     restart: unless-stopped
     networks:
       - default
