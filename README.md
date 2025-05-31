@@ -72,7 +72,40 @@ If you are new to GitHub or coding, follow these steps:
 1. Open the extracted folder.
 2. Find the file named `.env.example` and make a copy of it.
 3. Rename the copy to `.env`.
+
+   - **On Windows:**  
+     Open Command Prompt in the folder and run:  
+     ```sh
+     copy .env.example .env
+     ```
+   - **On Mac/Linux:**  
+     Open Terminal in the folder and run:  
+     ```sh
+     cp .env.example .env
+     ```
+
 4. Open `.env` with a text editor (like Notepad or VS Code).
+
+   - **On Windows:**  
+     Double-click `.env` to open with Notepad, or run:  
+     ```sh
+     notepad .env
+     ```
+   - **On Mac:**  
+     Simply run in Terminal:  
+     ```sh
+     open .env
+     ```
+     Or use your favorite editor (for example, VS Code):
+     ```sh
+     code .env
+     ```
+   - **On Linux:**  
+     Use your preferred editor, for example:  
+     ```sh
+     nano .env
+     ```
+
 5. Add your Notion API key and any other required keys. Example:
    ```env
    NOTION_API_KEY=secret_your_notion_api_key_here
