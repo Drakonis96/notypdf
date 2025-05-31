@@ -1,18 +1,11 @@
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #f5f5f5;
-}
-
-/* Remove gray background on mobile for cleaner experience */
-@media (max-width: 768px) {
-  body {
-    background-color: white;
-  }
+  background-color: #ffffff; /* Changed to white */
 }
 
 code {
@@ -32,9 +25,8 @@ code {
 
 .header {
   background: white;
-  padding: 10px;
-  border-radius: 0;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  padding: 12px 20px; /* Adjusted padding */
+  border-bottom: 1px solid #eeeeee; /* Subtle border instead of shadow */
   margin-bottom: 0;
   width: 100%;
   position: relative;
@@ -44,13 +36,13 @@ code {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  min-height: 40px;
+  gap: 12px; /* Increased gap */
+  min-height: 48px; /* Adjusted min-height */
 }
 
 .header-logo {
-  width: 80px;
-  height: 100px;
+  width: 40px; /* Adjusted size */
+  height: 40px; /* Adjusted size */
   object-fit: contain;
   flex-shrink: 0;
 }
@@ -60,22 +52,23 @@ code {
 }
 
 .header-text h1 {
-  margin: 0 0 5px 0;
-  font-size: 1.8rem;
+  margin: 0 0 4px 0; /* Adjusted margin */
+  font-size: 1.5rem; /* Adjusted font size */
+  font-weight: 600; /* Modern weight */
 }
 
 .header-text p {
   margin: 0;
-  color: #666;
-  font-size: 0.9rem;
+  color: #555555; /* Slightly darker gray */
+  font-size: 0.875rem; /* Adjusted font size */
 }
 
 .config-toggle-btn {
-  background: #007bff;
+  background: #0077cc; /* New primary color */
   color: white;
   border: none;
-  padding: 8px;
-  border-radius: 6px;
+  padding: 10px; /* Adjusted padding */
+  border-radius: 8px; /* Slightly larger radius */
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -85,31 +78,29 @@ code {
 }
 
 .config-toggle-btn:hover {
-  background: #0056b3;
+  background: #005fa3; /* Darker shade for hover */
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+  box-shadow: 0 2px 6px rgba(0, 119, 204, 0.2); /* Softer shadow */
 }
 
 .main-content {
   display: flex;
   flex-direction: row;
   gap: 0;
-  height: calc(100vh - 120px);
+  height: calc(100vh - 73px); /* Adjusted based on new header height (48px + 12px*2 + 1px border) */
   overflow: hidden;
 }
 
 .sidebar {
   background: white;
   padding: 0;
-  border-radius: 0;
-  box-shadow: 2px 0 4px rgba(0,0,0,0.1);
-  overflow-y: hidden; /* Changed to hidden - let config-content handle scrolling */
-  width: 320px;
+  border-right: 1px solid #eeeeee; /* Subtle border */
+  overflow-y: hidden;
+  width: 300px; /* Slightly narrower */
   flex-shrink: 0;
-  border-right: 1px solid #e0e0e0;
   transition: all 0.3s ease;
   position: relative;
-  z-index: 1200; /* Mismo z-index que en modo móvil */
+  z-index: 1200;
 }
 
 .sidebar-visible {
@@ -126,9 +117,7 @@ code {
 }
 
 .pdf-viewer {
-  background: white;
-  border-radius: 0;
-  box-shadow: none;
+  background: #f9f9f9; /* Light background for PDF area distinction */
   display: flex;
   flex-direction: column;
   flex-grow: 1;
@@ -137,100 +126,104 @@ code {
   transition: all 0.3s ease;
 }
 
-/* Ensure clean white background on mobile */
 @media (max-width: 768px) {
   .pdf-viewer {
-    background: white;
+    background: white; /* Keep white on mobile for simplicity */
   }
 }
 
 .upload-area {
-  border: 2px dashed #ccc;
-  border-radius: 8px;
+  border: 1px solid #dddddd; /* Solid, lighter border */
+  border-radius: 12px; /* Larger radius */
   padding: 40px;
   text-align: center;
   cursor: pointer;
   transition: all 0.3s ease;
-  /* Centrado absoluto en viewport */
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   background: white;
   z-index: 1050;
-  min-width: 320px;
-  min-height: 220px;
+  min-width: 300px; /* Adjusted min-width */
+  min-height: 200px; /* Adjusted min-height */
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.10);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08); /* Softer shadow */
 }
 
 .upload-area:hover {
-  border-color: #007bff;
-  background-color: rgba(0, 123, 255, 0.05);
+  border-color: #0077cc;
+  background-color: #f0f8ff; /* Lighter hover background */
 }
 
 .upload-area.dragover {
-  border-color: #007bff;
-  background-color: rgba(0, 123, 255, 0.1);
-  transform: translate(-50%, -50%) scale(1.02);
-  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.15);
+  border-color: #0077cc;
+  background-color: #e6f3ff; /* Lighter dragover background */
+  transform: translate(-50%, -50%) scale(1.01);
+  box-shadow: 0 3px 10px rgba(0, 119, 204, 0.1);
 }
 
 .form-group {
-  margin-bottom: 15px;
+  margin-bottom: 16px; /* Increased margin */
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 5px;
+  margin-bottom: 6px; /* Increased margin */
   font-weight: 500;
+  font-size: 0.875rem; /* Consistent small text size */
 }
 
 .form-group input,
 .form-group select {
   width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
+  padding: 10px 14px; /* Adjusted padding */
+  border: 1px solid #cccccc; /* Lighter border */
+  border-radius: 6px; /* Consistent radius */
+  font-size: 0.95rem; /* Adjusted font size */
+  background-color: #fff; /* Ensure white background */
 }
 
 .form-group input:focus,
 .form-group select:focus {
   outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+  border-color: #0077cc;
+  box-shadow: 0 0 0 2px rgba(0, 119, 204, 0.2);
 }
 
 .btn {
-  background: #007bff;
+  background: #0077cc; /* New primary color */
   color: white;
   border: none;
   padding: 10px 20px;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.3s;
+  font-size: 0.95rem; /* Adjusted font size */
+  font-weight: 500; /* Added font weight */
+  transition: background-color 0.2s ease, transform 0.2s ease;
 }
 
 .btn:hover {
-  background: #0056b3;
+  background: #005fa3;
+  transform: translateY(-1px); /* Subtle lift effect */
 }
 
 .btn:disabled {
-  background: #6c757d;
+  background: #cccccc; /* Lighter disabled background */
+  color: #777777;
   cursor: not-allowed;
+  transform: none;
 }
 
 .btn-secondary {
-  background: #6c757d;
+  background: #6c757d; /* Standard secondary color */
 }
 
 .btn-secondary:hover {
-  background: #545b62;
+  background: #5a6268;
 }
 
 .pdf-container {
@@ -246,37 +239,41 @@ code {
 .loading {
   text-align: center;
   padding: 40px;
-  color: #666;
+  color: #555555;
+  font-size: 1rem; /* Adjusted font size */
 }
 
 .error {
-  background: #f8d7da;
-  color: #721c24;
-  padding: 12px;
-  border-radius: 4px;
+  background: #ffebee; /* Lighter red background */
+  color: #c62828; /* Darker red text */
+  padding: 12px 16px;
+  border-radius: 6px;
   margin-bottom: 15px;
+  border: 1px solid #ef9a9a; /* Subtle border */
 }
 
 .success {
-  background: #d4edda;
-  color: #155724;
-  padding: 12px;
-  border-radius: 4px;
+  background: #e8f5e9; /* Lighter green background */
+  color: #2e7d32; /* Darker green text */
+  padding: 12px 16px;
+  border-radius: 6px;
   margin-bottom: 15px;
+  border: 1px solid #a5d6a7; /* Subtle border */
 }
 
 .selected-text {
-  background: #fff3cd;
-  padding: 10px;
-  border-radius: 4px;
+  background: #fffde7; /* Lighter yellow */
+  padding: 10px 12px;
+  border-radius: 6px;
   margin-bottom: 15px;
-  border-left: 4px solid #ffc107;
+  border-left: 3px solid #ffc107; /* Thinner border */
+  color: #5f5f5f; /* Darker text for better contrast */
 }
 
 .notion-status {
-  font-size: 12px;
-  color: #666;
-  margin-top: 10px;
+  font-size: 0.75rem; /* Smaller text */
+  color: #777777;
+  margin-top: 8px;
 }
 
 .file-input {
@@ -290,11 +287,11 @@ code {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.4); /* Slightly lighter backdrop */
   z-index: 1100;
   opacity: 0;
   visibility: hidden;
-  transition: all 0.3s ease;
+  transition: opacity 0.3s ease, visibility 0.3s ease; /* Smoother transition */
 }
 
 .sidebar-backdrop.visible {
@@ -317,34 +314,36 @@ code {
 /* Responsive design */
 @media (max-width: 1024px) {
   .sidebar {
-    width: 280px;
+    width: 260px; /* Adjusted for medium screens */
   }
   
   .header-text h1 {
-    font-size: 1.6rem;
+    font-size: 1.4rem;
   }
 }
 
 @media (max-width: 768px) {
   .main-content {
     flex-direction: column;
-    height: auto;
+    height: auto; /* Allow content to determine height */
     overflow: visible;
     position: relative;
+    height: calc(100vh - 68px); /* Adjusted for mobile header (40px logo + 10px*2 padding + 8px gap approx) */
   }
 
   .sidebar {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100vw;
+    width: 85vw; /* Use viewport width */
+    max-width: 300px; /* Max width for sidebar */
     height: 100vh;
     z-index: 1200;
     background: white;
-    padding: 80px 20px 20px;
+    padding: 70px 20px 20px; /* Adjusted padding for content */
     transform: translateX(-100%);
     transition: transform 0.3s ease;
-    box-shadow: none;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.1); /* Add shadow for mobile open sidebar */
     border-right: none;
   }
 
@@ -354,13 +353,15 @@ code {
 
   .sidebar-hidden {
     transform: translateX(-100%);
-    width: 100vw;
-    padding: 80px 20px 20px;
-    opacity: 1;
+    width: 85vw; /* Keep consistent for transition */
+    max-width: 300px;
+    padding: 70px 20px 20px;
+    opacity: 1; /* Opacity is handled by visibility of backdrop */
   }
 
   .pdf-viewer {
-    height: calc(100vh - 120px);
+    /* height: calc(100vh - 120px); Original, seems too much with new header */
+    height: 100%; /* Let main-content control this */
     padding: 0;
   }
 
@@ -369,96 +370,95 @@ code {
   }
 
   .header {
-    padding: 15px 20px;
-    position: relative;
-    z-index: 1001;
+    padding: 10px 15px; /* Reduced padding for mobile */
+    position: relative; /* Ensure header stays above sidebar backdrop */
+    z-index: 1300; /* Above sidebar and backdrop */
   }
 
   .header-content {
-    min-height: 60px;
+    min-height: 48px; /* Consistent with desktop */
   }
 
   .header-logo {
-    width: 48px;
-    height: 48px;
+    width: 36px; /* Slightly smaller logo on mobile */
+    height: 36px;
   }
 
   .header-text h1 {
-    font-size: 1.4rem;
+    font-size: 1.25rem; /* Adjusted for mobile */
   }
 
   .header-text p {
-    font-size: 0.8rem;
+    font-size: 0.75rem; /* Smaller subtitle */
   }
 
   .config-toggle-btn {
-    padding: 6px;
+    padding: 8px; /* Smaller button on mobile */
   }
 
-  /* PDF viewer responsive adjustments */
   .pdf-container {
-    padding: 0;
+    padding: 10px; /* Add some padding on mobile */
   }
 
   .upload-area {
     padding: 30px 20px;
+    width: 90vw; /* Responsive width */
+    min-width: unset;
   }
 
   .upload-area h3 {
-    font-size: 1.2rem;
+    font-size: 1.1rem; /* Adjusted for mobile */
   }
 
-  /* Form adjustments for mobile */
   .form-group {
     margin-bottom: 12px;
   }
 
   .form-group label {
-    font-size: 14px;
+    font-size: 0.8rem;
   }
 
   .form-group input,
   .form-group select {
     padding: 10px 12px;
-    font-size: 16px; /* Prevents zoom on iOS */
+    font-size: 1rem; /* Standard mobile font size to prevent zoom */
   }
 
   .btn {
-    padding: 12px 20px;
-    font-size: 16px;
+    padding: 12px 18px; /* Slightly adjusted padding */
+    font-size: 0.95rem;
   }
 }
 
 @media (max-width: 480px) {
   .header {
-    padding: 10px 15px;
+    padding: 8px 12px;
   }
 
   .header-content {
-    min-height: 50px;
-    gap: 10px;
+    min-height: 40px;
+    gap: 8px;
   }
 
   .header-logo {
-    width: 40px;
-    height: 40px;
+    width: 32px;
+    height: 32px;
   }
 
   .header-text h1 {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
   }
 
   .header-text p {
-    display: none; /* Hide subtitle on very small screens */
+    display: none; /* Hide subtitle on very small screens for minimalism */
   }
-
-  .pdf-viewer {
-    height: calc(100vh - 90px);
-    padding: 0;
+  
+  .main-content {
+     height: calc(100vh - 57px); /* Adjusted for smallest header */
   }
 
   .sidebar {
-    padding: 70px 15px 15px;
+    padding: 60px 15px 15px; /* Further adjust padding */
   }
 
   .upload-area {
@@ -466,22 +466,35 @@ code {
   }
 
   .upload-area h3 {
-    font-size: 1.1rem;
-    margin-bottom: 10px;
+    font-size: 1rem;
+    margin-bottom: 8px;
+  }
+  
+  .form-group input,
+  .form-group select {
+    font-size: 0.95rem; 
+  }
+
+  .btn {
+    padding: 10px 15px;
+    font-size: 0.9rem;
   }
 }
 
 /* Landscape mobile optimization */
 @media (max-width: 768px) and (orientation: landscape) {
   .header-text p {
-    display: none;
+    display: none; /* Hide subtitle in landscape for more space */
   }
 
-  .pdf-viewer {
-    height: calc(100vh - 80px);
+  .main-content {
+     /* Adjust height if header changes significantly in landscape */
+     /* calc(100vh - header_height_landscape) */
+     /* For now, let's assume header height is similar or use a safe value */
+     height: calc(100vh - 57px); /* Matches smallest portrait header for consistency */
   }
 
   .sidebar {
-    padding: 60px 20px 20px;
+    padding: 60px 20px 20px; /* Consistent padding */
   }
 }

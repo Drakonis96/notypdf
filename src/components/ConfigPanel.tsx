@@ -16,6 +16,7 @@ interface ConfigPanelProps {
   setTranslationConfig: (config: TranslationConfig) => void;
   onClearSelection?: () => void;
   onClose?: () => void;
+  fullscreenContainer?: HTMLElement | null;
 }
 
 // Translation options constants
@@ -47,7 +48,7 @@ const LANGUAGE_OPTIONS = [
   'English', 'Spanish', 'French', 'German', 'Italian', 'Portuguese', 'Chinese', 'Japanese', 'Korean', 'Russian', 'Arabic', 'Hindi', 'Other...'
 ];
 
-const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange, selectedText, translationConfig, setTranslationConfig, onClearSelection, onClose }) => {
+const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange, selectedText, translationConfig, setTranslationConfig, onClearSelection, onClose, fullscreenContainer }) => {
   const [properties, setProperties] = useState<NotionProperty[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
@@ -60,6 +61,8 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange, selec
   const [translating, setTranslating] = useState<boolean>(false);
   const [showDatabaseId, setShowDatabaseId] = useState<boolean>(false);
   const [showHelpModal, setShowHelpModal] = useState<boolean>(false);
+  const [isStreaming, setIsStreaming] = useState<boolean>(false);
+  const [streamingText, setStreamingText] = useState<string>('');
 
   // Helper: filter for dropdowns (title, rich_text, multi_select)
   const dropdownColumnTypes = ['title', 'rich_text', 'multi_select'];
@@ -168,16 +171,49 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange, selec
               if (!apiKey) {
                 throw new Error('Missing API key for selected translation provider');
               }
-              const translated = await translationService.translateText(selectedText, {
-                provider: translationConfig.provider,
-                model: translationConfig.model,
-                apiKey,
-                targetLanguage: translationConfig.targetLanguage,
-              });
-              setTranslatedText(translated);
-              setShowTranslationModal(true);
+
+              // Use streaming for OpenAI, OpenRouter, Gemini, and DeepSeek
+              if (translationConfig.provider === 'openai' || translationConfig.provider === 'openrouter' || translationConfig.provider === 'gemini' || translationConfig.provider === 'deepseek') {
+                // Open modal immediately for streaming
+                setIsStreaming(true);
+                setStreamingText('');
+                setTranslatedText('');
+                setShowTranslationModal(true);
+
+                await translationService.translateTextStreaming(selectedText, {
+                  provider: translationConfig.provider,
+                  model: translationConfig.model,
+                  apiKey,
+                  targetLanguage: translationConfig.targetLanguage,
+                  onProgress: (partialText: string) => {
+                    setStreamingText(partialText);
+                  },
+                  onComplete: (fullText: string) => {
+                    setTranslatedText(fullText);
+                    setIsStreaming(false);
+                    setStreamingText('');
+                  },
+                  onError: (error: Error) => {
+                    setError('Translation failed: ' + error.message);
+                    setIsStreaming(false);
+                    setStreamingText('');
+                  }
+                });
+              } else {
+                // Fallback to regular translation for other providers
+                const translated = await translationService.translateText(selectedText, {
+                  provider: translationConfig.provider,
+                  model: translationConfig.model,
+                  apiKey,
+                  targetLanguage: translationConfig.targetLanguage,
+                });
+                setTranslatedText(translated);
+                setShowTranslationModal(true);
+              }
             } catch (err: any) {
               setError('Translation failed: ' + (err.message || ''));
+              setIsStreaming(false);
+              setStreamingText('');
             } finally {
               setTranslating(false);
             }
@@ -193,7 +229,7 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange, selec
         setShowTextModal(true);
       }
     }
-  }, [selectedText, translationConfig, showTranslationModal, showTextModal, translating]);
+  }, [selectedText, translationConfig, showTranslationModal, showTextModal, translating, isStreaming]);
 
   const handleConfigChange = useCallback((field: keyof NotionConfig, value: string) => {
     const newConfig = { ...config };
@@ -278,6 +314,8 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange, selec
 
   const handleCloseModal = useCallback(() => {
     setShowTranslationModal(false);
+    setIsStreaming(false);
+    setStreamingText('');
     if (onClearSelection) {
       onClearSelection(); // Aquí sí se limpia el texto seleccionado
     }
@@ -796,6 +834,9 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange, selec
           pageNumber={config.pageNumber}
           onAddEverythingWithAnnotation={handleAddEverythingWithAnnotation}
           onAddSelectionWithAnnotation={handleAddSelectionWithAnnotation}
+          isStreaming={isStreaming}
+          streamingText={streamingText}
+          portalContainer={fullscreenContainer}
         />
 
         <TranslationModal
@@ -810,6 +851,9 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange, selec
           pageNumber={config.pageNumber}
           onAddEverythingWithAnnotation={handleAddEverythingTextWithAnnotation}
           onAddSelectionWithAnnotation={handleAddSelectionWithAnnotation}
+          isStreaming={false}
+          streamingText=""
+          portalContainer={fullscreenContainer}
         />
 
         <HelpModal

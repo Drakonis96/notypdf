@@ -1,5 +1,28 @@
 import axios from 'axios';
 
+// Helper function to ensure proper text formatting with line breaks
+function ensureProperLineBreaks(text: string): string {
+  // Remove any extra spaces and normalize line breaks
+  let processedText = text.trim();
+  
+  // If the text appears to be on a single line but should have paragraphs
+  // (indicated by sentence endings followed by capital letters)
+  if (!processedText.includes('\n\n') && processedText.includes('. ')) {
+    // Split on sentence endings followed by capital letters
+    processedText = processedText.replace(/\. ([A-Z])/g, '.\n\n$1');
+  }
+  
+  // Ensure double line breaks between paragraphs
+  processedText = processedText.replace(/\n\n+/g, '\n\n');
+  
+  // Add line breaks after common markdown patterns if they're missing
+  processedText = processedText.replace(/^(#+ .+)$/gm, '$1\n');
+  processedText = processedText.replace(/^(\* .+)$/gm, '$1\n');
+  processedText = processedText.replace(/^(\d+\. .+)$/gm, '$1\n');
+  
+  return processedText;
+}
+
 // Translation service - placeholder for future implementation
 export type TranslationProvider = 'openai' | 'openrouter' | 'gemini' | 'deepseek' | '';
 
@@ -8,7 +31,10 @@ export type OpenRouterModel =
   | 'google/gemma-3-27b-it:free'
   | 'google/gemini-2.0-flash-exp:free'
   | 'meta-llama/llama-4-maverick:free'
-  | 'meta-llama/llama-4-scout:free';
+  | 'meta-llama/llama-4-scout:free'
+  | 'deepseek/deepseek-chat-v3-0324:free'
+  | 'qwen/qwen3-32b:free'
+  | 'mistralai/mistral-small-3.1-24b-instruct:free';
 export type GeminiModel = 'gemini-2.0-pro' | 'gemini-2.0-flash';
 export type DeepSeekModel = 'deepseek-chat' | 'deepseek-reasoner';
 
@@ -19,6 +45,12 @@ export interface TranslationOptions {
   model: TranslationModel;
   apiKey: string;
   targetLanguage: string;
+}
+
+export interface StreamingTranslationOptions extends TranslationOptions {
+  onProgress?: (partialText: string) => void;
+  onComplete?: (fullText: string) => void;
+  onError?: (error: Error) => void;
 }
 
 export async function translateText(
@@ -39,17 +71,42 @@ export async function translateText(
   }
 }
 
+export async function translateTextStreaming(
+  text: string,
+  options: StreamingTranslationOptions
+): Promise<void> {
+  switch (options.provider) {
+    case 'openai':
+      return translateWithOpenAIStreaming(text, options);
+    case 'openrouter':
+      return translateWithOpenRouterStreaming(text, options);
+    case 'gemini':
+      return translateWithGeminiStreaming(text, options);
+    case 'deepseek':
+      return translateWithDeepSeekStreaming(text, options);
+    default:
+      // Fallback to regular translation for non-streaming providers
+      try {
+        const result = await translateText(text, options);
+        options.onProgress?.(result);
+        options.onComplete?.(result);
+      } catch (error) {
+        options.onError?.(error as Error);
+      }
+  }
+}
+
 async function translateWithOpenAI(
   text: string,
   options: TranslationOptions
 ): Promise<string> {
   const { model, apiKey, targetLanguage } = options;
   const url = 'https://api.openai.com/v1/chat/completions';
-  const prompt = `Translate the following text to ${targetLanguage} and return only the translation.\n\n${text}`;
+  const prompt = `Translate the following text to ${targetLanguage}. Format the translation as markdown, preserving paragraph breaks, titles, and other formatting. Return only the translated text formatted as markdown.\n\n${text}`;
   const body = {
     model,
     messages: [
-      { role: 'system', content: 'You are a translation assistant.' },
+      { role: 'system', content: 'You are a translation assistant. Always format your translations as markdown to preserve structure, paragraph breaks, and titles.' },
       { role: 'user', content: prompt },
     ],
     max_tokens: 2048,
@@ -72,17 +129,102 @@ async function translateWithOpenAI(
   throw new Error('No translation result from OpenAI');
 }
 
+async function translateWithOpenAIStreaming(
+  text: string,
+  options: StreamingTranslationOptions
+): Promise<void> {
+  const { model, apiKey, targetLanguage, onProgress, onComplete, onError } = options;
+  const url = 'https://api.openai.com/v1/chat/completions';
+  const prompt = `Translate the following text to ${targetLanguage}. Format the translation as markdown, preserving paragraph breaks, titles, and other formatting. Return only the translated text formatted as markdown.\n\n${text}`;
+  
+  const body = {
+    model,
+    messages: [
+      { role: 'system', content: 'You are a translation assistant. Always format your translations as markdown to preserve structure, paragraph breaks, and titles.' },
+      { role: 'user', content: prompt },
+    ],
+    max_tokens: 2048,
+    temperature: 0.2,
+    stream: true,
+  };
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new Error('Failed to get response reader');
+    }
+
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let fullTranslation = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      
+      if (done) {
+        break;
+      }
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      
+      // Keep the last incomplete line in the buffer
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        const trimmedLine = line.trim();
+        
+        if (trimmedLine === '') continue;
+        if (trimmedLine === 'data: [DONE]') continue;
+        if (!trimmedLine.startsWith('data: ')) continue;
+
+        try {
+          const jsonData = trimmedLine.slice(6); // Remove 'data: ' prefix
+          const parsed = JSON.parse(jsonData);
+          
+          if (parsed.choices && parsed.choices[0] && parsed.choices[0].delta) {
+            const content = parsed.choices[0].delta.content;
+            if (content) {
+              fullTranslation += content;
+              onProgress?.(fullTranslation);
+            }
+          }
+        } catch (parseError) {
+          console.warn('Failed to parse streaming response:', parseError);
+        }
+      }
+    }
+
+    onComplete?.(fullTranslation);
+  } catch (error) {
+    onError?.(error as Error);
+  }
+}
+
 async function translateWithOpenRouter(
   text: string,
   options: TranslationOptions
 ): Promise<string> {
   const { model, apiKey, targetLanguage } = options;
   const url = 'https://openrouter.ai/api/v1/chat/completions';
-  const prompt = `Translate the following text to ${targetLanguage} and return only the translation.\n\n${text}`;
+  const prompt = `Translate the following text to ${targetLanguage}. Format the translation as markdown, preserving paragraph breaks, titles, and other formatting. Return only the translated text formatted as markdown.\n\n${text}`;
   const body = {
     model,
     messages: [
-      { role: 'system', content: 'You are a translation assistant.' },
+      { role: 'system', content: 'You are a translation assistant. Always format your translations as markdown to preserve structure, paragraph breaks, and titles.' },
       { role: 'user', content: prompt },
     ],
     max_tokens: 2048,
@@ -105,13 +247,110 @@ async function translateWithOpenRouter(
   throw new Error('No translation result from OpenRouter');
 }
 
+async function translateWithOpenRouterStreaming(
+  text: string,
+  options: StreamingTranslationOptions
+): Promise<void> {
+  const { model, apiKey, targetLanguage, onProgress, onComplete, onError } = options;
+  const url = 'https://openrouter.ai/api/v1/chat/completions';
+  const prompt = `Translate the following text to ${targetLanguage}. Format the translation as markdown, preserving paragraph breaks, titles, and other formatting. Return only the translated text formatted as markdown.\n\n${text}`;
+  
+  const body = {
+    model,
+    messages: [
+      { role: 'system', content: 'You are a translation assistant. Always format your translations as markdown to preserve structure, paragraph breaks, and titles.' },
+      { role: 'user', content: prompt },
+    ],
+    max_tokens: 2048,
+    temperature: 0.2,
+    stream: true,
+  };
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new Error('Failed to get response reader');
+    }
+
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let fullTranslation = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      
+      if (done) {
+        break;
+      }
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      
+      // Keep the last incomplete line in the buffer
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        const trimmedLine = line.trim();
+        
+        if (trimmedLine === '') continue;
+        if (trimmedLine === 'data: [DONE]') continue;
+        if (!trimmedLine.startsWith('data: ')) continue;
+
+        try {
+          const jsonData = trimmedLine.slice(6); // Remove 'data: ' prefix
+          const parsed = JSON.parse(jsonData);
+          
+          if (parsed.choices && parsed.choices[0] && parsed.choices[0].delta) {
+            const content = parsed.choices[0].delta.content;
+            if (content) {
+              fullTranslation += content;
+              onProgress?.(fullTranslation);
+            }
+          }
+        } catch (parseError) {
+          console.warn('Failed to parse streaming response:', parseError);
+        }
+      }
+    }
+
+    onComplete?.(fullTranslation);
+  } catch (error) {
+    onError?.(error as Error);
+  }
+}
+
 async function translateWithGemini(
   text: string,
   options: TranslationOptions
 ): Promise<string> {
   const { model, apiKey, targetLanguage } = options;
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-  const prompt = `Translate the following text to ${targetLanguage} and return only the translation.\n\n${text}`;
+  const prompt = `Translate the following text to ${targetLanguage}. 
+
+IMPORTANT FORMATTING RULES:
+- Each paragraph must be separated by TWO line breaks (\n\n)
+- Preserve the original paragraph structure
+- Use proper markdown formatting for titles, lists, etc.
+- Ensure sentences naturally wrap across multiple lines
+- Do NOT put everything on a single line
+- Return ONLY the translated text with proper line breaks
+
+Text to translate:
+
+${text}`;
   const body = {
     contents: [
       {
@@ -122,6 +361,9 @@ async function translateWithGemini(
     generationConfig: {
       temperature: 0.2,
       maxOutputTokens: 2048,
+    },
+    systemInstruction: {
+      parts: [{ text: 'You are a translation assistant. CRITICAL: Always format your translations with proper line breaks and paragraph structure. Each paragraph must be separated by double line breaks (\\n\\n). Do NOT return everything on a single line. Preserve the original text structure and ensure readability with proper formatting.' }]
     },
   };
   const headers = {
@@ -137,9 +379,118 @@ async function translateWithGemini(
     result.candidates[0].content.parts[0] &&
     result.candidates[0].content.parts[0].text
   ) {
-    return result.candidates[0].content.parts[0].text.trim();
+    const translatedText = result.candidates[0].content.parts[0].text.trim();
+    return ensureProperLineBreaks(translatedText);
   }
   throw new Error('No translation result from Gemini');
+}
+
+async function translateWithGeminiStreaming(
+  text: string,
+  options: StreamingTranslationOptions
+): Promise<void> {
+  const { model, apiKey, targetLanguage, onProgress, onComplete, onError } = options;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?key=${apiKey}&alt=sse`;
+  const prompt = `Translate the following text to ${targetLanguage}. 
+
+IMPORTANT FORMATTING RULES:
+- Each paragraph must be separated by TWO line breaks (\n\n)
+- Preserve the original paragraph structure
+- Use proper markdown formatting for titles, lists, etc.
+- Ensure sentences naturally wrap across multiple lines
+- Do NOT put everything on a single line
+- Return ONLY the translated text with proper line breaks
+
+Text to translate:
+
+${text}`;
+  
+  const body = {
+    contents: [
+      {
+        role: 'user',
+        parts: [{ text: prompt }],
+      },
+    ],
+    generationConfig: {
+      temperature: 0.2,
+      maxOutputTokens: 2048,
+    },
+    systemInstruction: {
+      parts: [{ text: 'You are a translation assistant. CRITICAL: Always format your translations with proper line breaks and paragraph structure. Each paragraph must be separated by double line breaks (\\n\\n). Do NOT return everything on a single line. Preserve the original text structure and ensure readability with proper formatting.' }]
+    },
+  };
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new Error('Failed to get response reader');
+    }
+
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let fullTranslation = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      
+      if (done) {
+        break;
+      }
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      
+      // Keep the last incomplete line in the buffer
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        const trimmedLine = line.trim();
+        
+        if (trimmedLine === '') continue;
+        if (trimmedLine === 'data: [DONE]') continue;
+        if (!trimmedLine.startsWith('data: ')) continue;
+
+        try {
+          const jsonData = trimmedLine.slice(6); // Remove 'data: ' prefix
+          const parsed = JSON.parse(jsonData);
+          
+          // Gemini response structure: candidates[0].content.parts[0].text
+          if (parsed.candidates && 
+              parsed.candidates[0] && 
+              parsed.candidates[0].content && 
+              parsed.candidates[0].content.parts && 
+              parsed.candidates[0].content.parts[0] && 
+              parsed.candidates[0].content.parts[0].text) {
+            const content = parsed.candidates[0].content.parts[0].text;
+            if (content) {
+              fullTranslation += content;
+              onProgress?.(fullTranslation);
+            }
+          }
+        } catch (parseError) {
+          console.warn('Failed to parse Gemini streaming response:', parseError);
+        }
+      }
+    }
+
+    const processedTranslation = ensureProperLineBreaks(fullTranslation);
+    onComplete?.(processedTranslation);
+  } catch (error) {
+    onError?.(error as Error);
+  }
 }
 
 async function translateWithDeepSeek(
@@ -152,11 +503,11 @@ async function translateWithDeepSeek(
   // Hardcode DeepSeek API base URL
   const baseUrl = 'https://api.deepseek.com/v1';
   const url = `${baseUrl}/chat/completions`;
-  const prompt = `Translate the following text to ${targetLanguage} and return only the translation.\n\n${text}`;
+  const prompt = `Translate the following text to ${targetLanguage}. Format the translation as markdown, preserving paragraph breaks, titles, and other formatting. Return only the translated text formatted as markdown.\n\n${text}`;
   const body = {
     model,
     messages: [
-      { role: 'system', content: 'You are a translation assistant.' },
+      { role: 'system', content: 'You are a translation assistant. Always format your translations as markdown to preserve structure, paragraph breaks, and titles.' },
       { role: 'user', content: prompt },
     ],
     max_tokens: 2048,
@@ -179,8 +530,98 @@ async function translateWithDeepSeek(
   throw new Error('No translation result from DeepSeek');
 }
 
+async function translateWithDeepSeekStreaming(
+  text: string,
+  options: StreamingTranslationOptions
+): Promise<void> {
+  const { model, apiKey: apiKeyFromOptions, targetLanguage, onProgress, onComplete, onError } = options;
+  // Permitir override por variable de entorno
+  const apiKey = apiKeyFromOptions || process.env.DEEPSEEK_API_KEY || (typeof window !== 'undefined' ? window._env_?.DEEPSEEK_API_KEY : '');
+  // Hardcode DeepSeek API base URL
+  const baseUrl = 'https://api.deepseek.com/v1';
+  const url = `${baseUrl}/chat/completions`;
+  const prompt = `Translate the following text to ${targetLanguage} and return only the translation.\n\n${text}`;
+  
+  const body = {
+    model,
+    messages: [
+      { role: 'system', content: 'You are a translation assistant.' },
+      { role: 'user', content: prompt },
+    ],
+    max_tokens: 2048,
+    temperature: 0.2,
+    stream: true,
+  };
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new Error('Failed to get response reader');
+    }
+
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let fullTranslation = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      
+      if (done) {
+        break;
+      }
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      
+      // Keep the last incomplete line in the buffer
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        const trimmedLine = line.trim();
+        
+        if (trimmedLine === '') continue;
+        if (trimmedLine === 'data: [DONE]') continue;
+        if (!trimmedLine.startsWith('data: ')) continue;
+
+        try {
+          const jsonData = trimmedLine.slice(6); // Remove 'data: ' prefix
+          const parsed = JSON.parse(jsonData);
+          
+          if (parsed.choices && parsed.choices[0] && parsed.choices[0].delta) {
+            const content = parsed.choices[0].delta.content;
+            if (content) {
+              fullTranslation += content;
+              onProgress?.(fullTranslation);
+            }
+          }
+        } catch (parseError) {
+          console.warn('Failed to parse streaming response:', parseError);
+        }
+      }
+    }
+
+    onComplete?.(fullTranslation);
+  } catch (error) {
+    onError?.(error as Error);
+  }
+}
+
 const translationService = {
   translateText,
+  translateTextStreaming,
 };
 
 export default translationService;

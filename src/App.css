@@ -1,20 +1,15 @@
 .App {
   min-height: 100vh;
+  background-color: #ffffff; /* Ensure app background is white */
 }
 
 .react-pdf__Page {
-  margin-bottom: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  margin-bottom: 16px; /* Reduced margin */
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08); /* Softer shadow */
   position: relative;
+  border-radius: 4px; /* Add slight rounding to page corners */
 }
 
-.react-pdf__Page__textContent {
-  user-select: text !important;
-  opacity: 0.9;
-  line-height: 1.5;
-}
-
-/* Elimino hacks de superposición y fondo amarillo, dejo solo lo necesario para selección */
 .react-pdf__Page__textContent {
   user-select: text !important;
   opacity: 1;
@@ -39,7 +34,7 @@
 
 /* Text selection indicator styles */
 ::selection {
-  background-color: rgba(0, 123, 255, 0.3);
+  background-color: rgba(0, 119, 204, 0.25); /* Updated selection color */
   color: inherit;
 }
 
@@ -54,6 +49,7 @@
   align-items: center;
   width: 100%;
   height: 100%;
+  padding-top: 10px; /* Add some space at the top of the document scroll */
 }
 
 /* Fix for React PDF viewer */
@@ -71,9 +67,9 @@
 /* Improved page navigation controls */
 .page-controls {
   display: flex;
-  gap: 10px;
+  gap: 8px; /* Reduced gap */
   justify-content: center;
-  margin: 15px 0;
+  margin: 12px 0; /* Adjusted margin */
 }
 
 /* Translation Modal Styles */
@@ -83,54 +79,57 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.4); /* Slightly lighter backdrop */
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 9999;
-  backdrop-filter: blur(2px);
-  padding: 10px;
+  backdrop-filter: blur(3px); /* Slightly more blur */
+  padding: 15px; /* Consistent padding */
   box-sizing: border-box;
 }
 
-/* Mobile modal overlay adjustments */
 @media (max-width: 768px) {
   .translation-modal-overlay {
     z-index: 10000;
-    padding: 5px;
-    align-items: flex-start;
-    padding-top: 20px;
+    padding: 10px;
+    align-items: center; /* Center vertically on mobile too if possible */
     overflow-y: auto;
   }
 }
 
 @media (max-width: 480px) {
   .translation-modal-overlay {
-    padding: 2px;
-    padding-top: 10px;
+    padding: 5px;
+    align-items: flex-start; /* Revert to flex-start for very small screens if centering causes issues */
+    padding-top: 20px;
   }
+}
+
+/* Special styles for modal in fullscreen mode */
+.translation-modal-overlay.fullscreen-modal {
+  position: fixed;
+  z-index: 10001 !important;
 }
 
 .translation-modal {
   background: white;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-  max-width: 80vw;
-  max-height: 80vh;
-  width: 800px;
+  border-radius: 10px; /* Softer radius */
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15); /* Refined shadow */
+  max-width: 700px; /* Slightly narrower */
+  max-height: 85vh;
+  width: 90vw;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  animation: modalFadeIn 0.2s ease-out;
+  animation: modalFadeIn 0.25s ease-out;
 }
 
-/* Mobile responsive modal styles */
 @media (max-width: 768px) {
   .translation-modal {
     max-width: 95vw;
     max-height: 90vh;
     width: 95vw;
-    margin: 0 10px;
     border-radius: 8px;
   }
 }
@@ -140,7 +139,6 @@
     max-width: 98vw;
     max-height: 95vh;
     width: 98vw;
-    margin: 0 5px;
     border-radius: 6px;
   }
 }
@@ -148,7 +146,7 @@
 @keyframes modalFadeIn {
   from {
     opacity: 0;
-    transform: scale(0.95) translateY(-20px);
+    transform: scale(0.98) translateY(-10px); /* Subtler animation */
   }
   to {
     opacity: 1;
@@ -160,51 +158,50 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 24px 16px;
-  border-bottom: 1px solid #e1e5e9;
-  background: #f8f9fa;
+  padding: 16px 20px; /* Adjusted padding */
+  border-bottom: 1px solid #eeeeee; /* Lighter border */
+  background: #fcfcfc; /* Very light gray for header */
   flex-shrink: 0;
 }
 
 .translation-modal-header h3 {
   margin: 0;
-  color: #2c3e50;
-  font-size: 18px;
+  color: #333333; /* Darker text */
+  font-size: 1.1rem; /* Adjusted size */
   font-weight: 600;
 }
 
-/* Mobile header adjustments */
 @media (max-width: 768px) {
   .translation-modal-header {
-    padding: 16px 16px 12px;
+    padding: 14px 16px;
   }
   
   .translation-modal-header h3 {
-    font-size: 16px;
+    font-size: 1rem;
   }
 }
 
 @media (max-width: 480px) {
   .translation-modal-header {
-    padding: 12px 12px 8px;
+    padding: 10px 12px;
   }
   
   .translation-modal-header h3 {
-    font-size: 14px;
-    line-height: 1.2;
+    font-size: 0.9rem;
+    line-height: 1.3;
   }
 }
 
 .close-button {
   background: none;
   border: none;
-  font-size: 24px;
+  font-size: 22px; /* Slightly smaller */
   cursor: pointer;
-  color: #6c757d;
+  color: #777777; /* Lighter gray */
   padding: 0;
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
+  width: 36px; /* Adjusted size */
+  height: 36px;
+  border-radius: 50%; /* Circular button */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -213,35 +210,34 @@
 }
 
 .close-button:hover {
-  background-color: #e9ecef;
-  color: #495057;
+  background-color: #f0f0f0; /* Light gray hover */
+  color: #333333;
 }
 
-/* Mobile close button adjustments */
 @media (max-width: 768px) {
   .close-button {
-    width: 40px;
-    height: 40px;
+    width: 32px;
+    height: 32px;
     font-size: 20px;
   }
 }
 
 @media (max-width: 480px) {
   .close-button {
-    width: 36px;
-    height: 36px;
+    width: 28px;
+    height: 28px;
     font-size: 18px;
   }
 }
 
 .translation-modal-content {
   flex: 1;
-  padding: 24px;
+  padding: 20px; /* Adjusted padding */
   overflow-y: auto;
-  min-height: 300px;
+  min-height: 250px; /* Adjusted min-height */
+  background-color: #fff; /* Ensure white background */
 }
 
-/* Mobile content adjustments */
 @media (max-width: 768px) {
   .translation-modal-content {
     padding: 16px;
@@ -257,12 +253,12 @@
 }
 
 .text-display {
-  background: #f8f9fa;
-  border: 1px solid #e9ecef;
-  border-radius: 8px;
-  padding: 20px;
-  margin-bottom: 20px;
-  max-height: 400px;
+  background: #f9f9f9; /* Light gray background */
+  border: 1px solid #dddddd; /* Lighter border */
+  border-radius: 6px;
+  padding: 16px; /* Adjusted padding */
+  margin-bottom: 16px;
+  max-height: 350px; /* Adjusted max-height */
   overflow-y: auto;
   user-select: text;
   cursor: text;
@@ -271,161 +267,152 @@
   -webkit-user-select: text;
   -moz-user-select: text;
   -ms-user-select: text;
+  font-size: 0.95rem; /* Consistent font size */
+  line-height: 1.6;
 }
 
 .text-display:focus-within {
-  border-color: #007bff;
-  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+  border-color: #0077cc;
+  box-shadow: 0 0 0 2px rgba(0, 119, 204, 0.15);
 }
 
 .text-display::selection {
-  background-color: rgba(0, 123, 255, 0.3);
+  background-color: rgba(0, 119, 204, 0.25);
 }
 
-/* Mobile text-display optimizations */
 @media (max-width: 768px) {
   .text-display {
-    padding: 16px;
-    margin-bottom: 16px;
-    max-height: 300px;
-    font-size: 16px;
+    padding: 14px;
+    margin-bottom: 12px;
+    max-height: 280px;
+    font-size: 0.9rem;
     line-height: 1.5;
     -webkit-touch-callout: default;
     touch-action: manipulation;
   }
   
   .selection-preview {
-    padding: 12px;
-    margin-top: 12px;
+    padding: 10px;
+    margin-top: 10px;
   }
   
   .selection-preview h4 {
-    font-size: 13px;
+    font-size: 0.8rem;
   }
   
   .selected-text-preview {
-    padding: 10px;
-    font-size: 13px;
+    padding: 8px;
+    font-size: 0.8rem;
     line-height: 1.4;
   }
 }
 
 @media (max-width: 480px) {
   .text-display {
-    padding: 12px;
-    margin-bottom: 12px;
-    max-height: 250px;
-    font-size: 15px;
+    padding: 10px;
+    margin-bottom: 10px;
+    max-height: 220px;
+    font-size: 0.85rem;
     line-height: 1.4;
-    border-radius: 6px;
+    border-radius: 4px;
   }
   
   .selection-preview {
-    padding: 10px;
-    margin-top: 10px;
-    border-radius: 6px;
+    padding: 8px;
+    margin-top: 8px;
+    border-radius: 4px;
   }
   
   .selection-preview h4 {
-    font-size: 12px;
-    margin-bottom: 6px;
+    font-size: 0.75rem;
+    margin-bottom: 4px;
   }
   
   .selected-text-preview {
-    padding: 8px;
-    font-size: 12px;
+    padding: 6px;
+    font-size: 0.75rem;
     border-radius: 3px;
   }
 }
 
 .selection-preview {
-  background: #e3f2fd;
-  border: 1px solid #bbdefb;
-  border-radius: 8px;
-  padding: 16px;
-  margin-top: 16px;
+  background: #e6f3ff; /* Lighter blue */
+  border: 1px solid #b3d9ff; /* Softer border */
+  border-radius: 6px;
+  padding: 12px; /* Adjusted padding */
+  margin-top: 12px;
 }
 
 .selection-preview h4 {
-  margin: 0 0 8px 0;
-  color: #1976d2;
-  font-size: 14px;
+  margin: 0 0 6px 0;
+  color: #005fa3; /* Darker blue for heading */
+  font-size: 0.875rem;
   font-weight: 600;
 }
 
 .selected-text-preview {
   margin: 0;
-  color: #424242;
+  color: #444444; /* Slightly darker text */
   font-style: italic;
   background: white;
-  padding: 12px;
+  padding: 10px;
   border-radius: 4px;
-  border-left: 3px solid #2196f3;
+  border-left: 3px solid #0077cc; /* Updated color */
   word-wrap: break-word;
+  font-size: 0.9rem; /* Adjusted size */
 }
 
 .translation-modal-actions {
   display: flex;
-  gap: 12px;
-  padding: 20px 24px;
-  border-top: 1px solid #e1e5e9;
-  background: #f8f9fa;
+  gap: 10px; /* Reduced gap */
+  padding: 16px 20px; /* Adjusted padding */
+  border-top: 1px solid #eeeeee; /* Lighter border */
+  background: #fcfcfc; /* Very light gray for footer */
   justify-content: flex-end;
   flex-shrink: 0;
 }
 
-/* Mobile actions adjustments */
 @media (max-width: 768px) {
   .translation-modal-actions {
-    padding: 16px;
+    padding: 12px 16px;
     gap: 8px;
-    flex-direction: column-reverse;
+    flex-direction: column-reverse; /* Keep for mobile */
+  }
+  
+  .translation-modal-actions .btn {
+    width: 100%; /* Full width buttons on mobile */
   }
 }
 
 @media (max-width: 480px) {
   .translation-modal-actions {
-    padding: 12px;
+    padding: 10px 12px;
     gap: 6px;
   }
 }
 
-.btn {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  min-width: 100px;
-}
-
-.btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
+/* General button styles are in index.css, these are overrides or specific styles */
 
 .btn-primary {
-  background-color: #007bff;
+  background-color: #0077cc; /* Match new primary color */
   color: white;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background-color: #0056b3;
+  background-color: #005fa3;
   transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+  box-shadow: 0 3px 7px rgba(0, 119, 204, 0.25); /* Softer shadow */
 }
 
 .btn-secondary {
-  background-color: #28a745;
+  background-color: #28a745; /* Keep green for secondary positive actions like 'Translate' */
   color: white;
 }
 
 .btn-secondary:hover:not(:disabled) {
   background-color: #1e7e34;
   transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+  box-shadow: 0 3px 7px rgba(40, 167, 69, 0.25);
 }
 
 .btn-tertiary {
@@ -434,16 +421,15 @@
 }
 
 .btn-tertiary:hover {
-  background-color: #545b62;
+  background-color: #5a6268;
   transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(108, 117, 125, 0.3);
+  box-shadow: 0 3px 7px rgba(108, 117, 125, 0.25);
 }
 
-/* Button active state for focus mode */
 .btn-active {
-  background-color: #ffc107 !important;
+  background-color: #ffc107 !important; /* Keep warning color for active state */
   color: #212529 !important;
-  box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.5);
+  box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.4);
 }
 
 .btn-active:hover {
@@ -451,114 +437,126 @@
   color: #212529 !important;
 }
 
-/* Compact button styles for PDF viewer */
 .btn-compact {
-  padding: 8px 12px;
-  min-width: 36px;
-  min-height: 36px;
-  font-size: 12px;
+  padding: 7px 10px; /* Adjusted padding */
+  min-width: 32px;
+  min-height: 32px;
+  font-size: 0.8rem; /* Smaller font */
   border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
+  background-color: #f0f0f0; /* Light gray background */
+  color: #333;
+  border: 1px solid #dddddd; /* Subtle border */
 }
 
-/* Adjust icon size inside buttons for mobile */
+.btn-compact:hover {
+  transform: translateY(-1px);
+  background-color: #e0e0e0; /* Darker gray on hover */
+  border-color: #cccccc;
+}
+
+.btn-loading {
+  opacity: 0.6;
+  cursor: not-allowed;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.btn-loading:hover {
+  transform: none;
+  background-color: #f0f0f0;
+  border-color: #dddddd;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
 @media (max-width: 768px) {
   .btn-compact {
-    min-width: 38px; /* 29px * 1.3 ≈ 38px */
-    min-height: 38px;
-    padding: 9px 10px;
-    font-size: 17px;
+    min-width: 36px; 
+    min-height: 36px;
+    padding: 8px 9px;
+    font-size: 1rem; /* Ensure touch target is large enough */
   }
   
   .btn-compact svg {
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
   }
 }
 
 @media (max-width: 480px) {
   .btn-compact {
-    min-width: 30px; /* 23px * 1.3 ≈ 30px */
+    min-width: 30px; 
     min-height: 30px;
-    padding: 7px 8px;
-    font-size: 14px;
+    padding: 6px 7px;
+    font-size: 0.9rem;
   }
   
   .btn-compact svg {
-    width: 15px;
-    height: 15px;
+    width: 14px;
+    height: 14px;
   }
-}
-
-.btn-compact:hover {
-  transform: translateY(-1px);
-  background-color: #f0f0f0;
 }
 
 /* Mobile-first responsive improvements */
 @media (max-width: 1024px) {
   .btn-compact {
-    padding: 8px 10px;
-    min-width: 36px;
+    padding: 7px 9px;
+    min-width: 34px;
   }
 }
 
 @media (max-width: 768px) {
-  /* PDF viewer mobile controls */
   .page-controls {
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 6px;
     margin: 10px 0;
     justify-content: center;
   }
 
-  /* Smaller buttons for mobile devices - half size */
   .btn-compact {
-    padding: 5px 6px;
-    min-width: 22px;
-    min-height: 22px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 10px;
+    padding: 6px 8px; /* Adjusted for mobile */
+    min-width: 30px;
+    min-height: 30px;
+    font-size: 0.9rem;
   }
 
-  /* Hide fullscreen and reset zoom buttons on mobile */
   .btn-fullscreen,
   .btn-reset-zoom {
-    display: none !important;
+    display: none !important; /* Keep hidden on mobile */
   }
 
-  /* Improve text readability on small screens */
   .selected-text-preview {
-    font-size: 13px;
+    font-size: 0.85rem;
     line-height: 1.4;
   }
 
-  /* Better spacing for form elements on mobile */
   .form-group {
-    margin-bottom: 16px;
+    margin-bottom: 14px;
   }
 
-  /* Optimize loading spinner for mobile */
   .loading {
-    padding: 30px 20px;
-    font-size: 14px;
+    padding: 30px 15px;
+    font-size: 0.9rem;
   }
 
-  /* Better error and success message styling */
   .error, .success {
-    padding: 12px 16px;
-    font-size: 14px;
-    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 0.9rem;
+    border-radius: 4px;
   }
 
-  /* PDF Viewer responsive layout styles */
   .pdf-file-info {
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
     align-items: stretch;
   }
 
@@ -567,186 +565,105 @@
   }
 
   .file-name {
-    font-size: 13px;
+    font-size: 0.85rem;
   }
 
   .pdf-controls-bar {
-    position: fixed;
+    position: sticky; /* Changed from fixed to sticky for better flow on mobile */
     top: 0;
     left: 0;
     right: 0;
-    height: 60px;
-    background: #f8f9fa;
-    padding: 0 20px;
-    border-bottom: 1px solid #e0e0e0;
+    height: auto; /* Auto height based on content */
+    background: #fdfdfd; /* Slightly off-white */
+    padding: 8px 10px; /* Reduced padding */
+    border-bottom: 1px solid #eeeeee;
     z-index: 100;
     display: flex;
+    flex-direction: column; /* Stack controls vertically on mobile */
     align-items: center;
-    justify-content: space-between;
+    gap: 8px; /* Gap between control groups */
   }
 
   .pdf-controls-bar .btn,
   .pdf-controls-bar .btn-compact {
-    min-width: 40px;
-    min-height: 40px;
+    min-width: 38px;
+    min-height: 38px;
     padding: 8px;
-    font-size: 14px;
+    font-size: 0.9rem;
   }
 
   .document-title-section {
-    margin-bottom: 6px; /* Even more compact on mobile */
+    margin-bottom: 4px; 
+    order: -1; /* Move title to the top */
+    width: 100%;
+    text-align: center;
   }
 
   .file-name-centered {
-    max-width: 200px;
-    font-size: 13px;
-  }
-
-  .pdf-controls-bar {
-    padding: 10px 15px;
-  }
-
-  .document-title-section {
-    margin-bottom: 6px; /* Even more compact on mobile */
-  }
-
-  .file-name-centered {
-    max-width: 200px;
-    font-size: 13px;
-  }
-
-  .pdf-controls-bar {
-    padding: 10px 15px;
-  }
-
-  .document-title-section {
-    margin-bottom: 6px; /* Even more compact on mobile */
-  }
-
-  .file-name-centered {
-    max-width: 200px;
-    font-size: 13px;
-  }
-
-  .pdf-controls-bar {
-    padding: 10px 15px;
-  }
-
-  .document-title-section {
-    margin-bottom: 6px; /* Even more compact on mobile */
-  }
-
-  .file-name-centered {
-    max-width: 200px;
-    font-size: 13px;
-  }
-
-  .pdf-controls-bar {
-    padding: 10px 15px;
-  }
-
-  .document-title-section {
-    margin-bottom: 6px; /* Even more compact on mobile */
-  }
-
-  .file-name-centered {
-    max-width: 200px;
-    font-size: 13px;
-  }
-
-  .pdf-controls-bar {
-    padding: 10px 15px;
-  }
-
-  .document-title-section {
-    margin-bottom: 6px; /* Even more compact on mobile */
-  }
-
-  .file-name-centered {
-    max-width: 200px;
-    font-size: 13px;
-  }
-
-  .pdf-controls-bar {
-    padding: 10px 15px;
-  }
-
-  .document-title-section {
-    margin-bottom: 6px; /* Even more compact on mobile */
-  }
-
-  .file-name-centered {
-    max-width: 200px;
-    font-size: 13px;
+    max-width: calc(100vw - 40px); /* Allow more space for filename */
+    font-size: 0.9rem;
+    font-weight: 500;
   }
 
   .controls-grid {
-    gap: 8px;
+    gap: 6px;
     flex-wrap: wrap;
     justify-content: center;
+    width: 100%; /* Ensure grid takes full width */
   }
   
   .control-group {
-    padding: 4px;
+    padding: 2px;
     border-right: none;
-    background-color: #f8f9fa;
-    border-radius: 6px;
+    background-color: transparent; /* Remove group background */
+    border-radius: 4px;
     flex-wrap: wrap;
+    justify-content: center; /* Center buttons in group */
   }
 
   .bottom-controls {
-    background-color: #e9ecef;
-    border-radius: 8px;
-    padding: 6px 10px;
+    background-color: transparent; /* Remove group background */
+    border-radius: 6px;
+    padding: 4px 8px;
+    width: 100%;
+    justify-content: center;
   }
 
   .bottom-controls .page-info {
-    font-size: 13px;
+    font-size: 0.85rem;
   }
 
-  /* Very small screens adjustments - smaller buttons */
   .btn-compact {
-    padding: 4px;
-    min-width: 20px;
-    min-height: 20px;
-    font-size: 9px;
+    padding: 5px;
+    min-width: 28px;
+    min-height: 28px;
+    font-size: 0.8rem;
   }
 
   .page-controls {
-    gap: 6px;
-  }
-
-  /* Compact form styling */
-  .form-group label {
-    font-size: 13px;
-    margin-bottom: 4px;
-  }
-
-  .selected-text-preview {
-    font-size: 12px;
-    padding: 10px;
-  }
-
-  .controls-grid {
-    justify-content: center;
     gap: 4px;
   }
 
-  .control-group {
-    margin-bottom: 4px;
+  .form-group label {
+    font-size: 0.8rem;
+    margin-bottom: 3px;
+  }
+
+  .selected-text-preview {
+    font-size: 0.8rem;
+    padding: 8px;
   }
 
   .zoom-indicator {
-    font-size: 10px;
-    min-width: 40px;
+    font-size: 0.8rem;
+    min-width: 35px;
   }
 
   .page-info {
-    font-size: 12px;
+    font-size: 0.85rem;
   }
 }
 
-/* High DPI displays optimization */
 @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
   .header-logo {
     image-rendering: -webkit-optimize-contrast;
@@ -754,215 +671,205 @@
   }
 }
 
-/* Accessibility improvements for touch devices */
 @media (pointer: coarse) {
   .btn, .btn-compact {
-    min-height: 44px;
+    min-height: 40px; /* Slightly reduced from 44px for a more compact feel but still touch-friendly */
+    min-width: 40px; /* Ensure width for touch as well */
   }
 
   .config-toggle-btn {
-    min-width: 44px;
-    min-height: 44px;
+    min-width: 40px;
+    min-height: 40px;
   }
 
   .close-button {
-    min-width: 44px;
-    min-height: 44px;
+    min-width: 40px;
+    min-height: 40px;
   }
 }
 
-/* PDF Controls Layout */
 .pdf-controls-bar {
   position: sticky;
   top: 0;
   z-index: 100;
-  background-color: white;
-  padding: 12px 20px;
-  border-bottom: 1px solid #e0e0e0;
+  background-color: #fdfdfd; /* Slightly off-white, consistent with mobile */
+  padding: 10px 15px; /* Adjusted padding */
+  border-bottom: 1px solid #eeeeee;
   margin-bottom: 0;
   display: flex;
-  flex-direction: column;
+  flex-direction: column; /* Default to column, can be overridden by specific classes */
   align-items: center;
   width: 100%;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05); /* Softer shadow */
 }
 
-/* --- FIXED & CENTERED VERTICAL TOOLBAR (RIGHT) --- */
 .pdf-controls-bar.pdf-controls-right {
   position: fixed;
   top: 50%;
-  right: 16px; /* deja margen para la barra de desplazamiento */
+  right: 10px; 
   left: auto;
   transform: translateY(-50%);
-  width: 80px;
-  min-width: 80px;
+  width: 60px; /* Narrower vertical bar */
+  min-width: 60px;
   height: auto;
-  max-height: calc(100vh - 120px);
+  max-height: calc(100vh - 100px); /* Adjusted max height */
   overflow-y: auto;
-  overflow-x: visible;
-  border-left: 1px solid #e0e0e0;
+  overflow-x: hidden; /* Hide horizontal overflow */
+  border-left: 1px solid #eeeeee;
   border-bottom: none;
-  box-shadow: -2px 0 4px rgba(0,0,0,0.1);
-  padding: 8px;
-  z-index: 100; /* Aumentado para estar sobre otros elementos */
+  box-shadow: -1px 0 3px rgba(0,0,0,0.05);
+  padding: 6px;
+  z-index: 100; 
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top: 0; /* Eliminado margin-top */
-  justify-content: center; /* centra los botones verticalmente */
+  margin-top: 0; 
+  justify-content: center; 
+  background-color: #fff; /* White background for floating bar */
+  border-radius: 6px; /* Rounded corners */
 }
 
-/* Asegura que el header esté por encima */
 .header {
-  z-index: 100;
+  z-index: 100; /* Ensure header is above PDF controls if they overlap */
   position: relative;
 }
 
-/* Ajusta el contenido para no quedar debajo de la barra */
 .pdf-layout-right .pdf-document-container {
-  margin-right: 96px; /* 80px ancho barra + 16px margen */
+  margin-right: 75px; /* 60px width + 15px total gap/padding */
   margin-left: 0;
-  width: calc(100% - 96px);
+  width: calc(100% - 75px);
   overflow-y: auto;
 }
 
 @media (max-width: 768px) {
   .pdf-controls-bar.pdf-controls-right {
-    width: 60px;
-    min-width: 60px;
+    /* On mobile, the right bar is not ideal, revert to top/bottom or make it much smaller */
+    /* For now, let's assume it might be hidden or transformed by JS for mobile */
+    /* Or, if it must exist, make it very minimal */
+    width: 48px;
+    min-width: 48px;
     padding: 4px;
-    max-height: calc(100vh - 120px);
-    margin-top: 0;
-    right: 8px;
-    overflow-y: auto;
-    overflow-x: visible;
-    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
-    scrollbar-width: none; /* Hide scrollbar on Firefox */
-    -ms-overflow-style: none; /* Hide scrollbar on IE/Edge */
-    z-index: 100;
+    right: 5px;
+    max-height: calc(100vh - 80px); /* Adjust for mobile header */
+    box-shadow: -1px 0 2px rgba(0,0,0,0.05);
   }
   
-  /* Hide scrollbar on WebKit browsers */
   .pdf-controls-bar.pdf-controls-right::-webkit-scrollbar {
     display: none;
   }
   
   .pdf-layout-right .pdf-document-container {
-    margin-right: 68px; /* 60px barra + 8px margen */
-    width: calc(100% - 68px);
+    margin-right: 0; /* On mobile, if right bar is hidden or minimal, document takes full width */
+    width: 100%;
+    /* If right bar is shown on mobile, this needs adjustment: calc(100% - (48px + 5px)) */
   }
 }
 
-/* Mobile optimization for vertical toolbar */
 @media (max-width: 480px) {
   .pdf-controls-bar.pdf-controls-right {
-    width: 50px;
-    min-width: 50px;
+    width: 40px;
+    min-width: 40px;
     padding: 2px;
-    right: 4px;
-    max-height: calc(100vh - 100px);
-    margin-top: 0;
+    right: 2px;
+    max-height: calc(100vh - 70px);
   }
   
   .pdf-controls-bar.pdf-controls-right .controls-grid {
-    gap: 4px;
-    padding: 2px 0;
-    max-height: calc(100vh - 80px);
+    gap: 2px;
+    padding: 1px 0;
   }
   
   .pdf-controls-bar.pdf-controls-right .control-group {
-    padding: 4px 0;
+    padding: 2px 0;
   }
   
   .pdf-controls-bar.pdf-controls-right .btn-compact {
-    min-width: 18px;
-    min-height: 18px;
-    padding: 3px;
-    font-size: 8px;
+    min-width: 20px; /* Adjusted for very small vertical bar */
+    min-height: 20px;
+    padding: 4px; /* Ensure touch target */
+    font-size: 0.8rem;
   }
   
-  .pdf-layout-right .pdf-document-container {
-    margin-right: 54px; /* 50px toolbar + 4px margin */
-    width: calc(100% - 54px);
-  }
+  /* .pdf-layout-right .pdf-document-container - adjust if vertical bar is used on smallest screens */
 }
 
-/* Centered container for PDF and toolbar */
 .pdf-centered-container {
   display: flex;
   flex-direction: column;
-  align-items: flex-start; /* Cambiado de 'center' a 'flex-start' para alinear a la izquierda */
-  margin: 0; /* Eliminado 'auto' para que no se centre */
+  align-items: stretch; /* Stretch to fill width */
+  margin: 0;
   width: 100%;
   max-width: 100%;
-  padding: 0; /* Elimina todo el padding */
+  padding: 0;
 }
 
-/* Remove forced width for top/bottom toolbar so it matches parent */
 .pdf-controls-bar.pdf-controls-top,
 .pdf-controls-bar.pdf-controls-bottom {
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
-  padding: 12px 0; /* Mantiene padding vertical pero elimina horizontal */
+  padding: 8px 0; /* Reduced vertical padding */
   margin: 0;
+  flex-direction: column; /* Default for top/bottom bars */
+  align-items: center;
 }
 
 .pdf-document-container {
   max-width: 100%;
-  /* Elimina padding izquierdo para alinear el PDF */
   padding-left: 0;
+  padding-right: 0; /* Ensure no extra horizontal padding */
 }
 
-/* Document title section - centered at top */
 .document-title-section {
   display: flex;
   justify-content: center;
   width: 100%;
-  margin-bottom: 8px; /* Reduced from 12px for more compact layout */
+  margin-bottom: 6px; 
+  padding: 0 10px; /* Add padding to prevent text touching edges */
+  box-sizing: border-box;
 }
 
 .file-info-centered {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px; /* Reduced gap */
   justify-content: center;
 }
 
 .file-name-centered {
-  font-size: 14px;
+  font-size: 0.95rem; /* Adjusted size */
   font-weight: 500;
   color: #333;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 250px;
+  max-width: 300px; /* Increased max-width slightly */
   text-align: center;
 }
 
-/* Controls header - now minimal */
 .controls-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center; /* Center control groups */
   width: 100%;
-  margin-bottom: 0; /* Removed margin for compact layout */
-  gap: 15px;
+  margin-bottom: 0;
+  gap: 10px; /* Reduced gap */
+  flex-wrap: wrap; /* Allow wrapping for controls */
 }
 
-/* Bottom controls group - page info and upload aligned with other controls */
 .bottom-controls {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   justify-content: center;
   border-right: none !important;
-  padding: 0 6px;
+  padding: 0 4px;
+  margin-top: 6px; /* Add some space if title is above */
 }
 
 .bottom-controls .page-info {
-  font-size: 14px;
+  font-size: 0.9rem;
   color: #555;
   font-weight: 500;
   margin: 0;
@@ -972,46 +879,46 @@
 .file-info-inline {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   flex: 1;
-  min-width: 0; /* Allow text truncation */
+  min-width: 0; 
 }
 
 .file-name-inline {
-  font-size: 14px;
+  font-size: 0.9rem;
   font-weight: 500;
   color: #333;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 200px;
+  max-width: 180px;
 }
 
 .pdf-file-info {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
+  margin-bottom: 16px; /* Adjusted margin */
   width: 100%;
 }
 
 .file-info-content {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .file-name {
-  font-size: 14px;
+  font-size: 0.9rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 250px;
+  max-width: 300px;
 }
 
 .page-info {
   text-align: center;
-  font-size: 14px;
+  font-size: 0.9rem;
   color: #555;
   font-weight: 500;
   margin: 0;
@@ -1038,7 +945,7 @@
 
 .page-counter-row .page-info {
   text-align: center;
-  font-size: 14px;
+  font-size: 0.9rem;
   color: #555;
   font-weight: 500;
   margin: 0;
@@ -1104,7 +1011,7 @@
 
   .file-name-centered {
     max-width: 200px;
-    font-size: 13px;
+    font-size: 0.9rem;
   }
 
   /* Buttons row styling for mobile */
@@ -1125,7 +1032,7 @@
   }
   
   .page-counter-row .page-info {
-    font-size: 12px;
+    font-size: 0.8rem;
     text-align: center;
   }
 
@@ -1152,7 +1059,7 @@
   }
 
   .bottom-controls .page-info {
-    font-size: 12px;
+    font-size: 0.8rem;
   }
 
   /* Compact button styling for mobile - ensure centering */
@@ -1160,7 +1067,7 @@
     padding: 6px 8px; /* Reduced padding for mobile */
     min-width: 32px; /* Smaller minimum width */
     min-height: 32px; /* Smaller minimum height */
-    font-size: 11px;
+    font-size: 0.9rem;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1190,7 +1097,7 @@
 
   .file-name-centered {
     max-width: 150px;
-    font-size: 12px;
+    font-size: 0.85rem;
   }
 
   /* Enhanced mobile centering for buttons row */
@@ -1211,7 +1118,7 @@
   }
 
   .page-counter-row .page-info {
-    font-size: 11px;
+    font-size: 0.75rem;
     text-align: center;
   }
   
@@ -1237,7 +1144,7 @@
     padding: 6px; /* Very compact */
     min-width: 32px;
     min-height: 32px;
-    font-size: 11px;
+    font-size: 0.9rem;
     border-radius: 4px;
   }
 
@@ -1256,9 +1163,9 @@
 }
 
 .pdf-layout-right .pdf-document-container {
-  margin-right: 96px; /* 80px ancho barra + 16px margen */
+  margin-right: 75px; /* 60px width + 15px total gap/padding */
   margin-left: 0;
-  width: calc(100% - 96px);
+  width: calc(100% - 75px);
   flex: 1;
   overflow: auto;
   padding: 20px;
@@ -1569,17 +1476,17 @@
 
 /* Specific styles for toolbar positions */
 .pdf-controls-bar.pdf-controls-right {
-  width: 80px; /* Reduced from 120px to match button width + margins */
-  min-width: 80px;
+  width: 60px; /* Reduced from 120px to match button width + margins */
+  min-width: 60px;
   height: auto; /* Changed from 100vh to auto */
-  max-height: calc(100vh - 120px); /* Limit maximum height */
+  max-height: calc(100vh - 100px); /* Limit maximum height */
   overflow-y: auto;
-  overflow-x: visible;
-  border-left: 1px solid #e0e0e0;
+  overflow-x: hidden; /* Hide horizontal overflow */
+  border-left: 1px solid #eeeeee;
   border-bottom: none;
-  box-shadow: -2px 0 4px rgba(0,0,0,0.1);
+  box-shadow: -1px 0 3px rgba(0,0,0,0.05);
   order: 2;
-  padding: 8px; /* Reduced padding for more compact layout */
+  padding: 6px; /* Reduced padding for more compact layout */
   z-index: 100; /* Ensure toolbar is above content */
 }
 
@@ -1647,7 +1554,7 @@
 .pdf-layout-right .pdf-document-container {
   order: 1;
   flex: 1;
-  width: calc(100% - 80px); /* Updated from 120px to match new toolbar width */
+  width: calc(100% - 60px); /* Updated from 120px to match new toolbar width */
 }
 
 .pdf-layout-bottom .pdf-document-container {
@@ -2059,12 +1966,24 @@
 }
 
 .config-btn-secondary {
+  background: linear-gradient(135deg, #28a745, #1e7e34);
+  color: white;
+  box-shadow: 0 2px 4px rgba(40, 167, 69, 0.2);
+}
+
+.config-btn-secondary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #1e7e34, #155724);
+  box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+  transform: translateY(-1px);
+}
+
+.config-btn-tertiary {
   background: linear-gradient(135deg, #6c757d, #545b62);
   color: white;
   box-shadow: 0 2px 4px rgba(108, 117, 125, 0.2);
 }
 
-.config-btn-secondary:hover:not(:disabled) {
+.config-btn-tertiary:hover {
   background: linear-gradient(135deg, #545b62, #3d4345);
   box-shadow: 0 4px 8px rgba(108, 117, 125, 0.3);
   transform: translateY(-1px);

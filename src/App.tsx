@@ -15,6 +15,8 @@ function App() {
     }
     return true; // fallback for SSR
   });
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+  const [fullscreenContainer, setFullscreenContainer] = useState<HTMLElement | null>(null);
   const [notionConfig, setNotionConfig] = useState<NotionConfig>({
     databaseId: '',
     identifierColumn: '',
@@ -43,12 +45,23 @@ function App() {
     setSelectedText(text);
   }, []);
 
+  const handlePageTextExtracted = useCallback((text: string, pageNumber: number) => {
+    // When text is extracted from a page, set it as selected text
+    // This will trigger the translation modal if configured
+    setSelectedText(text);
+  }, []);
+
   const handleClearSelection = useCallback(() => {
     setSelectedText('');
   }, []);
 
   const handleConfigChange = useCallback((config: NotionConfig) => {
     setNotionConfig(config);
+  }, []);
+
+  const handleFullscreenChange = useCallback((isFS: boolean, container: HTMLElement | null) => {
+    setIsFullscreen(isFS);
+    setFullscreenContainer(container);
   }, []);
 
   return (
@@ -82,6 +95,7 @@ function App() {
               setTranslationConfig={setTranslationConfig}
               onClearSelection={handleClearSelection}
               onClose={() => setShowConfigPanel(false)}
+              fullscreenContainer={fullscreenContainer}
             />
           </aside>
 
@@ -128,6 +142,8 @@ function App() {
               onFileUpload={handleFileUpload}
               onTextSelection={handleTextSelection}
               translationConfig={translationConfig}
+              onFullscreenChange={handleFullscreenChange}
+              onPageTextExtracted={handlePageTextExtracted}
             />
           </main>
         </div>

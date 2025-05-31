@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
-import { Upload, FileText, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCcw, Lightbulb, Maximize, Minimize, BookOpen, FileIcon, Layout } from 'lucide-react';
+import { Upload, FileText, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCcw, Lightbulb, Maximize, Minimize, BookOpen, FileIcon, Layout, Languages } from 'lucide-react';
 import { TranslationConfig } from '../types';
+import { translateTextStreaming } from '../services/translationService';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/legacy/build/pdf.worker.min.js`;
 
@@ -10,9 +11,11 @@ interface PDFViewerProps {
   onFileUpload: (file: File) => void;
   onTextSelection: (text: string) => void;
   translationConfig: TranslationConfig;
+  onFullscreenChange?: (isFullscreen: boolean, container: HTMLElement | null) => void;
+  onPageTextExtracted?: (text: string, pageNumber: number) => void;
 }
 
-const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelection, translationConfig }) => {
+const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelection, translationConfig, onFullscreenChange, onPageTextExtracted }) => {
   const [numPages, setNumPages] = useState<number>(0);
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [error, setError] = useState<string>('');
@@ -22,9 +25,11 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [isContinuousView, setIsContinuousView] = useState<boolean>(false);
   const [toolbarPosition, setToolbarPosition] = useState<'top' | 'bottom'>('top');
+  const [isExtractingText, setIsExtractingText] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pdfContainerRef = useRef<HTMLDivElement>(null);
   const pageRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const documentRef = useRef<any>(null);
 
   function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
     setNumPages(numPages);
@@ -159,15 +164,61 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
     }
   }
 
+  async function extractCurrentPageText() {
+    if (!file || !translationConfig.enabled || isExtractingText) {
+      return;
+    }
+
+    try {
+      setIsExtractingText(true);
+      
+      // Load the PDF document
+      const loadingTask = pdfjs.getDocument(URL.createObjectURL(file));
+      const pdf = await loadingTask.promise;
+      
+      // Get the current page
+      const page = await pdf.getPage(pageNumber);
+      const textContent = await page.getTextContent();
+      
+      // Extract text from text items
+      const extractedText = textContent.items
+        .map((item: any) => item.str)
+        .join(' ')
+        .trim();
+      
+      if (extractedText && onPageTextExtracted) {
+        onPageTextExtracted(extractedText, pageNumber);
+      } else if (extractedText) {
+        // If no callback provided, send text to translation selection
+        onTextSelection(extractedText);
+      }
+      
+    } catch (error) {
+      console.error('Error extracting text from page:', error);
+      setError('Failed to extract text from current page');
+    } finally {
+      setIsExtractingText(false);
+    }
+  }
+
   // Listen for fullscreen changes
   React.useEffect(() => {
     const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
+      const isCurrentlyFullscreen = !!document.fullscreenElement;
+      setIsFullscreen(isCurrentlyFullscreen);
+      
+      // Notify parent component about fullscreen change
+      if (onFullscreenChange) {
+        onFullscreenChange(
+          isCurrentlyFullscreen, 
+          isCurrentlyFullscreen ? pdfContainerRef.current : null
+        );
+      }
     };
 
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
-  }, []);
+  }, [onFullscreenChange]);
 
   function openFileDialog() {
     fileInputRef.current?.click();
@@ -341,6 +392,19 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
                 >
                   <Lightbulb size={14} />
                 </button>
+                
+                {/* Extract page text for translation */}
+                {translationConfig.enabled && (
+                  <button
+                    className={`btn btn-compact ${isExtractingText ? 'btn-loading' : ''}`}
+                    onClick={extractCurrentPageText}
+                    disabled={isExtractingText || !file}
+                    title={isExtractingText ? "Extracting text..." : "Extract page text for translation"}
+                  >
+                    <Languages size={14} />
+                  </button>
+                )}
+                
                 <button
                   className="btn btn-compact btn-fullscreen"
                   onClick={toggleFullscreen}
