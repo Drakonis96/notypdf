@@ -19,6 +19,8 @@ interface TranslationModalProps {
   isStreaming?: boolean;
   streamingText?: string;
   portalContainer?: Element | null;
+  success?: string;
+  saving?: boolean;
 }
 
 const TranslationModal: React.FC<TranslationModalProps> = ({
@@ -35,12 +37,13 @@ const TranslationModal: React.FC<TranslationModalProps> = ({
   onAddSelectionWithAnnotation,
   isStreaming = false,
   streamingText = '',
-  portalContainer = null
+  portalContainer = null,
+  success = '',
+  saving = false
 }) => {
   const [selectedText, setSelectedText] = useState<string>('');
   const [modalAnnotation, setModalAnnotation] = useState<string>(annotation);
   const [modalPageNumber, setModalPageNumber] = useState<string>(pageNumber);
-  const [successMessage, setSuccessMessage] = useState<string>('');
   const modalRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLDivElement>(null);
 
@@ -101,7 +104,6 @@ const TranslationModal: React.FC<TranslationModalProps> = ({
     }
     setModalAnnotation('');
     setModalPageNumber('');
-    setSuccessMessage('Text saved');
     // NO limpiar selectedText aquí
   };
 
@@ -114,7 +116,6 @@ const TranslationModal: React.FC<TranslationModalProps> = ({
       }
       setModalAnnotation('');
       setModalPageNumber('');
-      setSuccessMessage('Text saved');
       // NO limpiar selectedText aquí
     }
   };
@@ -173,8 +174,8 @@ const TranslationModal: React.FC<TranslationModalProps> = ({
         </div>
         
         <div className="translation-modal-content">
-          {successMessage && (
-            <SuccessMessage message={successMessage} duration={2500} onClose={() => setSuccessMessage('')} />
+          {success && (
+            <SuccessMessage message={success} duration={3000} onClose={() => {}} />
           )}
           {isStreaming && (
             <div style={{
@@ -367,16 +368,16 @@ const TranslationModal: React.FC<TranslationModalProps> = ({
           <button 
             className="btn btn-primary"
             onClick={handleAddEverything}
-            disabled={isStreaming}
+            disabled={isStreaming || saving}
           >
-            Add Everything
+            {saving ? 'Saving...' : 'Add Everything'}
           </button>
           <button 
             className="btn btn-secondary"
             onClick={handleAddSelection}
-            disabled={!selectedText.trim() || isStreaming}
+            disabled={!selectedText.trim() || isStreaming || saving}
           >
-            Add Selection
+            {saving ? 'Saving...' : 'Add Selection'}
           </button>
           <button 
             className="btn btn-tertiary"

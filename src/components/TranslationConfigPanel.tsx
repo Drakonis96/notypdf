@@ -41,12 +41,24 @@ interface TranslationConfigPanelProps {
 const TranslationConfigPanel: React.FC<TranslationConfigPanelProps> = ({ config, onConfigChange }) => {
   const handleChange = (field: keyof TranslationConfig, value: any) => {
     if (field === 'enabled') {
-      // If enabling translation, set default language to Spanish if not already set
-      if (value && !config.targetLanguage) {
-        onConfigChange({ ...config, enabled: value, targetLanguage: 'Spanish' });
-        return;
+      if (value) {
+        // When enabling translation, set defaults
+        const newConfig = { 
+          ...config, 
+          enabled: value,
+          sendMode: 'translated' as 'translated' // Default to translated when translation is enabled
+        };
+        
+        // If no target language is set, default to Spanish
+        if (!config.targetLanguage) {
+          newConfig.targetLanguage = 'Spanish';
+        }
+        
+        onConfigChange(newConfig);
+      } else {
+        // When disabling translation, set sendMode back to original
+        onConfigChange({ ...config, enabled: value, sendMode: 'original' as 'original' });
       }
-      onConfigChange({ ...config, enabled: value });
       return;
     }
     if (field === 'provider') {

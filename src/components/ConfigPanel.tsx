@@ -100,17 +100,26 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange, selec
 
   // Helper: handle translation enabled change with default language selection
   const handleTranslationEnabledChange = (enabled: boolean) => {
-    if (enabled && !translationConfig.targetLanguage) {
-      // If enabling translation and no target language is set, default to Spanish
-      setTranslationConfig({ 
+    if (enabled) {
+      // When enabling translation, set defaults
+      const newConfig = { 
         ...translationConfig, 
-        enabled, 
-        targetLanguage: 'Spanish' 
-      });
+        enabled,
+        sendMode: 'translated' as 'translated' // Default to translated when translation is enabled
+      };
+      
+      // If no target language is set, default to Spanish
+      if (!translationConfig.targetLanguage) {
+        newConfig.targetLanguage = 'Spanish';
+      }
+      
+      setTranslationConfig(newConfig);
     } else {
+      // When disabling translation, set sendMode back to original
       setTranslationConfig({ 
         ...translationConfig, 
-        enabled 
+        enabled,
+        sendMode: 'original' as 'original'
       });
     }
   };
@@ -300,8 +309,13 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange, selec
       const result = await notionService.saveTextWithIdentifier(configToSave, textToSave);
       if (result.success) {
         setSuccess(`Text saved with identifier: ${result.identifier}`);
-        setShowTranslationModal(false);
-        setShowTextModal(false);
+        // Limpiar el mensaje de éxito después de 3 segundos
+        setTimeout(() => {
+          setSuccess('');
+        }, 3000);
+        // NO cerrar el modal automáticamente - mantener la traducción visible
+        // setShowTranslationModal(false);
+        // setShowTextModal(false);
       } else {
         setError('Failed to save text to Notion');
       }
@@ -837,6 +851,8 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange, selec
           isStreaming={isStreaming}
           streamingText={streamingText}
           portalContainer={fullscreenContainer}
+          success={success}
+          saving={saving}
         />
 
         <TranslationModal
@@ -854,6 +870,8 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange, selec
           isStreaming={false}
           streamingText=""
           portalContainer={fullscreenContainer}
+          success={success}
+          saving={saving}
         />
 
         <HelpModal
