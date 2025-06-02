@@ -137,6 +137,16 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
               <li>When using the multi-select column for document IDs, you can easily filter your database by document</li>
               <li>You can sort your references by their reference ID if you follow a consistent numbering convention</li>
             </ul>
+
+            <h3>🏷️ Tag Configuration</h3>
+            <p>
+              Use the <strong>Tag Config</strong> tab to set up automatic tagging of your Notion entries using AI. You can map context and tag columns, select the AI provider and model, customize prompts, and control the language and number of tags assigned per entry. This helps you keep your database organized and searchable by relevant topics or categories.
+            </p>
+
+            <h3>🗂️ Backup & Restore</h3>
+            <p>
+              The <strong>Backup</strong> tab allows you to export your NotyPDF configuration and mappings as a backup file, and restore them later if needed. This is useful for migrating your setup to another device or recovering from accidental changes.
+            </p>
           </div>
         </div>
         

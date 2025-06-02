@@ -1,4 +1,5 @@
 import axios from 'axios';
+import apiKeyService from './apiKeyService';
 
 // Helper function to ensure proper text formatting with line breaks
 function ensureProperLineBreaks(text: string): string {
@@ -498,8 +499,8 @@ async function translateWithDeepSeek(
   options: TranslationOptions
 ): Promise<string> {
   const { model, apiKey: apiKeyFromOptions, targetLanguage } = options;
-  // Permitir override por variable de entorno
-  const apiKey = apiKeyFromOptions || process.env.DEEPSEEK_API_KEY || (typeof window !== 'undefined' ? window._env_?.DEEPSEEK_API_KEY : '');
+  // Get API key from backend if not provided
+  const apiKey = apiKeyFromOptions || await apiKeyService.getApiKey('deepseek');
   // Hardcode DeepSeek API base URL
   const baseUrl = 'https://api.deepseek.com/v1';
   const url = `${baseUrl}/chat/completions`;
@@ -535,8 +536,8 @@ async function translateWithDeepSeekStreaming(
   options: StreamingTranslationOptions
 ): Promise<void> {
   const { model, apiKey: apiKeyFromOptions, targetLanguage, onProgress, onComplete, onError } = options;
-  // Permitir override por variable de entorno
-  const apiKey = apiKeyFromOptions || process.env.DEEPSEEK_API_KEY || (typeof window !== 'undefined' ? window._env_?.DEEPSEEK_API_KEY : '');
+  // Get API key from backend if not provided
+  const apiKey = apiKeyFromOptions || await apiKeyService.getApiKey('deepseek');
   // Hardcode DeepSeek API base URL
   const baseUrl = 'https://api.deepseek.com/v1';
   const url = `${baseUrl}/chat/completions`;

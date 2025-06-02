@@ -2,44 +2,38 @@ import axios from 'axios';
 import { NotionConfig, NotionProperty, NotionPage } from '../types';
 
 const NOTION_VERSION = '2022-06-28';
-const API_BASE_URL = process.env.API_BASE_URL || '/api';
-
-type NotionHeadersType = Record<string, string>;
+const API_BASE_URL = '/api';
 
 class NotionService {
-  private getNotionApiKey(): string {
-    const envKey = process.env.NOTION_API_KEY;
-    const windowReactKey = typeof window !== 'undefined' ? window._env_?.NOTION_API_KEY : undefined;
-    
-    console.log('=== API Key Debug Info ===');
-    console.log('Environment key (NOTION_API_KEY) exists:', !!envKey);
-    console.log('Environment key preview:', envKey ? envKey.substring(0, 10) + '...' : 'None');
-    console.log('Window React key exists:', !!windowReactKey);
-    console.log('Window React key preview:', windowReactKey ? windowReactKey.substring(0, 10) + '...' : 'None');
-    console.log('Window._env_ object:', typeof window !== 'undefined' ? window._env_ : 'Not available');
-    
-    const apiKey = envKey || windowReactKey || '';
-    console.log('Final key selected:', apiKey ? apiKey.substring(0, 10) + '...' : 'None');
-    console.log('=== End API Key Debug ===');
-    
-    // Additional validation for API key format
-    if (apiKey && !apiKey.startsWith('secret_') && !apiKey.startsWith('ntn_')) {
-      console.warn('⚠️ API key format warning: Notion API keys should start with "secret_" or "ntn_"');
-    }
-    
-    return apiKey;
-  }
+  private apiKeyCache: string | null = null;
 
-  private getHeaders(): NotionHeadersType {
-    const apiKey = this.getNotionApiKey();
-    if (!apiKey) {
-      throw new Error('Notion API key is not configured. Please set NOTION_API_KEY environment variable.');
+  private async getNotionApiKey(): Promise<string> {
+    // Return cached API key if available
+    if (this.apiKeyCache) {
+      return this.apiKeyCache;
     }
-    return {
-      'Authorization': `Bearer ${apiKey}`,
-      'Notion-Version': NOTION_VERSION,
-      'Content-Type': 'application/json'
-    };
+
+    try {
+      console.log('=== Fetching API Key from Backend ===');
+      const response = await axios.get(`${API_BASE_URL}/notion/api-key`);
+      const apiKey = response.data.apiKey;
+      
+      console.log('API key obtained from backend:', apiKey ? apiKey.substring(0, 10) + '...' : 'None');
+      
+      // Additional validation for API key format
+      if (apiKey && !apiKey.startsWith('secret_') && !apiKey.startsWith('ntn_')) {
+        console.warn('⚠️ API key format warning: Notion API keys should start with "secret_" or "ntn_"');
+      }
+      
+      // Cache the API key
+      this.apiKeyCache = apiKey;
+      console.log('=== End API Key Fetch ===');
+      
+      return apiKey;
+    } catch (error: any) {
+      console.error('Error fetching Notion API key from backend:', error);
+      throw new Error('Failed to obtain Notion API key from backend. Please check server configuration.');
+    }
   }
 
   async getDatabaseProperties(config: NotionConfig): Promise<NotionProperty[]> {
@@ -111,73 +105,17 @@ class NotionService {
     }
   }
 
-  generateNextIdentifier(pattern: string, existingIdentifiers: string[]): string {
-    // Handle patterns like "LV001_RF001" where we need to match "LV001_" and increment "RF001"
-    if (pattern.includes('_')) {
-      const parts = pattern.split('_');
-      if (parts.length === 2) {
-        const basePattern = parts[0]; // e.g., "LV001"
-        const incrementPart = parts[1]; // e.g., "RF001"
-        
-        // Extract the incrementing pattern (prefix + number)
-        const incrementMatch = incrementPart.match(/^(.+?)(\d+)$/);
-        if (incrementMatch) {
-          const [, incrementPrefix, incrementNumberStr] = incrementMatch;
-          
-          // Find all existing identifiers that match the base pattern
-          const matchingIdentifiers = existingIdentifiers.filter(id => {
-            return id.startsWith(basePattern + '_' + incrementPrefix);
-          });
-          
-          // Extract numbers from matching identifiers and find the maximum
-          let maxNumber = 0; // Start from 0, not from pattern number - 1
-          matchingIdentifiers.forEach(id => {
-            const idParts = id.split('_');
-            if (idParts.length === 2 && idParts[0] === basePattern) {
-              const numberMatch = idParts[1].match(new RegExp(`^${incrementPrefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\d+)$`));
-              if (numberMatch) {
-                const num = parseInt(numberMatch[1], 10);
-                if (num > maxNumber) {
-                  maxNumber = num;
-                }
-              }
-            }
-          });
-          
-          // Generate next identifier
-          const nextNumber = maxNumber + 1;
-          const paddedNumber = nextNumber.toString().padStart(incrementNumberStr.length, '0');
-          return `${basePattern}_${incrementPrefix}${paddedNumber}`;
-        }
-      }
+  async updatePage(pageId: string, properties: Record<string, any>): Promise<NotionPage> {
+    try {
+      const response = await axios.patch(
+        `${API_BASE_URL}/notion/pages/${pageId}`,
+        { properties }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error updating page:', error);
+      throw new Error('Failed to update page');
     }
-    
-    // Fallback to original logic for patterns without underscore
-    const match = pattern.match(/^(.+?)(\d+)(.*)$/);
-    if (!match) {
-      return pattern;
-    }
-
-    const [, prefix, numberStr, suffix] = match;
-    
-    // Find the highest existing number for this pattern
-    let maxNumber = 0; // Start from 0, not from pattern number - 1
-    const patternRegex = new RegExp(`^${prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\d+)${suffix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`);
-    
-    existingIdentifiers.forEach(id => {
-      const match = id.match(patternRegex);
-      if (match) {
-        const num = parseInt(match[1], 10);
-        if (num > maxNumber) {
-          maxNumber = num;
-        }
-      }
-    });
-
-    // Generate next identifier
-    const nextNumber = maxNumber + 1;
-    const paddedNumber = nextNumber.toString().padStart(numberStr.length, '0');
-    return `${prefix}${paddedNumber}${suffix}`;
   }
 
   async saveTextWithIdentifier(
@@ -185,115 +123,19 @@ class NotionService {
     text: string
   ): Promise<{ identifier: string; success: boolean }> {
     try {
-      // First, get existing identifiers
-      const existingPages = await this.queryDatabase(config);
-      const existingIdentifiers = existingPages
-        .map(page => {
-          const prop = page.properties[config.identifierColumn];
-          if (prop && prop.type === 'rich_text' && prop.rich_text.length > 0) {
-            return prop.rich_text[0].plain_text;
-          } else if (prop && prop.type === 'title' && prop.title.length > 0) {
-            return prop.title[0].plain_text;
-          }
-          return null;
-        })
-        .filter(Boolean) as string[];
-
-      // Generate next identifier
-      const identifier = this.generateNextIdentifier(config.identifierPattern, existingIdentifiers);
-
-      // Prepare properties for the new page
-      const properties: Record<string, any> = {};
-
-      // Set identifier
-      const identifierProp = await this.getPropertyType(config, config.identifierColumn);
-      if (identifierProp?.type === 'title') {
-        properties[config.identifierColumn] = {
-          title: [{ text: { content: identifier } }]
-        };
-      } else if (identifierProp?.type === 'rich_text') {
-        properties[config.identifierColumn] = {
-          rich_text: [{ text: { content: identifier } }]
-        };
+      // Now handled by backend
+      const response = await axios.post(
+        `${API_BASE_URL}/notion/save-text-with-identifier`,
+        { config, text }
+      );
+      if (response.data.success) {
+        return { identifier: response.data.identifier, success: true };
+      } else {
+        return { identifier: '', success: false };
       }
-
-      // Set text
-      const textProp = await this.getPropertyType(config, config.textColumn);
-      if (textProp?.type === 'rich_text') {
-        properties[config.textColumn] = {
-          rich_text: [{ text: { content: text } }]
-        };
-      } else if (textProp?.type === 'title') {
-        properties[config.textColumn] = {
-          title: [{ text: { content: text } }]
-        };
-      }
-
-      // Set annotation if provided and column is configured
-      if (config.annotationColumn && config.annotation.trim()) {
-        const annotationProp = await this.getPropertyType(config, config.annotationColumn);
-        if (annotationProp?.type === 'rich_text') {
-          properties[config.annotationColumn] = {
-            rich_text: [{ text: { content: config.annotation } }]
-          };
-        } else if (annotationProp?.type === 'title') {
-          properties[config.annotationColumn] = {
-            title: [{ text: { content: config.annotation } }]
-          };
-        }
-      }
-      
-      // Set page number if provided and column is configured
-      if (config.pageColumn && config.pageNumber?.trim()) {
-        const pageProp = await this.getPropertyType(config, config.pageColumn);
-        if (pageProp?.type === 'rich_text') {
-          properties[config.pageColumn] = {
-            rich_text: [{ text: { content: config.pageNumber } }]
-          };
-        } else if (pageProp?.type === 'title') {
-          properties[config.pageColumn] = {
-            title: [{ text: { content: config.pageNumber } }]
-          };
-        }
-      }
-
-      // New: Document identifier insertion logic
-      if (config.enableDocumentIdInsertion && config.documentIdInsertionColumn) {
-        // Only insert if pattern contains '_'
-        if (config.identifierPattern && config.identifierPattern.includes('_')) {
-          const prefix = identifier.split('_')[0];
-          const docIdProp = await this.getPropertyType(config, config.documentIdInsertionColumn);
-          if (docIdProp?.type === 'multi_select') {
-            properties[config.documentIdInsertionColumn] = {
-              multi_select: [{ name: prefix }]
-            };
-          } else if (docIdProp?.type === 'rich_text') {
-            properties[config.documentIdInsertionColumn] = {
-              rich_text: [{ text: { content: prefix } }]
-            };
-          } else if (docIdProp?.type === 'title') {
-            properties[config.documentIdInsertionColumn] = {
-              title: [{ text: { content: prefix } }]
-            };
-          }
-        }
-      }
-
-      await this.createPage(config, properties);
-
-      return { identifier, success: true };
     } catch (error) {
-      console.error('Error saving text with identifier:', error);
+      console.error('Error saving text with identifier (backend):', error);
       return { identifier: '', success: false };
-    }
-  }
-
-  private async getPropertyType(config: NotionConfig, propertyName: string): Promise<NotionProperty | null> {
-    try {
-      const properties = await this.getDatabaseProperties(config);
-      return properties.find(prop => prop.name === propertyName) || null;
-    } catch (error) {
-      return null;
     }
   }
 
@@ -308,6 +150,31 @@ class NotionService {
       }
     } catch (error: any) {
       return { success: false, message: error.message || 'Connection failed' };
+    }
+  }
+
+  async addMultiSelectOption(config: { databaseId: string }, propertyName: string, optionName: string): Promise<void> {
+    // This will PATCH the database schema to add a new multi_select option
+    try {
+      // Fetch current schema
+      const dbRes = await axios.get(`${API_BASE_URL}/notion/databases/${config.databaseId}`);
+      const dbProps = dbRes.data.properties;
+      const prop = dbProps[propertyName];
+      if (!prop || prop.type !== 'multi_select') throw new Error('Property is not multi_select');
+      const currentOptions = prop.multi_select.options || [];
+      // Check if already exists
+      if (currentOptions.some((opt: any) => opt.name.toLowerCase() === optionName.toLowerCase())) return;
+      const newOptions = [...currentOptions, { name: optionName }];
+      // Patch the database schema
+      await axios.patch(`${API_BASE_URL}/notion/databases/${config.databaseId}`, {
+        properties: {
+          [propertyName]: {
+            multi_select: { options: newOptions }
+          }
+        }
+      });
+    } catch (err) {
+      throw new Error('Failed to add multi_select option: ' + (err as any).message);
     }
   }
 }

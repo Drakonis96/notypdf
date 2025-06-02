@@ -21,6 +21,7 @@ interface TranslationModalProps {
   portalContainer?: Element | null;
   success?: string;
   saving?: boolean;
+  error?: string;
 }
 
 const TranslationModal: React.FC<TranslationModalProps> = ({
@@ -39,7 +40,8 @@ const TranslationModal: React.FC<TranslationModalProps> = ({
   streamingText = '',
   portalContainer = null,
   success = '',
-  saving = false
+  saving = false,
+  error = ''
 }) => {
   const [selectedText, setSelectedText] = useState<string>('');
   const [modalAnnotation, setModalAnnotation] = useState<string>(annotation);
@@ -145,8 +147,8 @@ const TranslationModal: React.FC<TranslationModalProps> = ({
       className={`translation-modal-overlay ${portalContainer ? 'fullscreen-modal' : ''}`} 
       onClick={handleClose}
       style={{
-        // Increase z-index when rendered inside fullscreen container
-        zIndex: portalContainer ? 10001 : 9999
+        // Increase z-index when rendered inside fullscreen container or when no specific portal container is given (implies it's a root modal)
+        zIndex: (portalContainer || !portalContainer) ? 10001 : 9999 
       }}
     >
       <div 
@@ -176,6 +178,19 @@ const TranslationModal: React.FC<TranslationModalProps> = ({
         <div className="translation-modal-content">
           {success && (
             <SuccessMessage message={success} duration={3000} onClose={() => {}} />
+          )}
+          {error && (
+            <div style={{
+              padding: '12px',
+              backgroundColor: '#fee',
+              border: '1px solid #f66',
+              borderRadius: '6px',
+              marginBottom: '16px',
+              fontSize: '14px',
+              color: '#c44'
+            }}>
+              {error}
+            </div>
           )}
           {isStreaming && (
             <div style={{

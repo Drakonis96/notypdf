@@ -85,34 +85,8 @@ code {
 
 .main-content {
   display: flex;
-  flex-direction: row;
-  gap: 0;
+  flex-direction: column;
   height: calc(100vh - 73px); /* Adjusted based on new header height (48px + 12px*2 + 1px border) */
-  overflow: hidden;
-}
-
-.sidebar {
-  background: white;
-  padding: 0;
-  border-right: 1px solid #eeeeee; /* Subtle border */
-  overflow-y: hidden;
-  width: 300px; /* Slightly narrower */
-  flex-shrink: 0;
-  transition: all 0.3s ease;
-  position: relative;
-  z-index: 1200;
-}
-
-.sidebar-visible {
-  transform: translateX(0);
-  opacity: 1;
-}
-
-.sidebar-hidden {
-  transform: translateX(-100%);
-  opacity: 0;
-  width: 0;
-  padding: 0;
   overflow: hidden;
 }
 
@@ -123,7 +97,8 @@ code {
   flex-grow: 1;
   overflow: hidden;
   padding: 0;
-  transition: all 0.3s ease;
+  width: 100%;
+  height: 100%;
 }
 
 @media (max-width: 768px) {
@@ -280,43 +255,8 @@ code {
   display: none;
 }
 
-/* Mobile sidebar backdrop */
-.sidebar-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.4); /* Slightly lighter backdrop */
-  z-index: 1100;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.3s ease, visibility 0.3s ease; /* Smoother transition */
-}
-
-.sidebar-backdrop.visible {
-  opacity: 1;
-  visibility: visible;
-}
-
-@media (max-width: 768px) {
-  .sidebar-backdrop {
-    display: block;
-  }
-}
-
-@media (min-width: 769px) {
-  .sidebar-backdrop {
-    display: none;
-  }
-}
-
 /* Responsive design */
 @media (max-width: 1024px) {
-  .sidebar {
-    width: 260px; /* Adjusted for medium screens */
-  }
-  
   .header-text h1 {
     font-size: 1.4rem;
   }
@@ -325,43 +265,11 @@ code {
 @media (max-width: 768px) {
   .main-content {
     flex-direction: column;
-    height: auto; /* Allow content to determine height */
-    overflow: visible;
-    position: relative;
-    height: calc(100vh - 68px); /* Adjusted for mobile header (40px logo + 10px*2 padding + 8px gap approx) */
-  }
-
-  .sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 85vw; /* Use viewport width */
-    max-width: 300px; /* Max width for sidebar */
-    height: 100vh;
-    z-index: 1200;
-    background: white;
-    padding: 70px 20px 20px; /* Adjusted padding for content */
-    transform: translateX(-100%);
-    transition: transform 0.3s ease;
-    box-shadow: 2px 0 10px rgba(0,0,0,0.1); /* Add shadow for mobile open sidebar */
-    border-right: none;
-  }
-
-  .sidebar-visible {
-    transform: translateX(0);
-  }
-
-  .sidebar-hidden {
-    transform: translateX(-100%);
-    width: 85vw; /* Keep consistent for transition */
-    max-width: 300px;
-    padding: 70px 20px 20px;
-    opacity: 1; /* Opacity is handled by visibility of backdrop */
+    height: calc(100vh - 68px); /* Adjusted for mobile header */
   }
 
   .pdf-viewer {
-    /* height: calc(100vh - 120px); Original, seems too much with new header */
-    height: 100%; /* Let main-content control this */
+    height: 100%;
     padding: 0;
   }
 
@@ -457,10 +365,6 @@ code {
      height: calc(100vh - 57px); /* Adjusted for smallest header */
   }
 
-  .sidebar {
-    padding: 60px 15px 15px; /* Further adjust padding */
-  }
-
   .upload-area {
     padding: 20px 15px;
   }
@@ -488,13 +392,6 @@ code {
   }
 
   .main-content {
-     /* Adjust height if header changes significantly in landscape */
-     /* calc(100vh - header_height_landscape) */
-     /* For now, let's assume header height is similar or use a safe value */
      height: calc(100vh - 57px); /* Matches smallest portrait header for consistency */
-  }
-
-  .sidebar {
-    padding: 60px 20px 20px; /* Consistent padding */
   }
 }

@@ -6,7 +6,48 @@
 <h1 align="center">NotyPDF</h1>
 
 <p align="center">
-  <b>Extract, organize, and save PDF highlights directly to Notion with automatic reference management.</b>
+  <b>Extract, organize, and save PDF highlights dire4. Start the development server:
+   ```sh
+   npm start
+   ```
+5. Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+## Advanced Features
+
+### Document Manager
+The document manager provides a centralized location for all your research materials:
+
+- **Multi-format Support**: Upload PDFs, Word documents, text files, and images
+- **Search Functionality**: Quick search through your document library
+- **File Management**: Organize, rename, and delete documents as needed
+- **Batch Operations**: Handle multiple files efficiently
+- **Cloud Storage**: Documents are stored securely and accessible across sessions
+
+### Configuration Management
+The settings panel offers comprehensive control over your NotyPDF experience:
+
+- **Tabbed Interface**: Organized sections for different configuration types
+- **Real-time Validation**: Immediate feedback on configuration changes
+- **Multiple Database Support**: Manage connections to different Notion workspaces
+- **Export/Import Settings**: Backup and restore your complete configuration
+
+### Custom Tagging System
+Take full control of your document organization:
+
+- **Manual Tag Creation**: Define tags that match your research methodology
+- **Template System**: Create reusable tag patterns for consistency
+- **Hierarchical Organization**: Build complex tag structures for detailed categorization
+- **No AI Dependency**: Completely manual control without relying on automated systems
+
+### Backup & Recovery
+Ensure your configurations are always safe:
+
+- **Complete Configuration Export**: Download all settings as a single JSON file
+- **Instant Restoration**: Restore settings with a single file upload
+- **Version Control**: Keep multiple backup versions for different project phases
+- **Migration Support**: Easily move configurations between installations
+
+--- Notion with automatic reference management.</b>
 </p>
 
 ---
@@ -16,20 +57,119 @@ NotyPDF helps you extract and save text from PDF documents to your Notion databa
 
 ## Main Features
 - **PDF Upload**: Drag & drop or select PDF files for viewing.
+- **Document Manager**: Upload, organize, and manage your document library with search, download, and delete capabilities.
 - **Text Selection**: Select and highlight text within PDF documents.
 - **Notion Integration**: Save selected text, annotations, and page numbers directly to your Notion database.
 - **Custom Identifiers**: Generate sequential, customizable reference IDs (e.g., `LV001_RF025`).
 - **Automatic Reference Numbering**: If a reference ID already exists, NotyPDF will automatically increment the number for you.
+- **Tag Configuration**: Create and manage custom tags without relying on Notion's AI - full manual control over your tagging system.
 - **Document Tagging**: Optionally insert a document ID as a tag in a multi-select Notion column for easy filtering.
 - **Annotation Support**: Add your own notes or categories to each reference.
+- **Configuration Menu**: Comprehensive settings panel with tabbed interface for easy navigation.
+- **Backup & Restore**: Export and import your configurations to ensure your settings are never lost.
+- **Translation Support**: Optional AI-powered translation with multiple provider support.
 - **Easy Configuration**: User-friendly interface for setting up Notion API credentials and database columns.
 
 ## How It Works
-1. **Load your PDF document**
-2. **Configure your Notion database connection and columns**
+1. **Load your PDF document** using the file upload or document manager
+2. **Configure your Notion database connection and columns** through the settings panel
 3. **Select text from the document**
 4. **Add optional annotation and page number**
 5. **Save to your Notion database**
+
+## New Features Guide
+
+### Document Manager
+Access the document manager through the floating action button or menu to:
+- **Upload Multiple Documents**: Support for PDF, DOC, DOCX, TXT, and image files
+- **Search & Filter**: Quickly find documents in your library
+- **Manage Files**: Load, download, or delete documents as needed
+- **Batch Operations**: Upload multiple files at once or clear all files
+- **File Information**: View file sizes, upload dates, and other metadata
+
+### Configuration Menu
+The modern tabbed configuration interface includes:
+
+#### Configuration Tab
+- **Database Setup**: Connect to your Notion databases
+- **Column Mapping**: Define which columns store your data
+- **Translation Settings**: Configure AI translation services
+- **Advanced Options**: Customize identifier patterns and behavior
+
+#### Database IDs Tab
+- **Saved Databases**: Manage multiple database configurations
+- **Quick Switching**: Easily switch between different Notion databases
+- **Database Naming**: Add custom names to identify your databases
+
+#### Tag Configuration Tab
+- **Manual Tag Control**: Create custom tags without Notion AI assistance
+- **Tag Templates**: Set up reusable tag patterns
+- **Document Categorization**: Organize content with your own tagging system
+- **No AI Dependency**: Full manual control over tag creation and assignment
+
+#### Backup Tab
+- **Export Settings**: Download your complete configuration as a JSON backup
+- **Restore Configuration**: Upload and restore previous settings
+- **Clear All Data**: Reset all configurations when needed
+- **Data Protection**: Ensure your settings are never lost
+
+### Tag Configuration Tutorial
+
+The Tag Configuration feature gives you complete control over document tagging without relying on Notion's AI:
+
+1. **Access Tag Configuration**:
+   - Open the configuration menu (⚙️ settings button)
+   - Navigate to the "Tag Config" tab
+
+2. **Create Custom Tags**:
+   - Define your own tag categories (e.g., Research, Literature, References)
+   - Set up tag templates for consistent naming
+   - Create hierarchical tag structures
+
+3. **Apply Tags Manually**:
+   - Select text from your document
+   - Choose from your predefined tags
+   - Apply multiple tags to organize content effectively
+
+4. **Manage Tag Library**:
+   - Edit existing tags
+   - Remove unused tags
+   - Reorganize tag categories
+
+5. **Benefits of Manual Tagging**:
+   - **Consistency**: Maintain uniform tagging across all documents
+   - **Control**: No dependency on AI interpretation
+   - **Customization**: Create tags that match your specific workflow
+   - **Reliability**: Tags work exactly as you define them
+
+### Backup & Restore Tutorial
+
+Protect your configuration and ensure continuity:
+
+1. **Creating a Backup**:
+   - Open Settings → Backup tab
+   - Click "Download Backup"
+   - Save the JSON file to a secure location
+   - Backups include database IDs, column mappings, and all settings
+
+2. **Restoring from Backup**:
+   - Click "Upload Backup" in the Backup tab
+   - Select your backup JSON file
+   - Confirm the restoration
+   - Refresh the page to see restored settings
+
+3. **What's Included**:
+   - Saved database IDs with names and identifiers
+   - Column mappings for all databases
+   - Document ID insertion settings
+   - Tag configurations
+   - Translation preferences
+
+4. **Best Practices**:
+   - Create backups before major configuration changes
+   - Store backups in multiple locations
+   - Regular backup schedule for active users
+   - Test restore process periodically
 
 ### Database Configuration
 - **Database ID**: Your Notion database's unique identifier
@@ -50,15 +190,27 @@ If you enter an identifier that already exists, NotyPDF will automatically incre
 - When enabled, the BOOKID part of your identifier will be added as a tag, making it easy to filter references by document.
 
 ### Tips & Tricks
-- Use standardized naming for document IDs (e.g., LV001, BK002)
-- Number references sequentially (RF001, RF002) or by page (P045-1, P045-2)
-- Use the annotation field for your own notes or categories
-- Filter your Notion database by document using the multi-select column
-- Sort references by their reference ID for better organization
+- **Document Organization**: Use the document manager to maintain a clean library of your research materials
+- **Standardized Naming**: Use consistent document IDs (e.g., LV001, BK002) for better organization
+- **Sequential References**: Number references sequentially (RF001, RF002) or by page (P045-1, P045-2)
+- **Custom Annotations**: Use the annotation field for your own notes, categories, or research insights
+- **Database Filtering**: Filter your Notion database by document using the multi-select column
+- **Reference Sorting**: Sort references by their reference ID for better organization
+- **Backup Regularly**: Create configuration backups before making major changes
+- **Tag Consistency**: Use the manual tag configuration for consistent categorization
+- **Multiple Databases**: Save different database configurations for different projects
+- **Translation Workflow**: Set up translation services for multilingual research
 
 ---
 
 ## Getting Started
+
+### Quick Start Guide
+1. **Upload Documents**: Use the document manager to upload your research materials
+2. **Configure Notion**: Set up your database connection in the configuration menu
+3. **Create Tags**: Define your tagging system in the Tag Config panel
+4. **Start Extracting**: Select text and save to Notion with your custom organization system
+5. **Backup Settings**: Export your configuration to ensure settings are preserved
 
 ### 1. Download from GitHub
 If you are new to GitHub or coding, follow these steps:
@@ -72,40 +224,7 @@ If you are new to GitHub or coding, follow these steps:
 1. Open the extracted folder.
 2. Find the file named `.env.example` and make a copy of it.
 3. Rename the copy to `.env`.
-
-   - **On Windows:**  
-     Open Command Prompt in the folder and run:  
-     ```sh
-     copy .env.example .env
-     ```
-   - **On Mac/Linux:**  
-     Open Terminal in the folder and run:  
-     ```sh
-     cp .env.example .env
-     ```
-
 4. Open `.env` with a text editor (like Notepad or VS Code).
-
-   - **On Windows:**  
-     Double-click `.env` to open with Notepad, or run:  
-     ```sh
-     notepad .env
-     ```
-   - **On Mac:**  
-     Simply run in Terminal:  
-     ```sh
-     open .env
-     ```
-     Or use your favorite editor (for example, VS Code):
-     ```sh
-     code .env
-     ```
-   - **On Linux:**  
-     Use your preferred editor, for example:  
-     ```sh
-     nano .env
-     ```
-
 5. Add your Notion API key and any other required keys. Example:
    ```env
    NOTION_API_KEY=secret_your_notion_api_key_here

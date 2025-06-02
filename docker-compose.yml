@@ -11,9 +11,15 @@ services:
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
       - NOTION_API_KEY=${NOTION_API_KEY}
+    volumes:
+      - notypdf-data:/app/data
+      - ./myworkspace:/myworkspace
     restart: unless-stopped
     networks:
       - default
+
+volumes:
+  notypdf-data:
 
 networks:
   default:

@@ -26,6 +26,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
   const [isContinuousView, setIsContinuousView] = useState<boolean>(false);
   const [toolbarPosition, setToolbarPosition] = useState<'top' | 'bottom'>('top');
   const [isExtractingText, setIsExtractingText] = useState<boolean>(false);
+  const [skipPageInput, setSkipPageInput] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pdfContainerRef = useRef<HTMLDivElement>(null);
   const pageRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -292,7 +293,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
   }
 
   // Calculate the PDF width (same as <Page width=...>)
-  const pdfWidth = Math.min(800 * scale, window.innerWidth > 768 ? window.innerWidth - 380 : window.innerWidth - 40);
+  const pdfWidth = window.innerWidth > 768 ? window.innerWidth - 380 : window.innerWidth - 40;
 
   return (
     <div className="pdf-container" ref={pdfContainerRef}>
@@ -319,121 +320,215 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
           >
             {/* Navigation and zoom controls */}
             <div className={`pdf-controls-bar pdf-controls-${toolbarPosition}`} style={{ width: '100%' }}>
-              {/* Document title - centered at top */}
-              <div className="document-title-section">
-                <div className="file-info-centered">
+              {/* Document title - centered at top con page info */}
+              <div className="document-title-section" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginBottom: '4px' }}>
+                <div className="file-info-centered" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <FileText size={16} />
                   <span className="file-name-centered">{file.name}</span>
                 </div>
+                <span style={{ color: '#888', fontWeight: 500, fontSize: '15px', margin: '0 6px' }}>–</span>
+                <span className="page-info-title" style={{ color: '#888', fontWeight: 500, fontSize: '15px' }}>Page {pageNumber} of {numPages}</span>
               </div>
               
-              {/* First row: All buttons */}
-              <div className="controls-grid buttons-row">
-                {/* Navigation controls */}
-                <button
-                  className="btn btn-compact"
-                  disabled={pageNumber <= 1 || isContinuousView}
-                  onClick={() => setPageNumber(page => Math.max(1, page - 1))}
-                  title="Previous page"
-                >
-                  <ChevronLeft size={14} />
-                </button>
-                <button
-                  className="btn btn-compact"
-                  disabled={pageNumber >= numPages || isContinuousView}
-                  onClick={() => setPageNumber(page => Math.min(numPages, page + 1))}
-                  title="Next page"
-                >
-                  <ChevronRight size={14} />
-                </button>
-
-                {/* View mode toggle */}
-                <button
-                  className={`btn btn-compact ${isContinuousView ? 'btn-active' : ''}`}
-                  onClick={toggleContinuousView}
-                  title={isContinuousView ? "Single page view" : "Continuous view"}
-                >
-                  {isContinuousView ? <FileIcon size={14} /> : <BookOpen size={14} />}
-                </button>
-
-                {/* Zoom controls */}
-                <button
-                  className="btn btn-compact"
-                  onClick={handleZoomOut}
-                  disabled={scale <= 0.5}
-                  title="Zoom out"
-                >
-                  <ZoomOut size={14} />
-                </button>
-                <span className="zoom-indicator">
-                  {Math.round(scale * 100)}%
-                </span>
-                <button
-                  className="btn btn-compact"
-                  onClick={handleZoomIn}
-                  disabled={scale >= 3.0}
-                  title="Zoom in"
-                >
-                  <ZoomIn size={14} />
-                </button>
-                <button
-                  className="btn btn-compact btn-secondary btn-reset-zoom"
-                  onClick={handleResetZoom}
-                  title="Reset zoom"
-                >
-                  <RotateCcw size={14} />
-                </button>
-
-                {/* Focus mode and fullscreen controls */}
-                <button
-                  className={`btn btn-compact ${isFocusMode ? 'btn-active' : ''}`}
-                  onClick={toggleFocusMode}
-                  title={isFocusMode ? "Exit focus mode" : "Focus mode"}
-                >
-                  <Lightbulb size={14} />
-                </button>
-                
-                {/* Extract page text for translation */}
-                {translationConfig.enabled && (
+              {/* Reorganized controls grid with navigation buttons in center */}
+              <div className="controls-grid buttons-row" style={{ display: 'flex', justifyContent: 'center', gap: '2px', alignItems: 'center' }}>
+                {/* Left section */}
+                <div className="controls-left pastel-section pastel-blue" style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                  {/* View mode toggle */}
                   <button
-                    className={`btn btn-compact ${isExtractingText ? 'btn-loading' : ''}`}
-                    onClick={extractCurrentPageText}
-                    disabled={isExtractingText || !file}
-                    title={isExtractingText ? "Extracting text..." : "Extract page text for translation"}
+                    className="btn btn-compact btn-same-size"
+                    style={{ minWidth: 32, minHeight: 32 }}
+                    onClick={toggleContinuousView}
+                    title={isContinuousView ? "Single page view" : "Continuous view"}
                   >
-                    <Languages size={14} />
+                    {isContinuousView ? <FileIcon size={14} /> : <BookOpen size={14} />}
                   </button>
-                )}
-                
-                <button
-                  className="btn btn-compact btn-fullscreen"
-                  onClick={toggleFullscreen}
-                  title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
-                >
-                  {isFullscreen ? <Minimize size={14} /> : <Maximize size={14} />}
-                </button>
-                <button
-                  className="btn btn-compact"
-                  onClick={toggleToolbarPosition}
-                  title="Change toolbar position"
-                >
-                  <Layout size={14} />
-                </button>
-                <button 
-                  className="btn btn-compact btn-secondary" 
-                  onClick={openFileDialog} 
-                  title="Change File"
-                >
-                  <Upload size={14} />
-                </button>
-              </div>
-              
-              {/* Second row: Page counter */}
-              <div className="page-counter-row">
-                <div className="page-info">
-                  <span>Page {pageNumber} of {numPages}</span>
+                  {/* Zoom controls */}
+                  <button
+                    className="btn btn-compact btn-same-size"
+                    style={{ minWidth: 32, minHeight: 32 }}
+                    onClick={handleZoomOut}
+                    disabled={scale <= 0.5}
+                    title="Zoom out"
+                  >
+                    <ZoomOut size={14} />
+                  </button>
+                  <span className="zoom-indicator" style={{ minWidth: 32, textAlign: 'center', fontWeight: 500 }}>
+                    {Math.round(scale * 100)}%
+                  </span>
+                  <button
+                    className="btn btn-compact btn-same-size"
+                    style={{ minWidth: 32, minHeight: 32 }}
+                    onClick={handleZoomIn}
+                    disabled={scale >= 3.0}
+                    title="Zoom in"
+                  >
+                    <ZoomIn size={14} />
+                  </button>
+                  <button
+                    className="btn btn-compact btn-secondary btn-reset-zoom btn-same-size"
+                    style={{ minWidth: 32, minHeight: 32 }}
+                    onClick={handleResetZoom}
+                    title="Reset zoom"
+                  >
+                    <RotateCcw size={14} />
+                  </button>
+                </div>
+                {/* Center section - Navigation controls */}
+                <div className="controls-center pastel-section pastel-pink" style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                  <button
+                    className="btn btn-compact btn-same-size"
+                    style={{ minWidth: 32, minHeight: 32 }}
+                    disabled={pageNumber <= 1 || isContinuousView}
+                    onClick={() => setPageNumber(page => Math.max(1, page - 1))}
+                    title="Previous page"
+                  >
+                    <ChevronLeft size={14} />
+                  </button>
+                  {/* Skip to page input */}
+                  <input
+                    type="number"
+                    min={1}
+                    max={numPages}
+                    value={skipPageInput}
+                    onChange={e => setSkipPageInput(e.target.value.replace(/[^0-9]/g, ''))}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' && !isContinuousView) {
+                        const page = parseInt(skipPageInput, 10);
+                        if (!isNaN(page) && page >= 1 && page <= numPages) {
+                          setPageNumber(page);
+                          setSkipPageInput("");
+                        }
+                      }
+                    }}
+                    className="btn btn-compact btn-same-size"
+                    style={{ width: 40, minHeight: 32, textAlign: 'center' }}
+                    placeholder="#"
+                    disabled={isContinuousView || numPages === 0}
+                    title={isContinuousView ? "No disponible en vista continua" : "Ir a página"}
+                  />
+                  <button
+                    className="btn btn-compact btn-same-size"
+                    style={{ minWidth: 32, minHeight: 32 }}
+                    onClick={() => {
+                      if (!isContinuousView) {
+                        const page = parseInt(skipPageInput, 10);
+                        if (!isNaN(page) && page >= 1 && page <= numPages) {
+                          setPageNumber(page);
+                          setSkipPageInput("");
+                        }
+                      }
+                    }}
+                    disabled={isContinuousView || !skipPageInput || isNaN(Number(skipPageInput)) || Number(skipPageInput) < 1 || Number(skipPageInput) > numPages}
+                    title={isContinuousView ? "No disponible en vista continua" : "Ir a página"}
+                  >
+                    Ir
+                  </button>
+                  <button
+                    className="btn btn-compact btn-same-size"
+                    style={{ minWidth: 32, minHeight: 32 }}
+                    disabled={pageNumber >= numPages || isContinuousView}
+                    onClick={() => setPageNumber(page => Math.min(numPages, page + 1))}
+                    title="Next page"
+                  >
+                    <ChevronRight size={14} />
+                  </button>
+                </div>
+                {/* Right section */}
+                <div className="controls-right pastel-section pastel-green" style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                  {/* Focus mode and fullscreen controls */}
+                  <button
+                    className={`btn btn-compact btn-same-size ${isFocusMode ? 'btn-active' : ''}`}
+                    style={{ minWidth: 32, minHeight: 32 }}
+                    onClick={toggleFocusMode}
+                    title={isFocusMode ? "Exit focus mode" : "Focus mode"}
+                  >
+                    <Lightbulb size={14} />
+                  </button>
+                  {/* Extract page text for translation */}
+                  {translationConfig.enabled && (
+                    <button
+                      className={`btn btn-compact btn-same-size ${isExtractingText ? 'btn-loading' : ''}`}
+                      style={{ minWidth: 32, minHeight: 32 }}
+                      onClick={extractCurrentPageText}
+                      disabled={isExtractingText || !file}
+                      title={isExtractingText ? "Extracting text..." : "Extract page text for translation"}
+                    >
+                      <Languages size={14} />
+                    </button>
+                  )}
+                  <button
+                    className="btn btn-compact btn-fullscreen btn-same-size"
+                    style={{ minWidth: 32, minHeight: 32 }}
+                    onClick={toggleFullscreen}
+                    title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+                  >
+                    {isFullscreen ? <Minimize size={14} /> : <Maximize size={14} />}
+                  </button>
+                  <button
+                    className="btn btn-compact btn-same-size"
+                    style={{ minWidth: 32, minHeight: 32 }}
+                    onClick={toggleToolbarPosition}
+                    title="Change toolbar position"
+                  >
+                    <Layout size={14} />
+                  </button>
+                  <button 
+                    className="btn btn-compact btn-secondary btn-same-size" 
+                    style={{ minWidth: 32, minHeight: 32 }}
+                    onClick={openFileDialog} 
+                    title="Change File"
+                  >
+                    <Upload size={14} />
+                  </button>
                 </div>
               </div>
+              {/* CSS pastel-section styles */}
+              <style>{`
+                .pastel-section {
+                  box-shadow: 0 2px 8px 0 rgba(0,0,0,0.04);
+                  border: 1.5px solid rgba(0,0,0,0.07);
+                  border-radius: 10px;
+                  padding: 4px 6px;
+                  margin: 0 1px;
+                  transition: box-shadow 0.2s, border 0.2s;
+                  display: flex;
+                  align-items: center;
+                  background-clip: padding-box;
+                }
+                .pastel-blue {
+                  background: linear-gradient(135deg, #e0f7fa 80%, #b2ebf2 100%);
+                }
+                .pastel-pink {
+                  background: linear-gradient(135deg, #ffe0f0 80%, #ffc1e3 100%);
+                }
+                .pastel-green {
+                  background: linear-gradient(135deg, #e6ffe6 80%, #b2f2b2 100%);
+                }
+                .pastel-section:hover {
+                  box-shadow: 0 4px 16px 0 rgba(0,0,0,0.10);
+                  border: 1.5px solid rgba(0,0,0,0.13);
+                }
+                .btn-same-size {
+                  min-width: 32px !important;
+                  min-height: 32px !important;
+                  max-width: 32px !important;
+                  max-height: 32px !important;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  font-size: 15px;
+                  padding: 0;
+                }
+                .btn-compact input[type='number'] {
+                  min-width: 32px;
+                  min-height: 32px;
+                  max-width: 40px;
+                  max-height: 32px;
+                  text-align: center;
+                  font-size: 15px;
+                }
+              `}</style>
             </div>
             {/* PDF Document */}
             <div 

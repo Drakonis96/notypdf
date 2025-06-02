@@ -1,12 +1,13 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { NotionConfig, NotionProperty, TranslationConfig, TranslationProvider, TranslationModel, OpenAIModel, OpenRouterModel, GeminiModel } from '../types';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { NotionConfig, NotionProperty, TranslationConfig, TranslationProvider, TranslationModel, OpenAIModel, OpenRouterModel, GeminiModel, SavedDatabaseId } from '../types';
 import notionService from '../services/notionService';
 import translationService from '../services/translationService';
-import { Settings, Save, Database, X, HelpCircle, Eye, EyeOff, TestTube } from 'lucide-react';
+import configService from '../services/configService';
+import apiKeyService from '../services/apiKeyService';
+import { Save, Database, Eye, EyeOff, TestTube } from 'lucide-react';
 import LoadingSpinner from './LoadingSpinner';
 import SuccessMessage from './SuccessMessage';
 import TranslationModal from './TranslationModal';
-import HelpModal from './HelpModal';
 
 interface ConfigPanelProps {
   config: NotionConfig;
@@ -15,8 +16,10 @@ interface ConfigPanelProps {
   translationConfig: TranslationConfig;
   setTranslationConfig: (config: TranslationConfig) => void;
   onClearSelection?: () => void;
-  onClose?: () => void;
   fullscreenContainer?: HTMLElement | null;
+  savedDatabaseIds?: SavedDatabaseId[];
+  refreshDatabaseIds?: () => void;
+  isConfigModalOpen?: boolean; // New prop to indicate if config modal is open
 }
 
 // Translation options constants
@@ -32,6 +35,9 @@ const OPENROUTER_MODELS: { label: string; value: OpenRouterModel }[] = [
   { label: 'Gemini 2.0 Flash Exp (free)', value: 'google/gemini-2.0-flash-exp:free' },
   { label: 'Llama 4 Maverick (free)', value: 'meta-llama/llama-4-maverick:free' },
   { label: 'Llama 4 Scout (free)', value: 'meta-llama/llama-4-scout:free' },
+  { label: 'DeepSeek Chat v3 (free)', value: 'deepseek/deepseek-chat-v3-0324:free' },
+  { label: 'Qwen 3 32B (free)', value: 'qwen/qwen3-32b:free' },
+  { label: 'Mistral Small 3.1 (free)', value: 'mistralai/mistral-small-3.1-24b-instruct:free' },
 ];
 
 const GEMINI_MODELS: { label: string; value: GeminiModel }[] = [
@@ -48,7 +54,18 @@ const LANGUAGE_OPTIONS = [
   'English', 'Spanish', 'French', 'German', 'Italian', 'Portuguese', 'Chinese', 'Japanese', 'Korean', 'Russian', 'Arabic', 'Hindi', 'Other...'
 ];
 
-const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange, selectedText, translationConfig, setTranslationConfig, onClearSelection, onClose, fullscreenContainer }) => {
+const ConfigPanel: React.FC<ConfigPanelProps> = ({ 
+  config, 
+  onConfigChange, 
+  selectedText, 
+  translationConfig, 
+  setTranslationConfig, 
+  onClearSelection, 
+  fullscreenContainer, 
+  savedDatabaseIds, 
+  refreshDatabaseIds,
+  isConfigModalOpen = false // Default to false for backward compatibility
+}) => {
   const [properties, setProperties] = useState<NotionProperty[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
@@ -60,7 +77,6 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange, selec
   const [translatedText, setTranslatedText] = useState<string>('');
   const [translating, setTranslating] = useState<boolean>(false);
   const [showDatabaseId, setShowDatabaseId] = useState<boolean>(false);
-  const [showHelpModal, setShowHelpModal] = useState<boolean>(false);
   const [isStreaming, setIsStreaming] = useState<boolean>(false);
   const [streamingText, setStreamingText] = useState<string>('');
 
@@ -148,13 +164,57 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange, selec
     loadProperties();
   }, [loadProperties]);
 
+  // Load saved column mapping when database ID changes
+  const loadColumnMapping = useCallback(async (databaseId: string, currentConfig: NotionConfig) => {
+    if (!databaseId) return;
+    
+    try {
+      const serverConfig = await configService.getConfig();
+      const savedMapping = serverConfig.columnMappings[databaseId];
+      
+      if (savedMapping) {
+        console.log('Loading saved column mapping for database:', databaseId);
+        
+        // Merge the saved mapping with current config
+        const updatedConfig = {
+          ...currentConfig,
+          databaseId,
+          identifierColumn: savedMapping.identifierColumn || '',
+          textColumn: savedMapping.textColumn || '',
+          annotationColumn: savedMapping.annotationColumn || '',
+          pageColumn: savedMapping.pageColumn || '',
+          documentIdInsertionColumn: savedMapping.documentIdInsertionColumn || '',
+          enableDocumentIdInsertion: savedMapping.enableDocumentIdInsertion || false,
+          identifierPattern: savedMapping.identifierPattern || '',
+          annotation: savedMapping.annotation || '',
+          pageNumber: savedMapping.pageNumber || ''
+        };
+        
+        onConfigChange(updatedConfig);
+      }
+    } catch (error) {
+      console.error('Error loading column mapping:', error);
+    }
+  }, [onConfigChange]);
+
+  // Load column mapping when database ID changes
+  const prevDatabaseIdRef = useRef<string>('');
+  useEffect(() => {
+    if (config.databaseId && config.databaseId !== prevDatabaseIdRef.current) {
+      prevDatabaseIdRef.current = config.databaseId;
+      loadColumnMapping(config.databaseId, config);
+    }
+  }, [config.databaseId, loadColumnMapping]);
+
   // Auto-translate when text is selected and translation is enabled, or show text modal when not enabled
+  // Only handle text selection if config modal is NOT open (let app-level modal handle it instead)
   useEffect(() => {
     if (
       selectedText.trim() &&
       !showTranslationModal &&
       !showTextModal &&
-      !translating
+      !translating &&
+      !isConfigModalOpen // Don't handle text selection when config modal is open
     ) {
       // Limpiar selección visual antes de mostrar el modal
       if (window.getSelection) {
@@ -172,11 +232,7 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange, selec
             setTranslating(true);
             setError('');
             try {
-              let apiKey = '';
-              if (translationConfig.provider === 'openai') apiKey = process.env.OPENAI_API_KEY || (typeof window !== 'undefined' ? window._env_?.OPENAI_API_KEY ?? '' : '');
-              if (translationConfig.provider === 'openrouter') apiKey = process.env.OPENROUTER_API_KEY || (typeof window !== 'undefined' ? window._env_?.OPENROUTER_API_KEY ?? '' : '');
-              if (translationConfig.provider === 'gemini') apiKey = process.env.GEMINI_API_KEY || (typeof window !== 'undefined' ? window._env_?.GEMINI_API_KEY ?? '' : '');
-              if (translationConfig.provider === 'deepseek') apiKey = process.env.DEEPSEEK_API_KEY || (typeof window !== 'undefined' ? window._env_?.DEEPSEEK_API_KEY ?? '' : '');
+              const apiKey = await apiKeyService.getApiKey(translationConfig.provider);
               if (!apiKey) {
                 throw new Error('Missing API key for selected translation provider');
               }
@@ -238,7 +294,7 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange, selec
         setShowTextModal(true);
       }
     }
-  }, [selectedText, translationConfig, showTranslationModal, showTextModal, translating, isStreaming]);
+  }, [selectedText, translationConfig, showTranslationModal, showTextModal, translating, isStreaming, isConfigModalOpen]);
 
   const handleConfigChange = useCallback((field: keyof NotionConfig, value: string) => {
     const newConfig = { ...config };
@@ -250,6 +306,44 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange, selec
     onConfigChange(newConfig);
     setSuccess('');
     setError('');
+    
+    // Save column mapping to server when database ID or column configuration changes
+    if (newConfig.databaseId && (
+      field === 'identifierColumn' || 
+      field === 'textColumn' || 
+      field === 'annotationColumn' || 
+      field === 'pageColumn' || 
+      field === 'documentIdInsertionColumn' ||
+      field === 'enableDocumentIdInsertion' ||
+      field === 'identifierPattern' ||
+      field === 'annotation' ||
+      field === 'pageNumber'
+    )) {
+      const columnMapping = {
+        identifierColumn: newConfig.identifierColumn,
+        textColumn: newConfig.textColumn,
+        annotationColumn: newConfig.annotationColumn,
+        pageColumn: newConfig.pageColumn,
+        documentIdInsertionColumn: newConfig.documentIdInsertionColumn,
+        enableDocumentIdInsertion: newConfig.enableDocumentIdInsertion,
+        identifierPattern: newConfig.identifierPattern,
+        annotation: newConfig.annotation,
+        pageNumber: newConfig.pageNumber
+      };
+      
+      // Save to server asynchronously
+      configService.saveColumnMapping(newConfig.databaseId, columnMapping)
+        .then(result => {
+          if (result.success) {
+            console.log('Column mapping saved to server');
+          } else {
+            console.error('Failed to save column mapping:', result.message);
+          }
+        })
+        .catch(err => {
+          console.error('Error saving column mapping:', err);
+        });
+    }
   }, [config, onConfigChange]);
 
   const handleSaveText = useCallback(async () => {
@@ -268,11 +362,7 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange, selec
     try {
       if (translationConfig.enabled && translationConfig.sendMode === 'translated') {
         // Get API key for provider
-        let apiKey = '';
-        if (translationConfig.provider === 'openai') apiKey = process.env.OPENAI_API_KEY || (typeof window !== 'undefined' ? window._env_?.OPENAI_API_KEY ?? '' : '');
-        if (translationConfig.provider === 'openrouter') apiKey = process.env.OPENROUTER_API_KEY || (typeof window !== 'undefined' ? window._env_?.OPENROUTER_API_KEY ?? '' : '');
-        if (translationConfig.provider === 'gemini') apiKey = process.env.GEMINI_API_KEY || (typeof window !== 'undefined' ? window._env_?.GEMINI_API_KEY ?? '' : '');
-        if (translationConfig.provider === 'deepseek') apiKey = process.env.DEEPSEEK_API_KEY || (typeof window !== 'undefined' ? window._env_?.DEEPSEEK_API_KEY ?? '' : '');
+        const apiKey = await apiKeyService.getApiKey(translationConfig.provider);
         if (!apiKey) throw new Error('Missing API key for selected translation provider');
         textToSave = await translationService.translateText(selectedText, {
           provider: translationConfig.provider,
@@ -393,85 +483,49 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange, selec
     }
   }, []);
 
-  // Check if API key is available
-  const getApiKeyStatus = () => {
-    const envKey = process.env.NOTION_API_KEY || (typeof window !== 'undefined' ? window._env_?.NOTION_API_KEY ?? undefined : undefined);
-    const windowKey = typeof window !== 'undefined' ? window._env_?.NOTION_API_KEY : undefined;
-    return envKey || windowKey;
-  };
-
   return (
     <div className="config-panel-modern">
       <div className="config-content">
-        {/* Header (moved inside scrollable area) */}
-        <div className="config-header">
-          <div className="config-header-left">
-            <Settings className="config-icon" />
-            <h2 className="config-title">Config.</h2>
-          </div>
-          <div className="config-header-actions">
-            <button
-              onClick={() => setShowHelpModal(true)}
-              className="config-action-btn config-help-btn"
-              aria-label="Open help guide"
-              title="Help Guide"
-            >
-              <HelpCircle size={18} />
-            </button>
-            <button
-              onClick={onClose}
-              className="config-action-btn config-close-btn"
-              aria-label="Close configuration panel"
-            >
-              <X size={18} />
-            </button>
-          </div>
-        </div>
-
-        {/* Añadir margen entre el header y el primer bloque de sección */}
-        <div style={{ height: 16 }} />
-
         {/* Status Messages */}
         {error && <div className="config-message config-error">{error}</div>}
         {success && <SuccessMessage message={success} onClose={() => setSuccess('')} />}
+
+        {/* Small padding before content */}
+        <div style={{ paddingTop: '16px' }} />
 
         {/* Content */}
         <div className="config-content">
           {/* API Key Status */}
           <div className="config-section">
             <h3 className="config-section-title">Notion API Connection</h3>
-            <div className={`api-status ${getApiKeyStatus() ? 'api-status-success' : 'api-status-error'}`}>
+            <div className="api-status api-status-info">
               <div className="api-status-indicator">
-                {getApiKeyStatus() ? '✅' : '❌'}
+                🔑
               </div>
               <div className="api-status-text">
-                {getApiKeyStatus() 
-                  ? 'API Key configured via environment variable' 
-                  : 'API Key not found. Please set NOTION_API_KEY environment variable.'
-                }
+                API Key configured on server
               </div>
             </div>
             
-            {getApiKeyStatus() && (
-              <div className="config-actions">
-                <button
-                  className="config-btn config-btn-secondary"
-                  style={{ color: '#fff' }}
-                  onClick={testConnection}
-                  disabled={testingConnection}
-                >
-                  {testingConnection ? (
-                    <>
-                      <LoadingSpinner size={16} color="#fff" />
-                      <span style={{ color: '#fff' }}>Testing...</span>
-                    </>
-                  ) : (
-                    <>
-                      <TestTube size={16} style={{ color: '#fff' }} />
-                      <span style={{ color: '#fff' }}>Test Connection</span>
-                    </>
-                  )}
-                </button>
+            <div className="config-actions">
+              <button
+                className="config-btn config-btn-secondary"
+                style={{ color: '#fff' }}
+                onClick={testConnection}
+                disabled={testingConnection}
+              >
+                {testingConnection ? (
+                  <>
+                    <LoadingSpinner size={16} color="#fff" />
+                    <span style={{ color: '#fff' }}>Testing...</span>
+                  </>
+                ) : (
+                  <>
+                    <TestTube size={16} style={{ color: '#fff' }} />
+                    <span style={{ color: '#fff' }}>Test Connection</span>
+                  </>
+                )}
+              </button>
                 <button
                   className="config-btn config-btn-primary"
                   style={{ color: '#fff' }}
@@ -491,7 +545,6 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange, selec
                   )}
                 </button>
               </div>
-            )}
           </div>
 
           {/* Database Configuration */}
@@ -500,24 +553,45 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange, selec
             
             <div className="config-field">
               <label htmlFor="databaseId" className="config-label">Database ID</label>
-              <div className="config-input-group">
-                <input
+              {savedDatabaseIds && savedDatabaseIds.length > 0 ? (
+                <select
                   id="databaseId"
-                  type={showDatabaseId ? 'text' : 'password'}
                   value={config.databaseId}
                   onChange={(e) => handleConfigChange('databaseId', e.target.value)}
-                  placeholder="32-character database ID"
-                  className="config-input"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowDatabaseId(!showDatabaseId)}
-                  className="config-input-action"
-                  aria-label={showDatabaseId ? 'Hide ID' : 'Show ID'}
+                  className="config-select"
                 >
-                  {showDatabaseId ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
+                  <option value="">Select a saved database ID</option>
+                  {savedDatabaseIds.map((item) => (
+                    <option key={item.id} value={item.databaseId}>
+                      {item.name}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <div className="config-input-group">
+                  <input
+                    id="databaseId"
+                    type={showDatabaseId ? 'text' : 'password'}
+                    value={config.databaseId}
+                    onChange={(e) => handleConfigChange('databaseId', e.target.value)}
+                    placeholder="32-character database ID"
+                    className="config-input"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowDatabaseId(!showDatabaseId)}
+                    className="config-input-action"
+                    aria-label={showDatabaseId ? 'Hide ID' : 'Show ID'}
+                  >
+                    {showDatabaseId ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              )}
+              {savedDatabaseIds && savedDatabaseIds.length === 0 && (
+                <p className="config-field-hint">
+                  No database IDs saved yet. Go to the "Database IDs" tab to add one.
+                </p>
+              )}
             </div>
 
             <div className="config-field">
@@ -850,7 +924,7 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange, selec
           onAddSelectionWithAnnotation={handleAddSelectionWithAnnotation}
           isStreaming={isStreaming}
           streamingText={streamingText}
-          portalContainer={fullscreenContainer}
+          portalContainer={document.body} // Ensures modal is portalled to the body
           success={success}
           saving={saving}
         />
@@ -872,11 +946,6 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ config, onConfigChange, selec
           portalContainer={fullscreenContainer}
           success={success}
           saving={saving}
-        />
-
-        <HelpModal
-          isOpen={showHelpModal}
-          onClose={() => setShowHelpModal(false)}
         />
       </div>
     </div>

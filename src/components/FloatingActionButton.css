@@ -1,0 +1,265 @@
+/* Floating Action Button Container */
+.fab-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Backdrop for expanded state */
+.fab-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: transparent;
+  z-index: -1;
+}
+
+/* Main FAB Button */
+.fab-main-btn {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #007acc;
+  border: none;
+  box-shadow: 0 4px 16px rgba(0, 122, 204, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  color: white;
+  position: relative;
+  z-index: 2;
+}
+
+.fab-main-btn:hover {
+  background: #005a9e;
+  box-shadow: 0 6px 20px rgba(0, 122, 204, 0.4);
+  transform: translateY(-2px);
+}
+
+.fab-main-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(0, 122, 204, 0.3);
+}
+
+/* Expanded state for main button */
+.fab-container.expanded .fab-main-btn {
+  transform: rotate(45deg);
+  background: #d32f2f;
+  box-shadow: 0 6px 20px rgba(211, 47, 47, 0.4);
+}
+
+.fab-container.expanded .fab-main-btn:hover {
+  background: #b71c1c;
+  transform: rotate(45deg) translateY(-2px);
+}
+
+/* Secondary Action Buttons */
+.fab-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(20px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.fab-container.expanded .fab-actions {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.fab-action-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  color: white;
+  position: relative;
+}
+
+.fab-action-btn:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.fab-action-btn:active {
+  transform: translateY(0) scale(1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* Individual action button styles */
+.fab-action-settings {
+  background: #4caf50;
+}
+
+.fab-action-settings:hover {
+  background: #388e3c;
+}
+
+.fab-action-documents {
+  background: #ff9800;
+}
+
+.fab-action-documents:hover {
+  background: #f57c00;
+}
+
+/* Animation delays for staggered appearance */
+.fab-container.expanded .fab-action-documents {
+  animation: fabActionSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0.1s both;
+}
+
+.fab-container.expanded .fab-action-settings {
+  animation: fabActionSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0.15s both;
+}
+
+@keyframes fabActionSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Tooltip styles */
+.fab-action-btn::before {
+  content: attr(title);
+  position: absolute;
+  right: 56px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.25s ease;
+  pointer-events: none;
+  z-index: 1001;
+}
+
+.fab-action-btn::after {
+  content: '';
+  position: absolute;
+  right: 48px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid rgba(0, 0, 0, 0.8);
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.25s ease;
+  pointer-events: none;
+  z-index: 1001;
+}
+
+.fab-action-btn:hover::before,
+.fab-action-btn:hover::after {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .fab-container {
+    bottom: 20px;
+    right: 20px;
+  }
+
+  .fab-main-btn {
+    width: 48px;
+    height: 48px;
+  }
+
+  .fab-action-btn {
+    width: 44px;
+    height: 44px;
+  }
+
+  .fab-actions {
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  /* Hide tooltips on mobile */
+  .fab-action-btn::before,
+  .fab-action-btn::after {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .fab-container {
+    bottom: 16px;
+    right: 16px;
+  }
+
+  .fab-main-btn {
+    width: 44px;
+    height: 44px;
+  }
+
+  .fab-action-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .fab-actions {
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  .fab-main-btn,
+  .fab-action-btn,
+  .fab-actions {
+    transition: none;
+  }
+
+  .fab-container.expanded .fab-action-documents,
+  .fab-container.expanded .fab-action-settings {
+    animation: none;
+  }
+}
+
+/* Focus states for accessibility */
+.fab-main-btn:focus,
+.fab-action-btn:focus {
+  outline: 2px solid #007acc;
+  outline-offset: 2px;
+}
+
+.fab-main-btn:focus:not(:focus-visible),
+.fab-action-btn:focus:not(:focus-visible) {
+  outline: none;
+}
