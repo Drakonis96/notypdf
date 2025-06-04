@@ -3,8 +3,17 @@
   "name": "NotyPDF Web Capture",
   "description": "Capture selected text on any webpage and send it to NotyPDF/Notion.",
   "version": "0.1",
-  "permissions": ["storage", "activeTab", "scripting"],
+  "permissions": ["storage", "activeTab", "scripting", "contextMenus", "notifications"],
   "host_permissions": ["<all_urls>"],
+  "icons": {
+    "16": "logo.png",
+    "32": "logo.png",
+    "48": "logo.png",
+    "128": "logo.png"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
   "action": {
     "default_popup": "popup.html",
     "default_title": "Send selection to NotyPDF"
