@@ -24,6 +24,12 @@ async function getPdfSelectionViaClipboard(tabId) {
   }
 }
 
+function showScreen(id) {
+  document.getElementById('main-screen').style.display = id === 'main' ? 'block' : 'none';
+  document.getElementById('settings-screen').style.display = id === 'settings' ? 'block' : 'none';
+  document.getElementById('help-screen').style.display = id === 'help' ? 'block' : 'none';
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   const isPdf = tab && /\.pdf($|\?)/i.test(tab.url || '');
@@ -56,6 +62,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       console.error('Error fetching config', e);
     }
   });
+
+  showScreen('main');
 });
 
 document.getElementById('send').addEventListener('click', () => {
@@ -107,6 +115,58 @@ document.getElementById('send').addEventListener('click', () => {
   });
 });
 
-document.getElementById('openOptions').addEventListener('click', () => {
-  chrome.runtime.openOptionsPage();
+
+document.getElementById('openSettings').addEventListener('click', () => {
+  chrome.storage.sync.get(['backendUrl','backendUser','backendPass'], ({ backendUrl, backendUser, backendPass }) => {
+    document.getElementById('backendUrl').value = backendUrl || 'http://localhost:3000';
+    document.getElementById('backendUser').value = backendUser || '';
+    document.getElementById('backendPass').value = backendPass || '';
+    document.getElementById('settingsStatus').textContent = '';
+    showScreen('settings');
+  });
+});
+
+document.getElementById('backFromSettings').addEventListener('click', () => {
+  showScreen('main');
+});
+
+document.getElementById('openHelp').addEventListener('click', () => {
+  showScreen('help');
+});
+
+document.getElementById('backFromHelp').addEventListener('click', () => {
+  showScreen('main');
+});
+
+document.getElementById('saveSettings').addEventListener('click', () => {
+  const url = document.getElementById('backendUrl').value;
+  const user = document.getElementById('backendUser').value;
+  const pass = document.getElementById('backendPass').value;
+  chrome.storage.sync.set({ backendUrl: url, backendUser: user, backendPass: pass }, () => {
+    const status = document.getElementById('settingsStatus');
+    status.textContent = 'Saved!';
+    setTimeout(() => { status.textContent = ''; }, 1000);
+  });
+});
+
+document.getElementById('testConnection').addEventListener('click', async () => {
+  const url = document.getElementById('backendUrl').value;
+  const user = document.getElementById('backendUser').value;
+  const pass = document.getElementById('backendPass').value;
+  const headers = {};
+  if (user && pass) {
+    headers['Authorization'] = `Basic ${btoa(`${user}:${pass}`)}`;
+  }
+  try {
+    const res = await fetch(`${url}/api/notion/test-connection`, { headers });
+    const data = await res.json();
+    const status = document.getElementById('settingsStatus');
+    if (data.success) {
+      status.textContent = 'Connection successful';
+    } else {
+      status.textContent = 'Failed: ' + (data.message || 'Error');
+    }
+  } catch (e) {
+    document.getElementById('settingsStatus').textContent = 'Error: ' + e.message;
+  }
 });

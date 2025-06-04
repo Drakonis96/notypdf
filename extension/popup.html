@@ -39,11 +39,47 @@
 </style>
 </head>
 <body>
-<textarea id="selection" placeholder="No text selected"></textarea>
-<input id="identifierPattern" type="text" placeholder="Identifier pattern (optional)" />
-<button id="send">Send to Notion</button>
-<button id="openOptions">Settings</button>
-<div id="status"></div>
+<div id="main-screen">
+  <textarea id="selection" placeholder="No text selected"></textarea>
+  <input id="identifierPattern" type="text" placeholder="Identifier pattern (optional)" />
+  <button id="send">Send to Notion</button>
+  <button id="openSettings">Settings</button>
+  <button id="openHelp">Help</button>
+  <div id="status"></div>
+</div>
+
+<div id="settings-screen" style="display:none;">
+  <label>Backend URL:
+    <input id="backendUrl" type="text" placeholder="http://localhost:3000">
+  </label>
+  <label>Username:
+    <input id="backendUser" type="text" placeholder="user">
+  </label>
+  <label>Password:
+    <input id="backendPass" type="password" placeholder="password">
+  </label>
+  <button id="saveSettings">Save</button>
+  <button id="testConnection">Test Connection</button>
+  <button id="backFromSettings">Back</button>
+  <div id="settingsStatus"></div>
+</div>
+
+<div id="help-screen" style="display:none;">
+  <h3>How it works</h3>
+  <p>Use this extension to send selected text from any page or PDF viewer to your NotyPDF server.</p>
+  <h4>Configuration</h4>
+  <ul>
+    <li>Open <b>Settings</b> to set the server URL.</li>
+    <li>If the server is exposed through a reverse proxy such as Nginx Proxy Manager, enter the external URL and any authentication credentials.</li>
+    <li>Provide username and password if your proxy requires them.</li>
+  </ul>
+  <h4>PDF Selection</h4>
+  <p>When viewing a PDF, copy the text to the clipboard before sending. Chrome cannot directly read selections inside PDFs.</p>
+  <h4>Note</h4>
+  <p>If running NotyPDF in a local Docker container, connect to <code>http://localhost:5026</code> instead of <code>http://localhost:3000</code>.</p>
+  <button id="backFromHelp">Back</button>
+</div>
+
 <script src="popup.js"></script>
 </body>
 </html>

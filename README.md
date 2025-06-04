@@ -284,7 +284,9 @@ configuration as the PDF reader.
    selection and choose **Send selection to NotyPDF**.
 
 You can access the extension settings from the popup using the
-**Settings** button.
+**Settings** button. A **Help** button is also available with
+instructions on configuring the connection, using the extension with
+PDFs and the Docker URL note.
 
 Using a reverse proxy makes the extension work from any browser and
 lets you add references directly to your Notion setup even when the
