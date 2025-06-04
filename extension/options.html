@@ -9,13 +9,29 @@
     padding: 10px;
     background: var(--bg, #fff);
     color: var(--fg, #000);
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   }
   input {
     width: 100%;
     box-sizing: border-box;
     margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 6px;
   }
-  button { margin-top: 10px; width: 100%; }
+  button {
+    margin-top: 10px;
+    width: 100%;
+    background-color: #4f46e5;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 8px;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  }
+  button:hover { background-color: #4338ca; }
   @media (prefers-color-scheme: dark) {
     body { --bg: #2b2b2b; --fg: #f0f0f0; }
   }

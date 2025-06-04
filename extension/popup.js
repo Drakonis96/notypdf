@@ -1,15 +1,12 @@
 async function getSelectionText(tabId) {
-  const [{ result }] = await chrome.scripting.executeScript({
-    target: { tabId },
-    func: () => {
-      const isPdf = document.contentType === 'application/pdf' || /\.pdf($|\?)/i.test(window.location.href);
-      if (isPdf) {
-        return window.getSelection().toString();
-      }
-      return window.getSelection().toString();
-    }
+  const results = await chrome.scripting.executeScript({
+    target: { tabId, allFrames: true },
+    func: () => window.getSelection().toString()
   });
-  return result || '';
+  for (const { result } of results) {
+    if (result) return result;
+  }
+  return '';
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -89,4 +86,8 @@ document.getElementById('send').addEventListener('click', () => {
       statusEl.textContent = 'Error: ' + err.message;
     }
   });
+});
+
+document.getElementById('openOptions').addEventListener('click', () => {
+  chrome.runtime.openOptionsPage();
 });
