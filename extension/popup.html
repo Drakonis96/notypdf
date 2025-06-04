@@ -39,9 +39,12 @@
 </style>
 </head>
 <body>
+<img src="logo.png" alt="NotyPDF" style="display:block;margin:0 auto 10px;width:48px;height:48px;" />
 <div id="main-screen">
   <textarea id="selection" placeholder="No text selected"></textarea>
+  <textarea id="annotation" placeholder="Annotation (optional)"></textarea>
   <input id="identifierPattern" type="text" placeholder="Identifier pattern (optional)" />
+  <select id="databaseSelect" style="margin-top:5px;width:100%;"></select>
   <button id="send">Send to Notion</button>
   <button id="openSettings">Settings</button>
   <button id="openHelp">Help</button>
@@ -67,6 +70,7 @@
 <div id="help-screen" style="display:none;">
   <h3>How it works</h3>
   <p>Use this extension to send selected text from any page or PDF viewer to your NotyPDF server.</p>
+  <p>You can also right-click a selection and choose <b>Send selection to NotyPDF</b> to send it immediately.</p>
   <h4>Configuration</h4>
   <ul>
     <li>Open <b>Settings</b> to set the server URL.</li>
