@@ -39,11 +39,35 @@
 </style>
 </head>
 <body>
-<textarea id="selection" placeholder="No text selected"></textarea>
-<input id="identifierPattern" type="text" placeholder="Identifier pattern (optional)" />
-<button id="send">Send to Notion</button>
-<button id="openOptions">Settings</button>
-<div id="status"></div>
+<div id="mainScreen">
+  <textarea id="selection" placeholder="No text selected"></textarea>
+  <input id="identifierPattern" type="text" placeholder="Identifier pattern (optional)" />
+  <button id="send">Send to Notion</button>
+  <button id="openOptions">Settings</button>
+  <button id="openHelp">Help</button>
+  <div id="status"></div>
+</div>
+
+<div id="optionsScreen" style="display:none;">
+  <button id="backFromOptions">&larr; Back</button>
+  <label>Backend URL:
+    <input id="backendUrl" type="text" placeholder="http://localhost:3000">
+  </label>
+  <label>Username:
+    <input id="backendUser" type="text" placeholder="user">
+  </label>
+  <label>Password:
+    <input id="backendPass" type="password" placeholder="password">
+  </label>
+  <button id="saveOptions">Save</button>
+  <button id="testConnection">Test Connection</button>
+  <div id="optionsStatus"></div>
+</div>
+
+<div id="helpScreen" style="display:none; max-height:250px; overflow-y:auto;">
+  <button id="backFromHelp">&larr; Back</button>
+  <div id="helpContent"></div>
+</div>
 <script src="popup.js"></script>
 </body>
 </html>
