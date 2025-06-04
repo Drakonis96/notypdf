@@ -9,11 +9,30 @@ async function getSelectionText(tabId) {
   return '';
 }
 
+async function getPdfSelectionViaClipboard(tabId) {
+  try {
+    await chrome.scripting.executeScript({
+      target: { tabId },
+      func: () => {
+        document.execCommand('copy');
+      }
+    });
+    return await navigator.clipboard.readText();
+  } catch (err) {
+    console.error('Failed to read PDF selection', err);
+    return '';
+  }
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  const text = tab ? await getSelectionText(tab.id) : '';
+  const isPdf = tab && /\.pdf($|\?)/i.test(tab.url || '');
+  let text = tab ? await getSelectionText(tab.id) : '';
+  if (!text && isPdf) {
+    text = await getPdfSelectionViaClipboard(tab.id);
+  }
   document.getElementById('selection').value = text;
-  if (tab && /\.pdf($|\?)/i.test(tab.url || '')) {
+  if (isPdf) {
     document.getElementById('status').textContent = 'PDF detected';
   }
 

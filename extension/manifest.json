@@ -3,7 +3,15 @@
   "name": "NotyPDF Web Capture",
   "description": "Capture selected text on any webpage and send it to NotyPDF/Notion.",
   "version": "0.1",
-  "permissions": ["storage", "activeTab", "scripting", "contextMenus", "notifications"],
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting",
+    "contextMenus",
+    "notifications",
+    "clipboardRead",
+    "clipboardWrite"
+  ],
   "host_permissions": ["<all_urls>"],
   "icons": {
     "16": "logo.png",
