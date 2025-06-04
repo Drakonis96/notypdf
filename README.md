@@ -275,9 +275,19 @@ configuration as the PDF reader.
 1. Open `chrome://extensions` and enable **Developer mode**.
 2. Click **Load unpacked** and select the `extension` folder.
 3. In the extension options set the URL where NotyPDF is running
-   (for example `http://localhost:3000`).
-4. Select text on any webpage, click the extension icon and press
-   **Send to Notion**.
+   (for example `http://localhost:3000`). If you're exposing the
+   server through **NGINX Proxy Manager**, enter the external URL
+   and provide the proxy authentication username and password.
+4. Select text on any webpage or PDF, click the extension icon and
+   press **Send to Notion**. You can also right‑click a selection
+   and choose **Send selection to NotyPDF**.
+
+You can access the extension settings from the popup using the
+**Settings** button.
+
+Using a reverse proxy makes the extension work from any browser and
+lets you add references directly to your Notion setup even when the
+server isn't running locally.
 
 The extension will fetch your saved configuration from the app and create a new
 entry with the next identifier.
