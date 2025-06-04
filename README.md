@@ -267,6 +267,21 @@ If you have Node.js and npm installed:
    ```
 4. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
+## Web Capture Extension
+
+Capture text from any website and send it straight to Notion using the same
+configuration as the PDF reader.
+
+1. Open `chrome://extensions` and enable **Developer mode**.
+2. Click **Load unpacked** and select the `extension` folder.
+3. In the extension options set the URL where NotyPDF is running
+   (for example `http://localhost:3000`).
+4. Select text on any webpage, click the extension icon and press
+   **Send to Notion**.
+
+The extension will fetch your saved configuration from the app and create a new
+entry with the next identifier.
+
 ---
 
 ## License
