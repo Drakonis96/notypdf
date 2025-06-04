@@ -52,11 +52,23 @@ document.addEventListener('DOMContentLoaded', async () => {
       const cfgRes = await fetch(`${base}/api/config`, { headers });
       const cfg = await cfgRes.json();
       if (cfg.savedDatabaseIds && cfg.savedDatabaseIds.length > 0) {
-        const dbId = cfg.savedDatabaseIds[0].databaseId;
+        const select = document.getElementById('databaseSelect');
+        cfg.savedDatabaseIds.forEach(db => {
+          const opt = document.createElement('option');
+          opt.value = db.databaseId;
+          opt.textContent = db.name || db.databaseId;
+          select.appendChild(opt);
+        });
+        const dbId = select.value;
         const mapping = cfg.columnMappings[dbId];
         if (mapping && mapping.identifierPattern) {
           document.getElementById('identifierPattern').value = mapping.identifierPattern;
         }
+        select.addEventListener('change', () => {
+          const id = select.value;
+          const map = cfg.columnMappings[id];
+          document.getElementById('identifierPattern').value = map && map.identifierPattern ? map.identifierPattern : '';
+        });
       }
     } catch (e) {
       console.error('Error fetching config', e);
@@ -68,6 +80,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 document.getElementById('send').addEventListener('click', () => {
   const text = document.getElementById('selection').value.trim();
+  const annotation = document.getElementById('annotation').value.trim();
   const overridePattern = document.getElementById('identifierPattern').value.trim();
   const statusEl = document.getElementById('status');
   if (!text) {
@@ -88,7 +101,8 @@ document.getElementById('send').addEventListener('click', () => {
         statusEl.textContent = 'No database configured.';
         return;
       }
-      const dbId = cfg.savedDatabaseIds[0].databaseId;
+      const select = document.getElementById('databaseSelect');
+      const dbId = select.value || cfg.savedDatabaseIds[0].databaseId;
       const mapping = cfg.columnMappings[dbId];
       if (!mapping) {
         statusEl.textContent = 'Missing column mapping.';
@@ -97,6 +111,9 @@ document.getElementById('send').addEventListener('click', () => {
       const notionConfig = { databaseId: dbId, ...mapping };
       if (overridePattern) {
         notionConfig.identifierPattern = overridePattern;
+      }
+      if (annotation) {
+        notionConfig.annotation = annotation;
       }
       const res = await fetch(`${base}/api/notion/save-text-with-identifier`, {
         method: 'POST',
