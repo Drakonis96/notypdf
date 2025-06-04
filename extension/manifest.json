@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "NotyPDF Web Capture",
+  "description": "Capture selected text on any webpage and send it to NotyPDF/Notion.",
+  "version": "0.1",
+  "permissions": ["storage", "activeTab", "scripting"],
+  "host_permissions": ["<all_urls>"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Send selection to NotyPDF"
+  },
+  "options_page": "options.html"
+}
