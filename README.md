@@ -279,8 +279,9 @@ configuration as the PDF reader.
    server through **NGINX Proxy Manager**, enter the external URL
    and provide the proxy authentication username and password.
 4. Select text on any webpage or PDF, click the extension icon and
-   press **Send to Notion**. You can also right‑click a selection
-   and choose **Send selection to NotyPDF**.
+   press **Send to Notion**. On PDF files the extension copies the
+   selection to the clipboard automatically. You can also right‑click a
+   selection and choose **Send selection to NotyPDF**.
 
 You can access the extension settings from the popup using the
 **Settings** button.
