@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
-import { Upload, FileText, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCcw, Lightbulb, Maximize, Minimize, BookOpen, FileIcon, Layout, Languages } from 'lucide-react';
+import { Upload, FileText, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCcw, Lightbulb, Maximize, Minimize, BookOpen, FileIcon, Layout, Languages, Bookmark } from 'lucide-react';
 import { TranslationConfig } from '../types';
 import { translateTextStreaming } from '../services/translationService';
 
@@ -27,10 +27,28 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
   const [toolbarPosition, setToolbarPosition] = useState<'top' | 'bottom'>('top');
   const [isExtractingText, setIsExtractingText] = useState<boolean>(false);
   const [skipPageInput, setSkipPageInput] = useState<string>("");
+  const [bookmarkedPage, setBookmarkedPage] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pdfContainerRef = useRef<HTMLDivElement>(null);
   const pageRefs = useRef<(HTMLDivElement | null)[]>([]);
   const documentRef = useRef<any>(null);
+
+  // Load bookmarked page when a new file is opened
+  React.useEffect(() => {
+    if (file) {
+      const saved = localStorage.getItem(`bookmark_${file.name}`);
+      if (saved) {
+        const page = parseInt(saved, 10);
+        if (!isNaN(page)) {
+          setPageNumber(page);
+          setBookmarkedPage(page);
+        }
+      } else {
+        setPageNumber(1);
+        setBookmarkedPage(null);
+      }
+    }
+  }, [file]);
 
   function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
     setNumPages(numPages);
@@ -225,6 +243,13 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
     fileInputRef.current?.click();
   }
 
+  function handleBookmarkPage() {
+    if (file) {
+      localStorage.setItem(`bookmark_${file.name}`, pageNumber.toString());
+      setBookmarkedPage(pageNumber);
+    }
+  }
+
   // Scroll handler to update pageNumber in continuous view
   React.useEffect(() => {
     if (!isContinuousView || numPages === 0) return;
@@ -401,8 +426,8 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
                         }
                       }
                     }}
-                    className="btn btn-compact btn-same-size"
-                    style={{ width: 40, minHeight: 32, textAlign: 'center' }}
+                    className="btn btn-compact"
+                    style={{ width: 60, minHeight: 32, textAlign: 'center' }}
                     placeholder="#"
                     disabled={isContinuousView || numPages === 0}
                     title={isContinuousView ? "No disponible en vista continua" : "Ir a página"}
@@ -457,6 +482,14 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
                       <Languages size={14} />
                     </button>
                   )}
+                  <button
+                    className={`btn btn-compact btn-same-size ${bookmarkedPage === pageNumber ? 'btn-active' : ''}`}
+                    style={{ minWidth: 32, minHeight: 32 }}
+                    onClick={handleBookmarkPage}
+                    title="Bookmark page"
+                  >
+                    <Bookmark size={14} />
+                  </button>
                   <button
                     className="btn btn-compact btn-fullscreen btn-same-size"
                     style={{ minWidth: 32, minHeight: 32 }}
@@ -523,7 +556,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
                 .btn-compact input[type='number'] {
                   min-width: 32px;
                   min-height: 32px;
-                  max-width: 40px;
+                  max-width: 60px;
                   max-height: 32px;
                   text-align: center;
                   font-size: 15px;
