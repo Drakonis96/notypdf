@@ -4,6 +4,9 @@ node_modules/
 # Build output
 build/
 
+# Mobile backend build output
+mobile/backend/dist/
+
 # Environment variables
 .env
 .env.*

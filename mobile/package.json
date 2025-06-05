@@ -1,0 +1,25 @@
+{
+  "name": "notypdf-mobile",
+  "version": "1.0.0",
+  "private": true,
+  "main": "node_modules/expo/AppEntry.js",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "backend": "cd backend && npm install --silent && npm run build && npm start"
+  },
+  "dependencies": {
+    "expo": "~53.0.0",
+    "react": "18.2.0",
+    "react-native": "0.74.0",
+    "expo-document-picker": "~14.0.0",
+    "react-native-pdf": "^6.6.2",
+    "axios": "^1.9.0",
+    "react-native-webview": "^13.7.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.20.0",
+    "typescript": "^4.9.5"
+  }
+}
