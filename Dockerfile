@@ -34,6 +34,9 @@ COPY --from=builder /app/build /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY supervisord.conf /etc/supervisord.conf
 
+# Create data directory for configuration storage
+RUN mkdir -p /app/data
+
 # Copy and set up entrypoint script
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
