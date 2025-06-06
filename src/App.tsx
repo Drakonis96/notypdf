@@ -99,6 +99,10 @@ function App() {
     setPdfFile(file);
   }, []);
 
+  const handleCloseFile = useCallback(() => {
+    setPdfFile(null);
+  }, []);
+
   const handleTextSelection = useCallback(async (text: string) => {
     setSelectedText(text);
     if (text.trim()) {
@@ -332,6 +336,7 @@ function App() {
               translationConfig={translationConfig}
               onFullscreenChange={handleFullscreenChange}
               onPageTextExtracted={handlePageTextExtracted}
+              onFileClose={handleCloseFile}
             />
           </main>
         </div>
