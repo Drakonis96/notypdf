@@ -41,7 +41,11 @@ notion = Client(auth=NOTION_API_KEY)
 CONFIG_FILE_PATH = '/app/data/config.json'
 
 # Document storage path
-WORKSPACE_PATH = '/myworkspace'
+# Use environment variable or default to a local "myworkspace" folder
+WORKSPACE_PATH = os.environ.get(
+    "WORKSPACE_PATH",
+    os.path.join(os.getcwd(), "myworkspace"),
+)
 
 # Ensure data directory exists
 os.makedirs(os.path.dirname(CONFIG_FILE_PATH), exist_ok=True)
