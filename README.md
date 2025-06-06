@@ -267,6 +267,12 @@ If you have Node.js and npm installed:
    ```
 4. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
+## Progressive Web App
+
+You can install NotyPDF as a PWA on supported browsers. Open the app in your
+browser and use the **Install** option from the address bar menu or settings.
+This lets you launch NotyPDF like a native application even when offline.
+
 ## Web Capture Extension
 
 Capture text from any website and send it straight to Notion using the same
