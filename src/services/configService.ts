@@ -162,6 +162,17 @@ class ConfigService {
       console.error('Error saving bookmark:', error);
     }
   }
+
+  async removeBookmark(fileName: string): Promise<void> {
+    try {
+      const config = await this.getConfig();
+      const updated = { ...(config.bookmarks || {}) };
+      delete updated[fileName];
+      await this.updateConfig({ bookmarks: updated });
+    } catch (error) {
+      console.error('Error removing bookmark:', error);
+    }
+  }
 }
 
 const configService = new ConfigService();
