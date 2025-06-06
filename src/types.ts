@@ -68,5 +68,6 @@ export interface AppConfig {
   savedDatabaseIds: SavedDatabaseId[];
   columnMappings: Record<string, Partial<NotionConfig>>;
   tagMappings?: Record<string, TagMapping>;
+  bookmarks?: Record<string, number>;
   lastUpdated: string;
 }
