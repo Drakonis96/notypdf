@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { Upload, FileText, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCcw, Lightbulb, Maximize, Minimize, BookOpen, FileIcon, Layout, Languages, Bookmark } from 'lucide-react';
 import { TranslationConfig } from '../types';
+import configService from '../services/configService';
 import { translateTextStreaming } from '../services/translationService';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/legacy/build/pdf.worker.min.js`;
@@ -35,19 +36,28 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
 
   // Load bookmarked page when a new file is opened
   React.useEffect(() => {
-    if (file) {
-      const saved = localStorage.getItem(`bookmark_${file.name}`);
-      if (saved) {
-        const page = parseInt(saved, 10);
-        if (!isNaN(page)) {
-          setPageNumber(page);
-          setBookmarkedPage(page);
+    const loadBookmark = async () => {
+      if (file) {
+        try {
+          const cfg = await configService.getConfig();
+          const serverPage = cfg.bookmarks ? cfg.bookmarks[file.name] : undefined;
+          const saved = serverPage ?? localStorage.getItem(`bookmark_${file.name}`);
+          if (saved) {
+            const page = parseInt(saved as any, 10);
+            if (!isNaN(page)) {
+              setPageNumber(page);
+              setBookmarkedPage(page);
+              return;
+            }
+          }
+          setPageNumber(1);
+          setBookmarkedPage(null);
+        } catch (err) {
+          console.error('Error loading bookmark:', err);
         }
-      } else {
-        setPageNumber(1);
-        setBookmarkedPage(null);
       }
-    }
+    };
+    loadBookmark();
   }, [file]);
 
   function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
@@ -247,6 +257,9 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
     if (file) {
       localStorage.setItem(`bookmark_${file.name}`, pageNumber.toString());
       setBookmarkedPage(pageNumber);
+      configService.saveBookmark(file.name, pageNumber).catch(err =>
+        console.error('Error saving bookmark:', err)
+      );
     }
   }
 
@@ -427,7 +440,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
                       }
                     }}
                     className="btn btn-compact btn-same-size"
-                    style={{ width: 60, minHeight: 32, textAlign: 'center' }}
+                    style={{ width: 180, minHeight: 32, textAlign: 'center' }}
                     placeholder="#"
                     disabled={isContinuousView || numPages === 0}
                     title={isContinuousView ? "No disponible en vista continua" : "Ir a página"}

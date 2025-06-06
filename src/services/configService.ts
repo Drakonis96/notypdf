@@ -28,6 +28,7 @@ class ConfigService {
       return {
         savedDatabaseIds: [],
         columnMappings: {},
+        bookmarks: {},
         lastUpdated: new Date().toISOString()
       };
     }
@@ -143,6 +144,21 @@ class ConfigService {
         success: false,
         message: error instanceof Error ? error.message : 'Unknown error occurred'
       };
+    }
+  }
+
+  async getBookmarks(): Promise<Record<string, number>> {
+    const config = await this.getConfig();
+    return config.bookmarks || {};
+  }
+
+  async saveBookmark(fileName: string, page: number): Promise<void> {
+    try {
+      const config = await this.getConfig();
+      const updated = { ...(config.bookmarks || {}), [fileName]: page };
+      await this.updateConfig({ bookmarks: updated });
+    } catch (error) {
+      console.error('Error saving bookmark:', error);
     }
   }
 }
