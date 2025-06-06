@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
-import { Upload, FileText, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCcw, Lightbulb, Maximize, Minimize, BookOpen, FileIcon, Layout, Languages, Bookmark } from 'lucide-react';
+import { Upload, FileText, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCcw, Lightbulb, Maximize, Minimize, BookOpen, FileIcon, Layout, Languages, Bookmark, X } from 'lucide-react';
 import DocumentManagerPanel from './DocumentManagerPanel';
 import { TranslationConfig } from '../types';
 import configService from '../services/configService';
@@ -16,9 +16,10 @@ interface PDFViewerProps {
   translationConfig: TranslationConfig;
   onFullscreenChange?: (isFullscreen: boolean, container: HTMLElement | null) => void;
   onPageTextExtracted?: (text: string, pageNumber: number) => void;
+  onFileClose?: () => void;
 }
 
-const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelection, translationConfig, onFullscreenChange, onPageTextExtracted }) => {
+const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelection, translationConfig, onFullscreenChange, onPageTextExtracted, onFileClose }) => {
   const [numPages, setNumPages] = useState<number>(0);
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [error, setError] = useState<string>('');
@@ -197,6 +198,16 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
       if (document.exitFullscreen) {
         document.exitFullscreen();
       }
+    }
+  }
+
+  function handleCloseFile() {
+    setNumPages(0);
+    setPageNumber(1);
+    setError('');
+    setBookmarkedPage(null);
+    if (onFileClose) {
+      onFileClose();
     }
   }
 
@@ -527,10 +538,18 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
                   >
                     <Layout size={14} />
                   </button>
-                  <button 
-                    className="btn btn-compact btn-secondary btn-same-size" 
+                  <button
+                    className="btn btn-compact btn-secondary btn-same-size"
                     style={{ minWidth: 32, minHeight: 32 }}
-                    onClick={openFileDialog} 
+                    onClick={handleCloseFile}
+                    title="Close File"
+                  >
+                    <X size={14} />
+                  </button>
+                  <button
+                    className="btn btn-compact btn-secondary btn-same-size"
+                    style={{ minWidth: 32, minHeight: 32 }}
+                    onClick={openFileDialog}
                     title="Change File"
                   >
                     <Upload size={14} />
