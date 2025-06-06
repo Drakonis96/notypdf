@@ -21,6 +21,10 @@ Thumbs.db
 __pycache__/
 *.pyc
 
+# Local data and workspace directories
+data/
+myworkspace/
+
 # VSCode settings
 .vscode/
 
