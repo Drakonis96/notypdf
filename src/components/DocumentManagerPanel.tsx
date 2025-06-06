@@ -18,6 +18,7 @@ const DocumentManagerPanel: React.FC<DocumentManagerPanelProps> = ({ onFileUploa
   const [showClearAllConfirm, setShowClearAllConfirm] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<string>('');
   const [uploadDetails, setUploadDetails] = useState<{ current: number; total: number; currentFileName: string; } | null>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
 
   useEffect(() => {
     loadDocuments();
@@ -127,6 +128,25 @@ const DocumentManagerPanel: React.FC<DocumentManagerPanelProps> = ({ onFileUploa
       setIsLoading(false);
       setUploadProgress('');
       setUploadDetails(null);
+    }
+  };
+
+  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsDragOver(false);
+    const files = Array.from(event.dataTransfer.files);
+    if (files.length > 0) {
+      await handleMultipleFiles(files);
     }
   };
 
@@ -265,20 +285,28 @@ const DocumentManagerPanel: React.FC<DocumentManagerPanelProps> = ({ onFileUploa
               disabled={isLoading}
               multiple
             />
-            <label htmlFor="file-upload-inline" className={`upload-button ${isLoading ? 'disabled' : ''}`}>
-              <Upload size={20} />
-              <span>{isLoading ? (uploadProgress || 'Uploading...') : 'Upload Documents'}</span>
-            </label>
-            <button
-              className="clear-all-button"
-              onClick={handleClearAllFiles}
-              disabled={isLoading || documents.length === 0}
-              title={documents.length === 0 ? 'No files to clear' : `Clear all ${documents.length} files`}
-            >
-              <Trash2 size={20} />
-              <span>Clear All Files</span>
-            </button>
+          <label htmlFor="file-upload-inline" className={`upload-button ${isLoading ? 'disabled' : ''}`}>
+            <Upload size={20} />
+            <span>{isLoading ? (uploadProgress || 'Uploading...') : 'Upload Documents'}</span>
+          </label>
+          <button
+            className="clear-all-button"
+            onClick={handleClearAllFiles}
+            disabled={isLoading || documents.length === 0}
+            title={documents.length === 0 ? 'No files to clear' : `Clear all ${documents.length} files`}
+          >
+            <Trash2 size={20} />
+            <span>Clear All Files</span>
+          </button>
+          <div
+            className={`drop-area ${isDragOver ? 'drag-over' : ''}`}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
+            Drop files here
           </div>
+        </div>
           {uploadProgress && (
             <div className="upload-progress">
               {uploadProgress}

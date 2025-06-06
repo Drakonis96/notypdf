@@ -262,11 +262,22 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
 
   function handleBookmarkPage() {
     if (file) {
-      localStorage.setItem(`bookmark_${file.name}`, pageNumber.toString());
-      setBookmarkedPage(pageNumber);
-      configService.saveBookmark(file.name, pageNumber).catch(err =>
-        console.error('Error saving bookmark:', err)
-      );
+      const bookmarkKey = `bookmark_${file.name}`;
+      const isBookmarked = bookmarkedPage === pageNumber;
+
+      if (isBookmarked) {
+        localStorage.removeItem(bookmarkKey);
+        setBookmarkedPage(null);
+        configService.removeBookmark(file.name).catch(err =>
+          console.error('Error removing bookmark:', err)
+        );
+      } else {
+        localStorage.setItem(bookmarkKey, pageNumber.toString());
+        setBookmarkedPage(pageNumber);
+        configService.saveBookmark(file.name, pageNumber).catch(err =>
+          console.error('Error saving bookmark:', err)
+        );
+      }
     }
   }
 
