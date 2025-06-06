@@ -1,4 +1,11 @@
 /* Document Manager Modal */
+.document-manager-panel {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+}
 .document-manager-modal {
   background: white;
   border-radius: 12px;

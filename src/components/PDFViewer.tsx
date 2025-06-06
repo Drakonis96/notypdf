@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { Upload, FileText, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCcw, Lightbulb, Maximize, Minimize, BookOpen, FileIcon, Layout, Languages, Bookmark } from 'lucide-react';
+import DocumentManagerPanel from './DocumentManagerPanel';
 import { TranslationConfig } from '../types';
 import configService from '../services/configService';
 import { translateTextStreaming } from '../services/translationService';
@@ -311,25 +312,15 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
 
   if (!file) {
     return (
-      <div className="pdf-container">
-        <div 
-          className={`upload-area ${isDragOver ? 'dragover' : ''}`}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-          onClick={openFileDialog}
-        >
-          <Upload size={48} style={{ marginBottom: '16px', color: '#666' }} />
-          <h3>Upload PDF Document</h3>
-          <p>Drag and drop a PDF file here, or click to select</p>
-          <button className="btn" type="button">Choose File</button>
-        </div>
+      <div className="pdf-container" onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
+        <DocumentManagerPanel onFileUpload={uploadAndLoadFile} currentFile={null} />
         <input
           ref={fileInputRef}
           type="file"
           accept=".pdf"
           onChange={handleFileInputChange}
           className="file-input"
+          style={{ display: 'none' }}
         />
         {error && <div className="error">{error}</div>}
       </div>
