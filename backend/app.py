@@ -41,7 +41,11 @@ notion = Client(auth=NOTION_API_KEY)
 CONFIG_FILE_PATH = '/app/data/config.json'
 
 # Document storage path
-WORKSPACE_PATH = '/myworkspace'
+# Use environment variable or default to a local "myworkspace" folder
+WORKSPACE_PATH = os.environ.get(
+    "WORKSPACE_PATH",
+    os.path.join(os.getcwd(), "myworkspace"),
+)
 
 # Ensure data directory exists
 os.makedirs(os.path.dirname(CONFIG_FILE_PATH), exist_ok=True)
@@ -224,6 +228,8 @@ def load_config():
                 # Ensure tagMappings key exists
                 if "tagMappings" not in config:
                     config["tagMappings"] = {}
+                if "bookmarks" not in config:
+                    config["bookmarks"] = {}
                 return config
         else:
             # Return default configuration
@@ -231,6 +237,7 @@ def load_config():
                 "savedDatabaseIds": [],
                 "columnMappings": {},
                 "tagMappings": {},
+                "bookmarks": {},
                 "lastUpdated": datetime.now().isoformat()
             }
     except Exception as e:
@@ -239,6 +246,7 @@ def load_config():
             "savedDatabaseIds": [],
             "columnMappings": {},
             "tagMappings": {},
+            "bookmarks": {},
             "lastUpdated": datetime.now().isoformat()
         }
 
@@ -277,6 +285,8 @@ def update_config():
             current_config["columnMappings"] = data["columnMappings"]
         if "tagMappings" in data:
             current_config["tagMappings"] = data["tagMappings"]
+        if "bookmarks" in data:
+            current_config["bookmarks"] = data["bookmarks"]
         if save_config(current_config):
             return jsonify({"success": True, "message": "Configuration updated successfully"})
         else:
@@ -329,7 +339,7 @@ def restore_backup():
             return jsonify({"error": "Invalid JSON file"}), 400
         
         # Validate the backup data structure
-        required_keys = ["savedDatabaseIds", "columnMappings", "tagMappings"]
+        required_keys = ["savedDatabaseIds", "columnMappings", "tagMappings", "bookmarks"]
         if not all(key in backup_data for key in required_keys):
             return jsonify({"error": "Invalid backup file structure"}), 400
         
@@ -352,6 +362,7 @@ def clear_config():
             "savedDatabaseIds": [],
             "columnMappings": {},
             "tagMappings": {},
+            "bookmarks": {},
             "lastUpdated": datetime.now().isoformat()
         }
         
