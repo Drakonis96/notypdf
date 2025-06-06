@@ -249,9 +249,23 @@ If you have never used Docker before, follow these steps:
    ```sh
    docker-compose up --build
    ```
-6. Wait until you see a message that the server is running.
-7. Open your web browser and go to [http://localhost:5026](http://localhost:5026)
+6. The first time you run it, two folders (`data` and `myworkspace`) will be
+   created next to the `docker-compose.yml` file. All configuration is stored in
+   the `data` folder so it will remain even if you update or recreate the
+   container.
+7. Wait until you see a message that the server is running.
+8. Open your web browser and go to [http://localhost:5026](http://localhost:5026)
 
+If you prefer to run the container manually with `docker run` instead of using
+Docker Compose, make sure to mount the same folders so your configuration is
+preserved:
+```sh
+docker run -d \
+  -p 5026:5026 \
+  -v $(pwd)/data:/app/data \
+  -v $(pwd)/myworkspace:/myworkspace \
+  --name notypdf drakonis96/notypdf:latest
+```
 ### 4. Alternative: Run the React Server Directly (For Developers)
 
 If you have Node.js and npm installed:
