@@ -88,6 +88,11 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
     onFileUpload(selectedFile);
   }
 
+  // Helper used by DocumentManagerPanel which already uploaded the file
+  function loadFileOnly(selectedFile: File) {
+    onFileUpload(selectedFile);
+  }
+
   function handleFileInputChange(event: React.ChangeEvent<HTMLInputElement>) {
     const selectedFile = event.target.files?.[0];
     if (selectedFile) {
@@ -335,7 +340,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
   if (!file) {
     return (
       <div className="pdf-container" onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
-        <DocumentManagerPanel onFileUpload={uploadAndLoadFile} currentFile={null} />
+        <DocumentManagerPanel onFileUpload={loadFileOnly} currentFile={null} />
         <input
           ref={fileInputRef}
           type="file"
