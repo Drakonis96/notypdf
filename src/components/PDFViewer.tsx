@@ -4,6 +4,7 @@ import { Upload, FileText, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCcw
 import { TranslationConfig } from '../types';
 import configService from '../services/configService';
 import { translateTextStreaming } from '../services/translationService';
+import { fileService } from '../services/fileService';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/legacy/build/pdf.worker.min.js`;
 
@@ -70,15 +71,25 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
     console.error('PDF load error:', error);
   }
 
+  async function uploadAndLoadFile(selectedFile: File) {
+    if (selectedFile.type !== 'application/pdf') {
+      setError('Please select a valid PDF file');
+      return;
+    }
+    try {
+      await fileService.uploadFile(selectedFile);
+      setError('');
+    } catch (err) {
+      console.error('Error uploading file:', err);
+      setError('Failed to upload file to server');
+    }
+    onFileUpload(selectedFile);
+  }
+
   function handleFileInputChange(event: React.ChangeEvent<HTMLInputElement>) {
     const selectedFile = event.target.files?.[0];
     if (selectedFile) {
-      if (selectedFile.type === 'application/pdf') {
-        onFileUpload(selectedFile);
-        setError('');
-      } else {
-        setError('Please select a valid PDF file');
-      }
+      uploadAndLoadFile(selectedFile);
     }
   }
 
@@ -116,12 +127,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
     const files = event.dataTransfer.files;
     if (files.length > 0) {
       const droppedFile = files[0];
-      if (droppedFile.type === 'application/pdf') {
-        onFileUpload(droppedFile);
-        setError('');
-      } else {
-        setError('Please drop a valid PDF file');
-      }
+      uploadAndLoadFile(droppedFile);
     }
   }
 
