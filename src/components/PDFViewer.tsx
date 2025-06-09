@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { Upload, FileText, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCcw, Lightbulb, Maximize, Minimize, BookOpen, FileIcon, Layout, Languages, Bookmark, X } from 'lucide-react';
 import DocumentManagerPanel from './DocumentManagerPanel';
@@ -16,10 +16,11 @@ interface PDFViewerProps {
   translationConfig: TranslationConfig;
   onFullscreenChange?: (isFullscreen: boolean, container: HTMLElement | null) => void;
   onPageTextExtracted?: (text: string, pageNumber: number) => void;
+  onPageChange?: (pageNumber: number) => void;
   onFileClose?: () => void;
 }
 
-const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelection, translationConfig, onFullscreenChange, onPageTextExtracted, onFileClose }) => {
+const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelection, translationConfig, onFullscreenChange, onPageTextExtracted, onPageChange, onFileClose }) => {
   const [numPages, setNumPages] = useState<number>(0);
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [error, setError] = useState<string>('');
@@ -36,6 +37,10 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
   const pdfContainerRef = useRef<HTMLDivElement>(null);
   const pageRefs = useRef<(HTMLDivElement | null)[]>([]);
   const documentRef = useRef<any>(null);
+
+  useEffect(() => {
+    if (onPageChange) onPageChange(pageNumber);
+  }, [pageNumber, onPageChange]);
 
   // Load bookmarked page when a new file is opened
   React.useEffect(() => {
