@@ -264,12 +264,14 @@ const DocumentManagerModal: React.FC<DocumentManagerModalProps> = ({
   };
 
   const filteredDocuments = documents
-    .filter(doc =>
-      doc.name.toLowerCase().includes(searchTerm.toLowerCase())
+    .filter(
+      doc =>
+        !doc.name.toLowerCase().endsWith('.md') &&
+        doc.name.toLowerCase().includes(searchTerm.toLowerCase())
     )
-    .sort((a, b) => a.name.localeCompare(b.name, undefined, { 
-      numeric: true, 
-      sensitivity: 'base' 
+    .sort((a, b) => a.name.localeCompare(b.name, undefined, {
+      numeric: true,
+      sensitivity: 'base'
     }));
 
   if (!isOpen) return null;
