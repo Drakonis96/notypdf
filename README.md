@@ -68,6 +68,12 @@ NotyPDF helps you extract and save text from PDF documents to your Notion databa
 - **Configuration Menu**: Comprehensive settings panel with tabbed interface for easy navigation.
 - **Backup & Restore**: Export and import your configurations to ensure your settings are never lost.
 - **Translation Support**: Optional AI-powered translation with multiple provider support.
+- **AI Chat Context**: When chatting with an AI, NotyPDF sends the markdown text
+  content as formatted text, never the markdown file itself, and fingerprints it
+  so providers can cache the context and avoid wasting tokens.
+- **Provider Support**: Caching via `system_fingerprint` is documented for
+  OpenAI and OpenRouter only. DeepSeek and Gemini do not mention similar
+  functionality.
 - **Easy Configuration**: User-friendly interface for setting up Notion API credentials and database columns.
 
 ## How It Works
