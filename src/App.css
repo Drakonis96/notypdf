@@ -430,6 +430,17 @@
   box-shadow: 0 3px 7px rgba(108, 117, 125, 0.25);
 }
 
+.btn-chat {
+  background-color: #9c27b0;
+  color: white;
+}
+
+.btn-chat:hover:not(:disabled) {
+  background-color: #7b1fa2;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 7px rgba(156, 39, 176, 0.25);
+}
+
 .btn-active {
   background-color: #ffc107 !important; /* Keep warning color for active state */
   color: #212529 !important;

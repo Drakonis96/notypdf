@@ -4,6 +4,7 @@ import ConfigModal from './components/ConfigModal';
 import FloatingActionButton from './components/FloatingActionButton';
 import DocumentManagerModal from './components/DocumentManagerModal';
 import TranslationModal from './components/TranslationModal'; // Import TranslationModal
+import ChatModal from './components/ChatModal';
 import { NotionConfig, TranslationConfig, SavedDatabaseId } from './types';
 import configService from './services/configService';
 import notionService from './services/notionService';
@@ -47,6 +48,9 @@ function App() {
   const [appModalSaving, setAppModalSaving] = useState<boolean>(false);
   const [appModalSuccessMessage, setAppModalSuccessMessage] = useState<string>('');
   const [appModalError, setAppModalError] = useState<string>('');
+
+  const [showChatModal, setShowChatModal] = useState<boolean>(false);
+  const [chatInitialMessage, setChatInitialMessage] = useState<string | undefined>(undefined);
 
   // Load configuration from server on component mount
   useEffect(() => {
@@ -346,6 +350,10 @@ function App() {
       <FloatingActionButton
         onSettingsClick={() => setShowConfigModal(true)}
         onDocumentManagerClick={() => setShowDocumentManager(true)}
+        onChatClick={() => {
+          setChatInitialMessage(undefined);
+          setShowChatModal(true);
+        }}
       />
 
       {/* Document Manager Modal */}
@@ -370,6 +378,10 @@ function App() {
         savedDatabaseIds={savedDatabaseIds}
         onDatabaseIdSave={handleDatabaseIdSave}
         refreshDatabaseIds={refreshDatabaseIds}
+        onSendToChat={(text) => {
+          setChatInitialMessage(text);
+          setShowChatModal(true);
+        }}
       />
 
       {/* App-level Translation Modal */}
@@ -390,6 +402,18 @@ function App() {
           saving={appModalSaving}
           success={appModalSuccessMessage}
           error={appModalError}
+          onSendToChat={(text) => {
+            setChatInitialMessage(text);
+            setShowChatModal(true);
+          }}
+        />
+      )}
+
+      {showChatModal && (
+        <ChatModal
+          isOpen={showChatModal}
+          onClose={() => setShowChatModal(false)}
+          initialMessage={chatInitialMessage}
         />
       )}
     </div>
@@ -397,3 +421,4 @@ function App() {
 }
 
 export default App;
+

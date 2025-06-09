@@ -20,6 +20,7 @@ interface ConfigModalProps {
   savedDatabaseIds?: SavedDatabaseId[];
   onDatabaseIdSave?: (databaseId: SavedDatabaseId) => void;
   refreshDatabaseIds?: () => void;
+  onSendToChat?: (text: string) => void;
 }
 
 type TabType = 'configuration' | 'database-ids' | 'tag-config' | 'backup';
@@ -36,7 +37,8 @@ const ConfigModal: React.FC<ConfigModalProps> = ({
   fullscreenContainer,
   savedDatabaseIds,
   onDatabaseIdSave,
-  refreshDatabaseIds
+  refreshDatabaseIds,
+  onSendToChat
 }) => {
   const [activeTab, setActiveTab] = useState<TabType>('configuration');
   const [showHelpModal, setShowHelpModal] = useState(false);
@@ -62,10 +64,11 @@ const ConfigModal: React.FC<ConfigModalProps> = ({
             setTranslationConfig={setTranslationConfig}
             onClearSelection={onClearSelection}
             fullscreenContainer={fullscreenContainer}
-            savedDatabaseIds={savedDatabaseIds}
-            refreshDatabaseIds={refreshDatabaseIds}
-            isConfigModalOpen={isOpen}
-          />
+          savedDatabaseIds={savedDatabaseIds}
+          refreshDatabaseIds={refreshDatabaseIds}
+          isConfigModalOpen={isOpen}
+          onSendToChat={onSendToChat}
+        />
         );
       case 'database-ids':
         return (

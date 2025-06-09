@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import ReactMarkdown from 'react-markdown';
+import { MessageCircle } from 'lucide-react';
 import { TranslationConfig } from '../types';
 import SuccessMessage from './SuccessMessage';
 
@@ -22,6 +23,7 @@ interface TranslationModalProps {
   success?: string;
   saving?: boolean;
   error?: string;
+  onSendToChat?: (text: string) => void;
 }
 
 const TranslationModal: React.FC<TranslationModalProps> = ({
@@ -41,7 +43,8 @@ const TranslationModal: React.FC<TranslationModalProps> = ({
   portalContainer = null,
   success = '',
   saving = false,
-  error = ''
+  error = '',
+  onSendToChat
 }) => {
   const [selectedText, setSelectedText] = useState<string>('');
   const [modalAnnotation, setModalAnnotation] = useState<string>(annotation);
@@ -119,6 +122,13 @@ const TranslationModal: React.FC<TranslationModalProps> = ({
       setModalAnnotation('');
       setModalPageNumber('');
       // NO limpiar selectedText aquí
+    }
+  };
+
+  const handleSendToChat = () => {
+    const text = selectedText.trim() || originalText.trim();
+    if (onSendToChat && text) {
+      onSendToChat(`[${text}]`);
     }
   };
 
@@ -387,14 +397,20 @@ const TranslationModal: React.FC<TranslationModalProps> = ({
           >
             {saving ? 'Saving...' : 'Add Everything'}
           </button>
-          <button 
+          <button
             className="btn btn-secondary"
             onClick={handleAddSelection}
             disabled={!selectedText.trim() || isStreaming || saving}
           >
             {saving ? 'Saving...' : 'Add Selection'}
           </button>
-          <button 
+          {onSendToChat && (
+            <button className="btn btn-chat" onClick={handleSendToChat} disabled={isStreaming || saving}>
+              <MessageCircle size={16} />
+              <span style={{ marginLeft: '4px' }}>Send to chat</span>
+            </button>
+          )}
+          <button
             className="btn btn-tertiary"
             onClick={handleClose}
           >
