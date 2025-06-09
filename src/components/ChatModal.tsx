@@ -101,6 +101,7 @@ const ChatModal: React.FC<ChatModalProps> = ({
   const [provider, setProvider] = useState<AIProvider>("openai");
   const [model, setModel] = useState<AIModel>("gpt-4o-mini");
   const [documentMarkdown, setDocumentMarkdown] = useState("");
+  const [isMarkdownLoading, setIsMarkdownLoading] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -111,10 +112,19 @@ const ChatModal: React.FC<ChatModalProps> = ({
       }
       textareaRef.current?.focus();
       if (fileName) {
+        setIsMarkdownLoading(true);
         markdownService
           .getMarkdown(fileName)
-          .then((md) => setDocumentMarkdown(md))
-          .catch(() => setDocumentMarkdown(""));
+          .then((md) => {
+            setDocumentMarkdown(md);
+            setIsMarkdownLoading(false);
+          })
+          .catch(() => {
+            setDocumentMarkdown("");
+            setIsMarkdownLoading(false);
+          });
+      } else {
+        setDocumentMarkdown("");
       }
     }
   }, [isOpen, selectedText, fileName]);
@@ -122,6 +132,17 @@ const ChatModal: React.FC<ChatModalProps> = ({
   const sendMessage = async () => {
     const content = input.trim();
     if (!content) return;
+    if (!documentMarkdown && fileName) {
+      try {
+        setIsMarkdownLoading(true);
+        const md = await markdownService.getMarkdown(fileName);
+        setDocumentMarkdown(md);
+      } catch {
+        setDocumentMarkdown("");
+      } finally {
+        setIsMarkdownLoading(false);
+      }
+    }
     const userMsg: ChatMessage = { role: "user", content };
     const newMessages = [...messages, userMsg];
     setMessages([...newMessages, { role: "assistant", content: "" }]);
@@ -197,6 +218,9 @@ const ChatModal: React.FC<ChatModalProps> = ({
           </button>
         </div>
         <div className="chat-messages">
+          {isMarkdownLoading && (
+            <div className="chat-status">Loading document...</div>
+          )}
           {messages.map((m, idx) => (
             <div key={idx} className={`chat-message ${m.role}`}>
               {m.content}
@@ -248,7 +272,7 @@ const ChatModal: React.FC<ChatModalProps> = ({
             <button
               className="btn btn-primary"
               onClick={sendMessage}
-              disabled={isStreaming}
+              disabled={isStreaming || isMarkdownLoading}
             >
               {isStreaming ? "Sending..." : "Send"}
             </button>
