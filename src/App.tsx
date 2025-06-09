@@ -4,7 +4,6 @@ import ConfigModal from './components/ConfigModal';
 import FloatingActionButton from './components/FloatingActionButton';
 import DocumentManagerModal from './components/DocumentManagerModal';
 import TranslationModal from './components/TranslationModal'; // Import TranslationModal
-import ChatModal from './components/ChatModal';
 import { NotionConfig, TranslationConfig, SavedDatabaseId } from './types';
 import configService from './services/configService';
 import notionService from './services/notionService';
@@ -39,9 +38,6 @@ function App() {
     targetLanguage: '',
     sendMode: 'original',
   });
-  const [isChatMode, setIsChatMode] = useState<boolean>(false);
-  const [showChatModal, setShowChatModal] = useState<boolean>(false);
-  const [chatSelectedText, setChatSelectedText] = useState<string>('');
 
   // State for App-level Translation Modal
   const [isAppTranslationModalOpen, setIsAppTranslationModalOpen] = useState<boolean>(false);
@@ -108,17 +104,6 @@ function App() {
   }, []);
 
   const handleTextSelection = useCallback(async (text: string) => {
-    if (isChatMode) {
-      setChatSelectedText(text);
-      if (text.trim()) {
-        setShowChatModal(true);
-        if (window.getSelection) {
-          window.getSelection()?.removeAllRanges();
-        }
-      }
-      return;
-    }
-
     setSelectedText(text);
     if (text.trim()) {
       setIsAppTranslationModalOpen(true);
@@ -349,8 +334,6 @@ function App() {
               onFileUpload={handleFileUpload}
               onTextSelection={handleTextSelection}
               translationConfig={translationConfig}
-              chatMode={isChatMode}
-              onToggleChatMode={() => setIsChatMode(!isChatMode)}
               onFullscreenChange={handleFullscreenChange}
               onPageTextExtracted={handlePageTextExtracted}
               onFileClose={handleCloseFile}
@@ -363,7 +346,6 @@ function App() {
       <FloatingActionButton
         onSettingsClick={() => setShowConfigModal(true)}
         onDocumentManagerClick={() => setShowDocumentManager(true)}
-        onChatClick={() => { setShowChatModal(true); setChatSelectedText(''); }}
       />
 
       {/* Document Manager Modal */}
@@ -407,15 +389,7 @@ function App() {
           portalContainer={fullscreenContainer || document.body}
           saving={appModalSaving}
           success={appModalSuccessMessage}
-        error={appModalError}
-      />
-      )}
-
-      {showChatModal && (
-        <ChatModal
-          isOpen={showChatModal}
-          onClose={() => setShowChatModal(false)}
-          selectedText={chatSelectedText}
+          error={appModalError}
         />
       )}
     </div>
