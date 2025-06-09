@@ -150,6 +150,16 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialMessage, 
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+    if (e.key === 'Escape') {
+      onClose();
+    }
+  };
+
   const resetConversation = () => {
     setMessages([]);
     setStreamingText('');
@@ -230,6 +240,7 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialMessage, 
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             rows={2}
+            onKeyDown={handleKeyDown}
           />
           <div className="chat-actions">
             <button
