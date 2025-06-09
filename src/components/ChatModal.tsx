@@ -119,14 +119,19 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialMessage, 
     if (!toSend.trim() || isContextLoading) return;
     try {
       const apiKey = await apiKeyService.getApiKey(provider);
-      const userMessages = [...messages, { role: 'user', content: toSend.trim() }];
+      const userMessage: ChatMessage = { role: 'user', content: toSend.trim() };
+      const userMessages = [...messages, userMessage];
       setMessages(userMessages);
       setInputText('');
       setIsStreaming(true);
       setStreamingText('');
-      const messagesToSend = messages.length === 0 && markdownContext
-        ? [{ role: 'system', content: markdownContext }, ...userMessages]
-        : userMessages;
+      let messagesToSend: ChatMessage[];
+      if (messages.length === 0 && markdownContext) {
+        const combined = `[DOCUMENTO]\n${markdownContext}\n[/DOCUMENTO]\n\n${toSend.trim()}`;
+        messagesToSend = [...messages, { role: 'user', content: combined }];
+      } else {
+        messagesToSend = [...messages, userMessage];
+      }
       await chatService.streamChat(messagesToSend, {
         provider,
         model,
