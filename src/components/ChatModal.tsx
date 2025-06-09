@@ -104,6 +104,7 @@ const ChatModal: React.FC<ChatModalProps> = ({
   const [isMarkdownLoading, setIsMarkdownLoading] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -128,6 +129,11 @@ const ChatModal: React.FC<ChatModalProps> = ({
       }
     }
   }, [isOpen, selectedText, fileName]);
+
+  // Automatically scroll to the newest message when messages update
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isStreaming]);
 
   const sendMessage = async () => {
     const content = input.trim();
@@ -226,6 +232,7 @@ const ChatModal: React.FC<ChatModalProps> = ({
               {m.content}
             </div>
           ))}
+          <div ref={messagesEndRef} />
         </div>
         <div className="chat-controls">
           <div className="chat-selectors">
