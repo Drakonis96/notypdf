@@ -57,11 +57,34 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialMessage, 
   const [isContextLoading, setIsContextLoading] = useState(false);
   const [limitTokens, setLimitTokens] = useState(false);
   const [tokenLimit, setTokenLimit] = useState('2048');
+  const [contextFingerprint, setContextFingerprint] = useState<string>();
   const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isOpen && modalRef.current) modalRef.current.focus();
   }, [isOpen]);
+
+  // Compute a stable fingerprint for the markdown context so providers can cache it
+  useEffect(() => {
+    async function computeFingerprint(text: string): Promise<string> {
+      const data = new TextEncoder().encode(text);
+      const hash = await crypto.subtle.digest('SHA-256', data);
+      return Array.from(new Uint8Array(hash))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
+    }
+
+    if (markdownContext) {
+      computeFingerprint(markdownContext)
+        .then(setContextFingerprint)
+        .catch(err => {
+          console.error('Fingerprint error:', err);
+          setContextFingerprint(undefined);
+        });
+    } else {
+      setContextFingerprint(undefined);
+    }
+  }, [markdownContext]);
 
   useEffect(() => {
     const loadContext = async () => {
@@ -124,14 +147,21 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialMessage, 
       setInputText('');
       setIsStreaming(true);
       setStreamingText('');
-      const messagesToSend = messages.length === 0 && markdownContext
-        ? [{ role: 'system', content: markdownContext }, ...userMessages]
-        : userMessages;
+      // If a markdown context is available, send its *text* to the AI as a
+      // system message. We never transmit the markdown file itself. A stable
+      // fingerprint accompanies the request so OpenAI/OpenRouter can cache the
+      // context. DeepSeek caches prefixes automatically, and Gemini simply
+      // ignores this value.
+      const messagesToSend =
+        messages.length === 0 && markdownContext
+          ? [{ role: 'system', content: markdownContext }, ...userMessages]
+          : userMessages;
       await chatService.streamChat(messagesToSend, {
         provider,
         model,
         apiKey,
         maxTokens: limitTokens ? parseInt(tokenLimit, 10) || undefined : undefined,
+        systemFingerprint: contextFingerprint,
         onProgress: (txt) => setStreamingText(txt),
         onComplete: (full) => {
           setIsStreaming(false);

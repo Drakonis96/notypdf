@@ -11,21 +11,23 @@ export interface StreamingChatOptions {
   model: TranslationModel;
   apiKey: string;
   maxTokens?: number;
+  systemFingerprint?: string;
   onProgress?: (partial: string) => void;
   onComplete?: (full: string) => void;
   onError?: (err: Error) => void;
 }
 
 async function chatWithOpenAIStreaming(messages: ChatMessage[], options: StreamingChatOptions): Promise<void> {
-  const { model, apiKey, maxTokens, onProgress, onComplete, onError } = options;
+  const { model, apiKey, maxTokens, onProgress, onComplete, onError, systemFingerprint } = options;
   const url = 'https://api.openai.com/v1/chat/completions';
-  const body = {
+  const body: Record<string, any> = {
     model,
     messages,
     max_tokens: maxTokens ?? 2048,
     temperature: 0.2,
     stream: true,
   };
+  if (systemFingerprint) body.system_fingerprint = systemFingerprint;
 
   try {
     const response = await fetch(url, {
@@ -81,15 +83,16 @@ async function chatWithOpenAIStreaming(messages: ChatMessage[], options: Streami
 }
 
 async function chatWithOpenRouterStreaming(messages: ChatMessage[], options: StreamingChatOptions): Promise<void> {
-  const { model, apiKey, maxTokens, onProgress, onComplete, onError } = options;
+  const { model, apiKey, maxTokens, onProgress, onComplete, onError, systemFingerprint } = options;
   const url = 'https://openrouter.ai/api/v1/chat/completions';
-  const body = {
+  const body: Record<string, any> = {
     model,
     messages,
     max_tokens: maxTokens ?? 2048,
     temperature: 0.2,
     stream: true,
   };
+  if (systemFingerprint) body.system_fingerprint = systemFingerprint;
   try {
     const response = await fetch(url, {
       method: 'POST',
@@ -137,6 +140,8 @@ async function chatWithOpenRouterStreaming(messages: ChatMessage[], options: Str
 
 async function chatWithGeminiStreaming(messages: ChatMessage[], options: StreamingChatOptions): Promise<void> {
   const { model, apiKey, maxTokens, onProgress, onComplete, onError } = options;
+  // Gemini's API docs don't mention a system fingerprint parameter,
+  // so caching the context this way is currently unsupported.
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?key=${apiKey}&alt=sse`;
   const contents = messages.map(m => ({ role: m.role === 'assistant' ? 'model' : m.role, parts: [{ text: m.content }] }));
   const body = {
@@ -196,6 +201,9 @@ async function chatWithDeepSeekStreaming(messages: ChatMessage[], options: Strea
     temperature: 0.2,
     stream: true,
   };
+  // DeepSeek's API documentation doesn't list a "system_fingerprint" parameter.
+  // Instead, their service performs disk-based prefix caching automatically,
+  // so no manual fingerprint is required.
   try {
     const response = await fetch(url, {
       method: 'POST',
