@@ -520,6 +520,14 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
                     </button>
                   )}
                   <button
+                    className={`btn btn-compact btn-same-size ${chatMode ? 'btn-active' : ''}`}
+                    style={{ minWidth: 32, minHeight: 32 }}
+                    onClick={onToggleChatMode}
+                    title={chatMode ? 'Disable chat mode' : 'Enable chat mode'}
+                  >
+                    <MessageCircle size={14} />
+                  </button>
+                  <button
                     className={`btn btn-compact btn-same-size ${bookmarkedPage === pageNumber ? 'btn-active' : ''}`}
                     style={{ minWidth: 32, minHeight: 32 }}
                     onClick={handleBookmarkPage}
