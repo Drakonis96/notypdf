@@ -20,6 +20,7 @@ interface ConfigPanelProps {
   savedDatabaseIds?: SavedDatabaseId[];
   refreshDatabaseIds?: () => void;
   isConfigModalOpen?: boolean; // New prop to indicate if config modal is open
+  onSendToChat?: (text: string) => void;
 }
 
 // Translation options constants
@@ -62,9 +63,10 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
   setTranslationConfig, 
   onClearSelection, 
   fullscreenContainer, 
-  savedDatabaseIds, 
+  savedDatabaseIds,
   refreshDatabaseIds,
-  isConfigModalOpen = false // Default to false for backward compatibility
+  isConfigModalOpen = false, // Default to false for backward compatibility
+  onSendToChat
 }) => {
   const [properties, setProperties] = useState<NotionProperty[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -927,6 +929,7 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
           portalContainer={document.body} // Ensures modal is portalled to the body
           success={success}
           saving={saving}
+          onSendToChat={onSendToChat}
         />
 
         <TranslationModal
@@ -946,6 +949,7 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
           portalContainer={fullscreenContainer}
           success={success}
           saving={saving}
+          onSendToChat={onSendToChat}
         />
       </div>
     </div>

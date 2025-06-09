@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
-import { Settings, FileText, Plus, X } from 'lucide-react';
+import { Settings, FileText, MessageCircle, Plus, X } from 'lucide-react';
 import './FloatingActionButton.css';
 
 interface FloatingActionButtonProps {
   onSettingsClick: () => void;
   onDocumentManagerClick: () => void;
+  onChatClick: () => void;
 }
 
 const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
   onSettingsClick,
   onDocumentManagerClick,
+  onChatClick,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -41,6 +43,15 @@ const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
           title="Document Manager"
         >
           <FileText size={20} />
+        </button>
+
+        <button
+          className="fab-action-btn fab-action-chat"
+          onClick={() => handleActionClick(onChatClick)}
+          aria-label="Chat"
+          title="Chat"
+        >
+          <MessageCircle size={20} />
         </button>
         
         <button
