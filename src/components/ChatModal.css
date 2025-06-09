@@ -4,7 +4,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0,0,0,0.4);
+  background: rgba(0, 0, 0, 0.4);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -14,7 +14,7 @@
 .chat-modal {
   background: white;
   border-radius: 8px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   width: 90vw;
   max-width: 600px;
   max-height: 85vh;
@@ -37,20 +37,29 @@
   flex: 1;
   padding: 16px;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .chat-message {
-  margin-bottom: 12px;
+  max-width: 85%;
+  padding: 8px 12px;
+  border-radius: 8px;
   white-space: pre-wrap;
   line-height: 1.4;
 }
 
 .chat-message.user {
-  text-align: right;
+  align-self: flex-end;
+  background: #daf1fc;
+  border-bottom-right-radius: 0;
 }
 
 .chat-message.assistant {
-  text-align: left;
+  align-self: flex-start;
+  background: #f1f0f0;
+  border-bottom-left-radius: 0;
 }
 
 .chat-controls {

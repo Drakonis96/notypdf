@@ -1,101 +1,115 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import PDFViewer from './components/PDFViewer';
-import ConfigModal from './components/ConfigModal';
-import FloatingActionButton from './components/FloatingActionButton';
-import DocumentManagerModal from './components/DocumentManagerModal';
-import TranslationModal from './components/TranslationModal'; // Import TranslationModal
-import ChatModal from './components/ChatModal';
-import { NotionConfig, TranslationConfig, SavedDatabaseId } from './types';
-import configService from './services/configService';
-import notionService from './services/notionService';
-import translationService from './services/translationService';
-import apiKeyService from './services/apiKeyService';
-import './App.css';
+import React, { useState, useCallback, useEffect } from "react";
+import PDFViewer from "./components/PDFViewer";
+import ConfigModal from "./components/ConfigModal";
+import FloatingActionButton from "./components/FloatingActionButton";
+import DocumentManagerModal from "./components/DocumentManagerModal";
+import TranslationModal from "./components/TranslationModal"; // Import TranslationModal
+import ChatModal from "./components/ChatModal";
+import { NotionConfig, TranslationConfig, SavedDatabaseId } from "./types";
+import configService from "./services/configService";
+import notionService from "./services/notionService";
+import translationService from "./services/translationService";
+import apiKeyService from "./services/apiKeyService";
+import "./App.css";
 
 function App() {
   const [pdfFile, setPdfFile] = useState<File | null>(null);
-  const [selectedText, setSelectedText] = useState<string>('');
+  const [selectedText, setSelectedText] = useState<string>("");
   const [showConfigModal, setShowConfigModal] = useState<boolean>(false);
-  const [showDocumentManager, setShowDocumentManager] = useState<boolean>(false);
+  const [showDocumentManager, setShowDocumentManager] =
+    useState<boolean>(false);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
-  const [fullscreenContainer, setFullscreenContainer] = useState<HTMLElement | null>(null);
-  const [savedDatabaseIds, setSavedDatabaseIds] = useState<SavedDatabaseId[]>([]);
+  const [fullscreenContainer, setFullscreenContainer] =
+    useState<HTMLElement | null>(null);
+  const [savedDatabaseIds, setSavedDatabaseIds] = useState<SavedDatabaseId[]>(
+    [],
+  );
   const [notionConfig, setNotionConfig] = useState<NotionConfig>({
-    databaseId: '',
-    identifierColumn: '',
-    textColumn: '',
-    annotationColumn: '',
-    pageColumn: '',
-    identifierPattern: '',
-    annotation: '',
-    pageNumber: '',
-    documentIdInsertionColumn: '', 
-    enableDocumentIdInsertion: false
+    databaseId: "",
+    identifierColumn: "",
+    textColumn: "",
+    annotationColumn: "",
+    pageColumn: "",
+    identifierPattern: "",
+    annotation: "",
+    pageNumber: "",
+    documentIdInsertionColumn: "",
+    enableDocumentIdInsertion: false,
   });
-  const [translationConfig, setTranslationConfig] = useState<TranslationConfig>({
-    enabled: false,
-    provider: '',
-    model: '',
-    targetLanguage: '',
-    sendMode: 'original',
-  });
+  const [translationConfig, setTranslationConfig] = useState<TranslationConfig>(
+    {
+      enabled: false,
+      provider: "",
+      model: "",
+      targetLanguage: "",
+      sendMode: "original",
+    },
+  );
   const [isChatMode, setIsChatMode] = useState<boolean>(false);
   const [showChatModal, setShowChatModal] = useState<boolean>(false);
-  const [chatSelectedText, setChatSelectedText] = useState<string>('');
+  const [chatSelectedText, setChatSelectedText] = useState<string>("");
 
   // State for App-level Translation Modal
-  const [isAppTranslationModalOpen, setIsAppTranslationModalOpen] = useState<boolean>(false);
-  const [appModalTranslatedText, setAppModalTranslatedText] = useState<string>('');
-  const [appModalIsStreaming, setAppModalIsStreaming] = useState<boolean>(false);
-  const [appModalStreamingText, setAppModalStreamingText] = useState<string>('');
+  const [isAppTranslationModalOpen, setIsAppTranslationModalOpen] =
+    useState<boolean>(false);
+  const [appModalTranslatedText, setAppModalTranslatedText] =
+    useState<string>("");
+  const [appModalIsStreaming, setAppModalIsStreaming] =
+    useState<boolean>(false);
+  const [appModalStreamingText, setAppModalStreamingText] =
+    useState<string>("");
   const [appModalSaving, setAppModalSaving] = useState<boolean>(false);
-  const [appModalSuccessMessage, setAppModalSuccessMessage] = useState<string>('');
-  const [appModalError, setAppModalError] = useState<string>('');
+  const [appModalSuccessMessage, setAppModalSuccessMessage] =
+    useState<string>("");
+  const [appModalError, setAppModalError] = useState<string>("");
 
   // Load configuration from server on component mount
   useEffect(() => {
     const loadConfiguration = async () => {
       try {
         const config = await configService.getConfig();
-        
+
         // Load saved database IDs
         if (config.savedDatabaseIds) {
           const withDates = config.savedDatabaseIds.map((item: any) => ({
             ...item,
-            createdAt: new Date(item.createdAt)
+            createdAt: new Date(item.createdAt),
           }));
           setSavedDatabaseIds(withDates);
         }
-        
+
         // Load column mappings (if any stored configuration exists)
-        if (config.columnMappings && Object.keys(config.columnMappings).length > 0) {
+        if (
+          config.columnMappings &&
+          Object.keys(config.columnMappings).length > 0
+        ) {
           // For now, we could load the most recent mapping or let user select
           // This is a placeholder for future column mapping persistence
         }
       } catch (err) {
-        console.error('Error loading configuration from server:', err);
-        
+        console.error("Error loading configuration from server:", err);
+
         // Fallback to localStorage for migration
-        const savedDbIds = localStorage.getItem('savedDatabaseIds');
+        const savedDbIds = localStorage.getItem("savedDatabaseIds");
         if (savedDbIds) {
           try {
             const parsed = JSON.parse(savedDbIds);
             const withDates = parsed.map((item: any) => ({
               ...item,
-              createdAt: new Date(item.createdAt)
+              createdAt: new Date(item.createdAt),
             }));
             setSavedDatabaseIds(withDates);
-            
+
             // Migrate to server
             await configService.updateConfig({ savedDatabaseIds: withDates });
-            localStorage.removeItem('savedDatabaseIds');
+            localStorage.removeItem("savedDatabaseIds");
           } catch (migrationErr) {
-            console.error('Error migrating data to server:', migrationErr);
+            console.error("Error migrating data to server:", migrationErr);
           }
         }
       }
     };
-    
+
     loadConfiguration();
   }, []);
 
@@ -107,104 +121,122 @@ function App() {
     setPdfFile(null);
   }, []);
 
-  const handleTextSelection = useCallback(async (text: string) => {
-    if (isChatMode) {
-      setChatSelectedText(text);
-      if (text.trim()) {
-        setShowChatModal(true);
-        if (window.getSelection) {
-          window.getSelection()?.removeAllRanges();
+  const handleTextSelection = useCallback(
+    async (text: string) => {
+      if (isChatMode) {
+        setChatSelectedText(text);
+        if (text.trim()) {
+          setShowChatModal(true);
+          if (window.getSelection) {
+            window.getSelection()?.removeAllRanges();
+          }
         }
+        return;
       }
-      return;
-    }
 
-    setSelectedText(text);
-    if (text.trim()) {
-      setIsAppTranslationModalOpen(true);
-      setAppModalError('');
-      
-      // Implement translation logic if translation is enabled
-      if (translationConfig.enabled) {
-        // Check if translation is fully configured
-        if (
-          translationConfig.targetLanguage &&
-          translationConfig.provider &&
-          translationConfig.model
-        ) {
-          // Translation is fully configured - auto-translate
-          try {
-            // Clear visual selection before showing modal
-            if (window.getSelection) {
-              window.getSelection()?.removeAllRanges();
+      setSelectedText(text);
+      if (text.trim()) {
+        setIsAppTranslationModalOpen(true);
+        setAppModalError("");
+
+        // Implement translation logic if translation is enabled
+        if (translationConfig.enabled) {
+          // Check if translation is fully configured
+          if (
+            translationConfig.targetLanguage &&
+            translationConfig.provider &&
+            translationConfig.model
+          ) {
+            // Translation is fully configured - auto-translate
+            try {
+              // Clear visual selection before showing modal
+              if (window.getSelection) {
+                window.getSelection()?.removeAllRanges();
+              }
+
+              const apiKey = await apiKeyService.getApiKey(
+                translationConfig.provider,
+              );
+              if (!apiKey) {
+                throw new Error(
+                  "Missing API key for selected translation provider",
+                );
+              }
+
+              // Use streaming for OpenAI, OpenRouter, Gemini, and DeepSeek
+              if (
+                translationConfig.provider === "openai" ||
+                translationConfig.provider === "openrouter" ||
+                translationConfig.provider === "gemini" ||
+                translationConfig.provider === "deepseek"
+              ) {
+                setAppModalIsStreaming(true);
+                setAppModalStreamingText("");
+                setAppModalTranslatedText("");
+
+                await translationService.translateTextStreaming(text, {
+                  provider: translationConfig.provider,
+                  model: translationConfig.model,
+                  apiKey,
+                  targetLanguage: translationConfig.targetLanguage,
+                  onProgress: (partialText: string) => {
+                    setAppModalStreamingText(partialText);
+                  },
+                  onComplete: (fullText: string) => {
+                    setAppModalTranslatedText(fullText);
+                    setAppModalIsStreaming(false);
+                    setAppModalStreamingText("");
+                  },
+                  onError: (error: Error) => {
+                    setAppModalError("Translation failed: " + error.message);
+                    setAppModalIsStreaming(false);
+                    setAppModalStreamingText("");
+                  },
+                });
+              } else {
+                // Fallback to regular translation for other providers
+                const translated = await translationService.translateText(
+                  text,
+                  {
+                    provider: translationConfig.provider,
+                    model: translationConfig.model,
+                    apiKey,
+                    targetLanguage: translationConfig.targetLanguage,
+                  },
+                );
+                setAppModalTranslatedText(translated);
+              }
+            } catch (err: any) {
+              setAppModalError("Translation failed: " + (err.message || ""));
+              setAppModalIsStreaming(false);
+              setAppModalStreamingText("");
             }
-
-            const apiKey = await apiKeyService.getApiKey(translationConfig.provider);
-            if (!apiKey) {
-              throw new Error('Missing API key for selected translation provider');
-            }
-
-            // Use streaming for OpenAI, OpenRouter, Gemini, and DeepSeek
-            if (translationConfig.provider === 'openai' || translationConfig.provider === 'openrouter' || translationConfig.provider === 'gemini' || translationConfig.provider === 'deepseek') {
-              setAppModalIsStreaming(true);
-              setAppModalStreamingText('');
-              setAppModalTranslatedText('');
-
-              await translationService.translateTextStreaming(text, {
-                provider: translationConfig.provider,
-                model: translationConfig.model,
-                apiKey,
-                targetLanguage: translationConfig.targetLanguage,
-                onProgress: (partialText: string) => {
-                  setAppModalStreamingText(partialText);
-                },
-                onComplete: (fullText: string) => {
-                  setAppModalTranslatedText(fullText);
-                  setAppModalIsStreaming(false);
-                  setAppModalStreamingText('');
-                },
-                onError: (error: Error) => {
-                  setAppModalError('Translation failed: ' + error.message);
-                  setAppModalIsStreaming(false);
-                  setAppModalStreamingText('');
-                }
-              });
-            } else {
-              // Fallback to regular translation for other providers
-              const translated = await translationService.translateText(text, {
-                provider: translationConfig.provider,
-                model: translationConfig.model,
-                apiKey,
-                targetLanguage: translationConfig.targetLanguage,
-              });
-              setAppModalTranslatedText(translated);
-            }
-          } catch (err: any) {
-            setAppModalError('Translation failed: ' + (err.message || ''));
-            setAppModalIsStreaming(false);
-            setAppModalStreamingText('');
+          } else {
+            // Translation is enabled but not fully configured - show modal with original text
+            setAppModalTranslatedText(text);
           }
         } else {
-          // Translation is enabled but not fully configured - show modal with original text
-          setAppModalTranslatedText(text);
+          // Translation is disabled - just show the original text
+          setAppModalTranslatedText("");
         }
       } else {
-        // Translation is disabled - just show the original text
-        setAppModalTranslatedText('');
+        setIsAppTranslationModalOpen(false);
       }
-    } else {
-      setIsAppTranslationModalOpen(false);
-    }
-  }, [translationConfig]);
+    },
+    [translationConfig],
+  );
 
-  const handlePageTextExtracted = useCallback(async (text: string, pageNumber: number) => {
-    // For page text extraction, we can use the same logic as text selection
-    await handleTextSelection(text);
-    // TODO: use pageNumber if needed for specific functionality
-  }, [handleTextSelection]);
+  const handlePageTextExtracted = useCallback(
+    async (text: string, pageNumber: number) => {
+      // For page text extraction, we can use the same logic as text selection
+      await handleTextSelection(text);
+      // TODO: use pageNumber if needed for specific functionality
+    },
+    [handleTextSelection],
+  );
 
   const handleClearSelection = useCallback(() => {
-    setSelectedText('');
+    setSelectedText("");
     setIsAppTranslationModalOpen(false);
   }, []);
 
@@ -212,22 +244,25 @@ function App() {
     setNotionConfig(config);
   }, []);
 
-  const handleDatabaseIdSave = useCallback(async (databaseId: SavedDatabaseId) => {
-    // Refresh the local state from server when a new database ID is saved
-    try {
-      const config = await configService.getConfig();
-      if (config.savedDatabaseIds) {
-        const withDates = config.savedDatabaseIds.map((item: any) => ({
-          ...item,
-          createdAt: new Date(item.createdAt)
-        }));
-        setSavedDatabaseIds(withDates);
+  const handleDatabaseIdSave = useCallback(
+    async (databaseId: SavedDatabaseId) => {
+      // Refresh the local state from server when a new database ID is saved
+      try {
+        const config = await configService.getConfig();
+        if (config.savedDatabaseIds) {
+          const withDates = config.savedDatabaseIds.map((item: any) => ({
+            ...item,
+            createdAt: new Date(item.createdAt),
+          }));
+          setSavedDatabaseIds(withDates);
+        }
+      } catch (err) {
+        console.error("Error refreshing database IDs from server:", err);
       }
-    } catch (err) {
-      console.error('Error refreshing database IDs from server:', err);
-    }
-  }, []);
-  
+    },
+    [],
+  );
+
   // Función para refrescar las Database IDs desde el servidor
   const refreshDatabaseIds = useCallback(async () => {
     try {
@@ -236,98 +271,124 @@ function App() {
       if (config.savedDatabaseIds) {
         const withDates = config.savedDatabaseIds.map((item: any) => ({
           ...item,
-          createdAt: new Date(item.createdAt)
+          createdAt: new Date(item.createdAt),
         }));
         setSavedDatabaseIds(withDates);
       }
     } catch (err) {
-      console.error('Error refreshing database IDs from server:', err);
+      console.error("Error refreshing database IDs from server:", err);
     }
   }, []);
 
-  const handleFullscreenChange = useCallback((isFS: boolean, container: HTMLElement | null) => {
-    setIsFullscreen(isFS);
-    setFullscreenContainer(container);
-  }, []);
+  const handleFullscreenChange = useCallback(
+    (isFS: boolean, container: HTMLElement | null) => {
+      setIsFullscreen(isFS);
+      setFullscreenContainer(container);
+    },
+    [],
+  );
 
   const handleAppModalClose = () => {
     setIsAppTranslationModalOpen(false);
-    setAppModalError('');
-    setAppModalSuccessMessage('');
+    setAppModalError("");
+    setAppModalSuccessMessage("");
     setAppModalIsStreaming(false);
-    setAppModalStreamingText('');
+    setAppModalStreamingText("");
     // Optionally clear selectedText if it should not persist for ConfigModal
-    // setSelectedText(''); 
+    // setSelectedText('');
   };
 
   // App-level modal "Add to Notion" handlers with actual implementation
-  const handleAppModalAddEverything = async (annotation: string, pageNum?: string) => {
+  const handleAppModalAddEverything = async (
+    annotation: string,
+    pageNum?: string,
+  ) => {
     if (!notionConfig.identifierColumn || !notionConfig.textColumn) {
-      setAppModalError('Please configure the required database columns first');
+      setAppModalError("Please configure the required database columns first");
       return;
     }
 
     setAppModalSaving(true);
-    setAppModalError('');
-    
+    setAppModalError("");
+
     try {
-      const textToSave = translationConfig.sendMode === 'translated' ? appModalTranslatedText : selectedText;
+      const textToSave =
+        translationConfig.sendMode === "translated"
+          ? appModalTranslatedText
+          : selectedText;
       const configToSave = {
         ...notionConfig,
         annotation: annotation || notionConfig.annotation,
         pageNumber: pageNum || notionConfig.pageNumber,
       };
-      
-      const result = await notionService.saveTextWithIdentifier(configToSave, textToSave);
+
+      const result = await notionService.saveTextWithIdentifier(
+        configToSave,
+        textToSave,
+      );
       if (result.success) {
-        setAppModalSuccessMessage(`Text saved with identifier: ${result.identifier}`);
+        setAppModalSuccessMessage(
+          `Text saved with identifier: ${result.identifier}`,
+        );
         // Clear the success message after 3 seconds
         setTimeout(() => {
-          setAppModalSuccessMessage('');
+          setAppModalSuccessMessage("");
         }, 3000);
       } else {
-        setAppModalError('Failed to save text to Notion');
+        setAppModalError("Failed to save text to Notion");
       }
     } catch (err: any) {
-      setAppModalError('An error occurred while saving to Notion: ' + (err.message || ''));
+      setAppModalError(
+        "An error occurred while saving to Notion: " + (err.message || ""),
+      );
     } finally {
       setAppModalSaving(false);
     }
   };
 
-  const handleAppModalAddSelection = async (textInModal: string, annotation: string, pageNum?: string) => {
+  const handleAppModalAddSelection = async (
+    textInModal: string,
+    annotation: string,
+    pageNum?: string,
+  ) => {
     if (!notionConfig.identifierColumn || !notionConfig.textColumn) {
-      setAppModalError('Please configure the required database columns first');
+      setAppModalError("Please configure the required database columns first");
       return;
     }
 
     setAppModalSaving(true);
-    setAppModalError('');
-    
+    setAppModalError("");
+
     try {
       const configToSave = {
         ...notionConfig,
         annotation: annotation || notionConfig.annotation,
         pageNumber: pageNum || notionConfig.pageNumber,
       };
-      
-      const result = await notionService.saveTextWithIdentifier(configToSave, textInModal);
+
+      const result = await notionService.saveTextWithIdentifier(
+        configToSave,
+        textInModal,
+      );
       if (result.success) {
-        setAppModalSuccessMessage(`Text saved with identifier: ${result.identifier}`);
+        setAppModalSuccessMessage(
+          `Text saved with identifier: ${result.identifier}`,
+        );
         // Clear the success message after 3 seconds
         setTimeout(() => {
-          setAppModalSuccessMessage('');
+          setAppModalSuccessMessage("");
         }, 3000);
       } else {
-        setAppModalError('Failed to save text to Notion');
+        setAppModalError("Failed to save text to Notion");
       }
     } catch (err: any) {
-      setAppModalError('An error occurred while saving to Notion: ' + (err.message || ''));
+      setAppModalError(
+        "An error occurred while saving to Notion: " + (err.message || ""),
+      );
     } finally {
       setAppModalSaving(false);
     }
   };
-
 
   return (
     <div className="App">
@@ -337,11 +398,14 @@ function App() {
             <img src="/static/logo.png" alt="Logo" className="header-logo" />
             <div className="header-text">
               <h1>NotyPDF</h1>
-              <p>Seamlessly read PDFs and save selected text and annotations to your Notion database.</p>
+              <p>
+                Seamlessly read PDFs and save selected text and annotations to
+                your Notion database.
+              </p>
             </div>
           </div>
         </header>
-        
+
         <div className="main-content">
           <main className="pdf-viewer">
             <PDFViewer
@@ -363,7 +427,10 @@ function App() {
       <FloatingActionButton
         onSettingsClick={() => setShowConfigModal(true)}
         onDocumentManagerClick={() => setShowDocumentManager(true)}
-        onChatClick={() => { setShowChatModal(true); setChatSelectedText(''); }}
+        onChatClick={() => {
+          setShowChatModal(true);
+          setChatSelectedText("");
+        }}
       />
 
       {/* Document Manager Modal */}
@@ -402,13 +469,13 @@ function App() {
           translationConfig={translationConfig}
           onAddEverythingWithAnnotation={handleAppModalAddEverything}
           onAddSelectionWithAnnotation={handleAppModalAddSelection}
-          onAddEverything={() => handleAppModalAddEverything('', '')}
-          onAddSelection={(txt) => handleAppModalAddSelection(txt, '', '')}
+          onAddEverything={() => handleAppModalAddEverything("", "")}
+          onAddSelection={(txt) => handleAppModalAddSelection(txt, "", "")}
           portalContainer={fullscreenContainer || document.body}
           saving={appModalSaving}
           success={appModalSuccessMessage}
-        error={appModalError}
-      />
+          error={appModalError}
+        />
       )}
 
       {showChatModal && (
@@ -416,6 +483,7 @@ function App() {
           isOpen={showChatModal}
           onClose={() => setShowChatModal(false)}
           selectedText={chatSelectedText}
+          fileName={pdfFile ? pdfFile.name : null}
         />
       )}
     </div>
