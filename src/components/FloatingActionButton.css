@@ -123,21 +123,9 @@
   background: #f57c00;
 }
 
-.fab-action-chat {
-  background: #2196f3;
-}
-
-.fab-action-chat:hover {
-  background: #1976d2;
-}
-
 /* Animation delays for staggered appearance */
 .fab-container.expanded .fab-action-documents {
   animation: fabActionSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0.1s both;
-}
-
-.fab-container.expanded .fab-action-chat {
-  animation: fabActionSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0.12s both;
 }
 
 .fab-container.expanded .fab-action-settings {
