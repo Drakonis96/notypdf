@@ -56,6 +56,8 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialMessage, 
   const [initialSent, setInitialSent] = useState(false);
   const [markdownContext, setMarkdownContext] = useState('');
   const [isContextLoading, setIsContextLoading] = useState(false);
+  const [limitTokens, setLimitTokens] = useState(false);
+  const [tokenLimit, setTokenLimit] = useState('2048');
   const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -135,6 +137,7 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialMessage, 
         provider,
         model,
         apiKey,
+        maxTokens: limitTokens ? parseInt(tokenLimit, 10) || undefined : undefined,
         onProgress: (txt) => setStreamingText(txt),
         onComplete: (full) => {
           setIsStreaming(false);
@@ -178,6 +181,24 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialMessage, 
               <option key={m.value} value={m.value}>{m.label}</option>
             ))}
           </select>
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              checked={limitTokens}
+              onChange={e => setLimitTokens(e.target.checked)}
+              className="checkbox-input"
+            />
+            <span className="checkbox-text">Limitar tokens</span>
+          </label>
+          {limitTokens && (
+            <input
+              type="number"
+              className="token-input"
+              value={tokenLimit}
+              min="1"
+              onChange={e => setTokenLimit(e.target.value)}
+            />
+          )}
         </div>
         <div className="chat-messages">
           {isContextLoading && (
