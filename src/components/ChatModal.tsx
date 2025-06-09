@@ -53,7 +53,6 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialMessage, 
   const [inputText, setInputText] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingText, setStreamingText] = useState('');
-  const [initialSent, setInitialSent] = useState(false);
   const [markdownContext, setMarkdownContext] = useState('');
   const [isContextLoading, setIsContextLoading] = useState(false);
   const [limitTokens, setLimitTokens] = useState(false);
@@ -85,13 +84,8 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialMessage, 
   }, [isOpen, currentFile]);
 
   useEffect(() => {
-    if (isOpen && initialMessage && !initialSent) {
-      setInitialSent(true);
+    if (isOpen && initialMessage) {
       setInputText(initialMessage);
-      sendMessage(initialMessage);
-    }
-    if (!isOpen) {
-      setInitialSent(false);
     }
   }, [isOpen, initialMessage]);
 
