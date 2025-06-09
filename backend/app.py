@@ -392,6 +392,10 @@ def list_files():
     try:
         files = []
         for filename in os.listdir(WORKSPACE_PATH):
+            # Ignore generated markdown files
+            if filename.lower().endswith('.md'):
+                continue
+
             filepath = os.path.join(WORKSPACE_PATH, filename)
             if os.path.isfile(filepath):
                 stat = os.stat(filepath)
@@ -618,12 +622,24 @@ def delete_file(filename):
         # Sanitize the filename
         filename = safe_filename(filename)
         filepath = os.path.join(WORKSPACE_PATH, filename)
-        
+
         if not os.path.exists(filepath):
             return jsonify({"error": "File not found"}), 404
-        
+
         os.remove(filepath)
         logger.info(f"File deleted successfully: {filename}")
+
+        # If a PDF was deleted, remove its associated markdown file as well
+        if filename.lower().endswith('.pdf'):
+            md_filename = os.path.splitext(filename)[0] + '.md'
+            md_path = os.path.join(WORKSPACE_PATH, md_filename)
+            if os.path.exists(md_path):
+                try:
+                    os.remove(md_path)
+                    logger.info(f"Associated markdown deleted: {md_filename}")
+                except Exception as md_err:
+                    logger.error(f"Error deleting markdown file {md_filename}: {md_err}")
+
         return jsonify({"success": True, "message": f"File '{filename}' deleted successfully"})
     
     except Exception as e:
