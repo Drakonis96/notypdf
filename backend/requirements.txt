@@ -2,3 +2,4 @@ Flask
 flask-cors
 notion-client
 requests
+markitdown[pdf]

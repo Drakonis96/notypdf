@@ -9,6 +9,7 @@ import tempfile
 import re
 import unicodedata
 from translation import translation_service
+from markitdown import MarkItDown
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -52,6 +53,9 @@ os.makedirs(os.path.dirname(CONFIG_FILE_PATH), exist_ok=True)
 # Ensure workspace directory exists
 os.makedirs(WORKSPACE_PATH, exist_ok=True)
 
+# Initialize MarkItDown converter
+md_converter = MarkItDown()
+
 # Allowed file extensions for documents
 ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx', 'txt', 'png', 'jpg', 'jpeg', 'gif'}
 
@@ -85,8 +89,14 @@ def safe_filename(filename):
     # Ensure it's not empty after cleaning
     if not filename or filename in ('.', '..'):
         return 'untitled'
-    
+
     return filename
+
+def pdf_to_markdown(pdf_path: str, md_path: str) -> None:
+    """Convert a PDF file to Markdown using MarkItDown."""
+    result = md_converter.convert(pdf_path)
+    with open(md_path, 'w', encoding='utf-8') as f:
+        f.write(result.text_content)
 
 @app.route("/notion/databases/<database_id>", methods=["GET"])
 def get_database(database_id):
@@ -569,6 +579,36 @@ def download_file(filename):
     
     except Exception as e:
         logger.error(f"Error downloading file {filename}: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/files/<filename>/markdown", methods=["GET"])
+def get_markdown(filename):
+    """Return Markdown for a PDF file, generating it if needed."""
+    try:
+        filename = safe_filename(filename)
+        if not filename.lower().endswith('.pdf'):
+            return jsonify({"error": "Only PDF files supported"}), 400
+
+        pdf_path = os.path.join(WORKSPACE_PATH, filename)
+        if not os.path.exists(pdf_path):
+            return jsonify({"error": "File not found"}), 404
+
+        md_filename = os.path.splitext(filename)[0] + '.md'
+        md_path = os.path.join(WORKSPACE_PATH, md_filename)
+
+        if not os.path.exists(md_path):
+            try:
+                pdf_to_markdown(pdf_path, md_path)
+            except Exception as e:
+                logger.error(f"Error generating markdown for {filename}: {str(e)}")
+                return jsonify({"error": str(e)}), 500
+
+        with open(md_path, 'r', encoding='utf-8') as f:
+            text = f.read()
+
+        return jsonify({"markdown": text})
+    except Exception as e:
+        logger.error(f"Error retrieving markdown for {filename}: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @app.route("/files/<filename>", methods=["DELETE"])
