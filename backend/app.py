@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify, send_file, after_this_request
 from flask_cors import CORS
 import os
 import json
@@ -6,6 +6,7 @@ import logging
 from datetime import datetime
 from notion_client import Client
 import tempfile
+import zipfile
 import re
 import unicodedata
 from translation import translation_service
@@ -567,6 +568,33 @@ def upload_multiple_files():
         logger.error(f"❌ Critical error in multiple file upload: {error_msg}")
         logger.error(f"Error type: {type(e).__name__}")
         return jsonify({"error": error_msg}), 500
+
+@app.route("/files/download/all", methods=["GET"])
+def download_all_pdfs():
+    """Download all PDF files in a single ZIP archive"""
+    try:
+        pdf_files = [f for f in os.listdir(WORKSPACE_PATH) if f.lower().endswith('.pdf')]
+        if not pdf_files:
+            return jsonify({"error": "No PDF files found"}), 404
+
+        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".zip")
+        with zipfile.ZipFile(temp_file.name, 'w') as zipf:
+            for fname in pdf_files:
+                zipf.write(os.path.join(WORKSPACE_PATH, fname), arcname=fname)
+        temp_file.close()
+
+        @after_this_request
+        def remove_temp(response):
+            try:
+                os.remove(temp_file.name)
+            except Exception as e:
+                logger.error(f"Error removing temporary zip file {temp_file.name}: {e}")
+            return response
+
+        return send_file(temp_file.name, as_attachment=True, download_name="all_pdfs.zip")
+    except Exception as e:
+        logger.error(f"Error creating zip archive: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/files/<filename>", methods=["GET"])
 def download_file(filename):
