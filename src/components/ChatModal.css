@@ -4,22 +4,27 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0,0,0,0.3);
+  background-color: rgba(0, 0, 0, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 10001;
+  backdrop-filter: blur(3px);
+  padding: 15px;
+  box-sizing: border-box;
 }
 
 .chat-modal {
   background: #fff;
-  border-radius: 8px;
-  width: 90%;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  width: 90vw;
   max-width: 600px;
-  max-height: 90vh;
+  max-height: 85vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  animation: modalFadeIn 0.25s ease-out;
 }
 
 .chat-header {
@@ -45,7 +50,7 @@
   border-bottom: 1px solid #eee;
 }
 
-.chat-config select {
+.chat-config .config-select {
   flex: 1;
 }
 
@@ -83,7 +88,7 @@
   gap: 8px;
 }
 
-.chat-input-section textarea {
+.chat-input-section .config-textarea {
   width: 100%;
   resize: vertical;
 }

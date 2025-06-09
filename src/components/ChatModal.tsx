@@ -168,12 +168,20 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialMessage, 
           <button className="close-button" onClick={onClose} aria-label="Close">×</button>
         </div>
         <div className="chat-config">
-          <select value={provider} onChange={(e) => handleProviderChange(e.target.value as TranslationProvider)}>
+          <select
+            className="config-select"
+            value={provider}
+            onChange={(e) => handleProviderChange(e.target.value as TranslationProvider)}
+          >
             {PROVIDER_OPTIONS.map(p => (
               <option key={p.value} value={p.value}>{p.label}</option>
             ))}
           </select>
-          <select value={model} onChange={(e) => setModel(e.target.value as TranslationModel)}>
+          <select
+            className="config-select"
+            value={model}
+            onChange={(e) => setModel(e.target.value as TranslationModel)}
+          >
             {getModelOptions().map(m => (
               <option key={m.value} value={m.value}>{m.label}</option>
             ))}
@@ -197,10 +205,27 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialMessage, 
           )}
         </div>
         <div className="chat-input-section">
-          <textarea value={inputText} onChange={(e) => setInputText(e.target.value)} rows={2} />
+          <textarea
+            className="config-textarea"
+            value={inputText}
+            onChange={(e) => setInputText(e.target.value)}
+            rows={2}
+          />
           <div className="chat-actions">
-            <button onClick={sendMessage} disabled={isStreaming || isContextLoading || !inputText.trim()}>Send</button>
-            <button onClick={resetConversation} disabled={isStreaming}>Reset</button>
+            <button
+              className="btn btn-primary"
+              onClick={sendMessage}
+              disabled={isStreaming || isContextLoading || !inputText.trim()}
+            >
+              Send
+            </button>
+            <button
+              className="btn btn-tertiary"
+              onClick={resetConversation}
+              disabled={isStreaming}
+            >
+              Reset
+            </button>
           </div>
         </div>
       </div>
