@@ -113,3 +113,15 @@
   color: #666;
 }
 
+.context-loaded {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+}
+
+.checkmark {
+  color: #28a745;
+  font-size: 18px;
+}
+

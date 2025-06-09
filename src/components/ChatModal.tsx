@@ -208,6 +208,11 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialMessage, 
               <LoadingSpinner size={16} /> Cargando contexto...
             </div>
           )}
+          {!isContextLoading && markdownContext && (
+            <div className="context-loaded" aria-label="Markdown loaded">
+              <span className="checkmark">&#10003;</span>
+            </div>
+          )}
           {messages.map((m, idx) => (
             <div key={idx} className={`chat-bubble ${m.role === 'user' ? 'user' : 'ai'}`}>
               <ReactMarkdown>{m.content}</ReactMarkdown>
