@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import ReactMarkdown from 'react-markdown';
 import { Send, RotateCcw } from 'lucide-react';
 import { pdfjs } from 'react-pdf';
-import chatService, { ChatMessage } from '../services/chatService';
+import chatService, { ChatMessage, ChatContentPart } from '../services/chatService';
 import apiKeyService from '../services/apiKeyService';
 import { markdownService } from '../services/markdownService';
 import { TranslationProvider, TranslationModel } from '../types';
@@ -54,6 +54,21 @@ const DEEPSEEK_MODELS: { label: string; value: TranslationModel }[] = [
 type ContextMode = 'markdown' | 'full-pdf' | 'selected-page';
 
 const PROVIDERS_WITH_FILE_SUPPORT: TranslationProvider[] = ['openai', 'openrouter', 'gemini'];
+
+const renderMessageContent = (content: string | ChatContentPart[]): string => {
+  if (typeof content === 'string') {
+    return content;
+  }
+  // For ChatContentPart[], extract text content and describe files
+  return content.map(part => {
+    if (part.type === 'text') {
+      return part.text;
+    } else if (part.type === 'file') {
+      return `[FILE: ${part.file.filename}]`;
+    }
+    return '';
+  }).join('\n');
+};
 
 const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialMessage, currentFile, currentPage: currentPageProp }) => {
   const [provider, setProvider] = useState<TranslationProvider>('openai');
@@ -198,7 +213,7 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialMessage, 
         } else if (contextMode === 'full-pdf' && fileData) {
           if (provider === 'openai' || provider === 'openrouter') {
             const dataUrl = `data:application/pdf;base64,${fileData}`;
-            const content = [
+            const content: ChatContentPart[] = [
               { type: 'text', text: toSend.trim() },
               { type: 'file', file: { filename: currentFile?.name || 'document.pdf', file_data: dataUrl } },
             ];
@@ -322,7 +337,7 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialMessage, 
           )}
           {messages.map((m, idx) => (
             <div key={idx} className={`chat-bubble ${m.role === 'user' ? 'user' : 'ai'}`}>
-              <ReactMarkdown>{m.content}</ReactMarkdown>
+              <ReactMarkdown>{renderMessageContent(m.content)}</ReactMarkdown>
             </div>
           ))}
           {isStreaming && (
