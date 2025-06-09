@@ -234,7 +234,7 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialMessage, 
           <div className="chat-actions">
             <button
               className="btn btn-primary"
-              onClick={sendMessage}
+              onClick={() => sendMessage()}
               disabled={isStreaming || isContextLoading || !inputText.trim()}
             >
               Send
