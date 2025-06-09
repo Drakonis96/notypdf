@@ -43,45 +43,23 @@
 }
 
 .chat-message {
-  position: relative;
   max-width: 85%;
-  padding: 10px 14px;
-  border-radius: 16px;
+  padding: 8px 12px;
+  border-radius: 8px;
   white-space: pre-wrap;
   line-height: 1.4;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .chat-message.user {
   align-self: flex-end;
-  background: #d1e7ff;
-  border-bottom-right-radius: 4px;
-}
-
-.chat-message.user::after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  right: -8px;
-  border-left: 8px solid #d1e7ff;
-  border-top: 8px solid transparent;
-  border-bottom: 0;
+  background: #daf1fc;
+  border-bottom-right-radius: 0;
 }
 
 .chat-message.assistant {
   align-self: flex-start;
-  background: #f6e1fa;
-  border-bottom-left-radius: 4px;
-}
-
-.chat-message.assistant::after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  left: -8px;
-  border-right: 8px solid #f6e1fa;
-  border-top: 8px solid transparent;
-  border-bottom: 0;
+  background: #f1f0f0;
+  border-bottom-left-radius: 0;
 }
 
 .chat-controls {
