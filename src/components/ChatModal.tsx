@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import ReactMarkdown from 'react-markdown';
 import { Send, RotateCcw } from 'lucide-react';
+import { pdfjs } from 'react-pdf';
 import chatService, { ChatMessage } from '../services/chatService';
 import apiKeyService from '../services/apiKeyService';
 import { markdownService } from '../services/markdownService';
@@ -9,11 +10,14 @@ import { TranslationProvider, TranslationModel } from '../types';
 import LoadingSpinner from './LoadingSpinner';
 import './ChatModal.css';
 
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/legacy/build/pdf.worker.min.js`;
+
 interface ChatModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialMessage?: string;
   currentFile?: File | null;
+  currentPage?: number;
 }
 
 const PROVIDER_OPTIONS: { label: string; value: TranslationProvider }[] = [
@@ -47,7 +51,11 @@ const DEEPSEEK_MODELS: { label: string; value: TranslationModel }[] = [
   { label: 'DeepSeek Reasoner', value: 'deepseek-reasoner' },
 ];
 
-const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialMessage, currentFile }) => {
+type ContextMode = 'markdown' | 'full-pdf' | 'selected-page';
+
+const PROVIDERS_WITH_FILE_SUPPORT: TranslationProvider[] = ['openai', 'openrouter', 'gemini'];
+
+const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialMessage, currentFile, currentPage: currentPageProp }) => {
   const [provider, setProvider] = useState<TranslationProvider>('openai');
   const [model, setModel] = useState<TranslationModel>('gpt-4o-mini');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -55,34 +63,78 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialMessage, 
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingText, setStreamingText] = useState('');
   const [markdownContext, setMarkdownContext] = useState('');
+  const [fileData, setFileData] = useState('');
+  const [contextMode, setContextMode] = useState<ContextMode>('markdown');
+  const [currentPage, setCurrentPage] = useState(1);
   const [isContextLoading, setIsContextLoading] = useState(false);
   const [limitTokens, setLimitTokens] = useState(false);
   const [tokenLimit, setTokenLimit] = useState('2048');
   const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (currentPageProp) setCurrentPage(currentPageProp);
+  }, [currentPageProp]);
+
+  useEffect(() => {
     if (isOpen && modalRef.current) modalRef.current.focus();
   }, [isOpen]);
 
   useEffect(() => {
+    const fileToBase64 = (file: File): Promise<string> => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = reader.result;
+          if (typeof result === 'string') {
+            const b64 = result.split(',')[1];
+            resolve(b64 || '');
+          } else {
+            reject(new Error('Failed to read file'));
+          }
+        };
+        reader.onerror = () => reject(new Error('Failed to read file'));
+        reader.readAsDataURL(file);
+      });
+    };
+
+    const getPageText = async (file: File, page: number): Promise<string> => {
+      const pdf = await pdfjs.getDocument(URL.createObjectURL(file)).promise;
+      const pg = await pdf.getPage(page);
+      const tc = await pg.getTextContent();
+      return tc.items.map((i: any) => i.str).join(' ').trim();
+    };
+
     const loadContext = async () => {
       if (isOpen && currentFile && currentFile.name.toLowerCase().endsWith('.pdf')) {
         setIsContextLoading(true);
         try {
-          const md = await markdownService.getMarkdown(currentFile.name);
-          setMarkdownContext(md);
+          if (contextMode === 'markdown') {
+            const md = await markdownService.getMarkdown(currentFile.name);
+            setMarkdownContext(md);
+            setFileData('');
+          } else if (contextMode === 'full-pdf') {
+            const b64 = await fileToBase64(currentFile);
+            setFileData(b64);
+            setMarkdownContext('');
+          } else if (contextMode === 'selected-page') {
+            const txt = await getPageText(currentFile, currentPage);
+            setMarkdownContext(txt);
+            setFileData('');
+          }
         } catch (err) {
-          console.error('Error loading markdown context:', err);
+          console.error('Error loading context:', err);
           setMarkdownContext('');
+          setFileData('');
         } finally {
           setIsContextLoading(false);
         }
       } else {
         setMarkdownContext('');
+        setFileData('');
       }
     };
     loadContext();
-  }, [isOpen, currentFile]);
+  }, [isOpen, currentFile, contextMode, currentPage, provider]);
 
   useEffect(() => {
     if (isOpen && initialMessage) {
@@ -113,6 +165,9 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialMessage, 
     if (prov === 'deepseek') defaultModel = 'deepseek-chat';
     setProvider(prov);
     setModel(defaultModel);
+    if (contextMode === 'full-pdf' && !PROVIDERS_WITH_FILE_SUPPORT.includes(prov)) {
+      setContextMode('markdown');
+    }
     resetConversation();
   };
 
@@ -133,9 +188,19 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialMessage, 
       setIsStreaming(true);
       setStreamingText('');
       let messagesToSend: ChatMessage[];
-      if (messages.length === 0 && markdownContext) {
-        const combined = `[DOCUMENTO]\n${markdownContext}\n[/DOCUMENTO]\n\n${toSend.trim()}`;
-        messagesToSend = [...messages, { role: 'user', content: combined }];
+      if (messages.length === 0) {
+        if (contextMode === 'markdown' && markdownContext) {
+          const combined = `[DOCUMENTO]\n${markdownContext}\n[/DOCUMENTO]\n\n${toSend.trim()}`;
+          messagesToSend = [...messages, { role: 'user', content: combined }];
+        } else if (contextMode === 'selected-page' && markdownContext) {
+          const combined = `[PAGE ${currentPage}]\n${markdownContext}\n[/PAGE]\n\n${toSend.trim()}`;
+          messagesToSend = [...messages, { role: 'user', content: combined }];
+        } else if (contextMode === 'full-pdf' && fileData) {
+          const combined = `[FILE:${currentFile?.name};base64]\n${fileData}\n[/FILE]\n\n${toSend.trim()}`;
+          messagesToSend = [...messages, { role: 'user', content: combined }];
+        } else {
+          messagesToSend = [...messages, userMessage];
+        }
       } else {
         messagesToSend = [...messages, userMessage];
       }
@@ -230,9 +295,20 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialMessage, 
               <LoadingSpinner size={16} /> Cargando contexto...
             </div>
           )}
-          {!isContextLoading && markdownContext && (
-            <div className="context-loaded" aria-label="Markdown loaded">
+          {!isContextLoading && (markdownContext || fileData) && (
+            <div className="context-loaded" aria-label="Context loaded">
               <span className="checkmark">&#10003;</span>
+              <select
+                className="context-mode-select"
+                value={contextMode}
+                onChange={e => setContextMode(e.target.value as ContextMode)}
+              >
+                <option value="markdown">Markdown (short files)</option>
+                <option value="full-pdf" disabled={!PROVIDERS_WITH_FILE_SUPPORT.includes(provider)}>
+                  Full PDF (large files)
+                </option>
+                <option value="selected-page">Selected page</option>
+              </select>
             </div>
           )}
           {messages.map((m, idx) => (

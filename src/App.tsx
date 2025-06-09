@@ -19,6 +19,7 @@ function App() {
   const [showDocumentManager, setShowDocumentManager] = useState<boolean>(false);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [fullscreenContainer, setFullscreenContainer] = useState<HTMLElement | null>(null);
+  const [currentPageNumber, setCurrentPageNumber] = useState<number>(1);
   const [savedDatabaseIds, setSavedDatabaseIds] = useState<SavedDatabaseId[]>([]);
   const [notionConfig, setNotionConfig] = useState<NotionConfig>({
     databaseId: '',
@@ -340,6 +341,7 @@ function App() {
               translationConfig={translationConfig}
               onFullscreenChange={handleFullscreenChange}
               onPageTextExtracted={handlePageTextExtracted}
+              onPageChange={setCurrentPageNumber}
               onFileClose={handleCloseFile}
             />
           </main>
@@ -415,6 +417,7 @@ function App() {
           onClose={() => setShowChatModal(false)}
           initialMessage={chatInitialMessage}
           currentFile={pdfFile}
+          currentPage={currentPageNumber}
         />
       )}
     </div>
