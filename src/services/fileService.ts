@@ -175,6 +175,17 @@ class FileService {
   }
 
   /**
+   * Download all PDF files as a ZIP archive
+   */
+  async downloadAllPdfsZip(): Promise<Blob> {
+    const response = await fetch(`${this.baseUrl}/files/download/all`);
+    if (!response.ok) {
+      throw new Error(`Failed to download PDFs: ${response.status} ${response.statusText}`);
+    }
+    return await response.blob();
+  }
+
+  /**
    * Get the download URL for a file
    */
   getDownloadUrl(filename: string): string {

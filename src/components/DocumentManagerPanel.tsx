@@ -242,6 +242,31 @@ const DocumentManagerPanel: React.FC<DocumentManagerPanelProps> = ({ onFileUploa
     }
   };
 
+  const handleDownloadAllPdfs = async () => {
+    const pdfCount = documents.filter(d => d.name.toLowerCase().endsWith('.pdf')).length;
+    if (pdfCount === 0) {
+      alert('No PDF files to download.');
+      return;
+    }
+    try {
+      setIsLoading(true);
+      const blob = await fileService.downloadAllPdfsZip();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'all_pdfs.zip';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Error downloading PDFs:', error);
+      alert('Failed to download PDFs. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const cancelClearAll = () => {
     setShowClearAllConfirm(false);
   };
@@ -301,6 +326,15 @@ const DocumentManagerPanel: React.FC<DocumentManagerPanelProps> = ({ onFileUploa
           >
             <Trash2 size={20} />
             <span>Clear All Files</span>
+          </button>
+          <button
+            className="download-all-button"
+            onClick={handleDownloadAllPdfs}
+            disabled={isLoading || documents.filter(d => d.name.toLowerCase().endsWith('.pdf')).length === 0}
+            title="Download all PDFs as ZIP"
+          >
+            <Download size={20} />
+            <span>Download All PDFs</span>
           </button>
           <div
             className={`drop-area ${isDragOver ? 'drag-over' : ''}`}
