@@ -9,7 +9,6 @@ import tempfile
 import re
 import unicodedata
 from translation import translation_service
-from markitdown import MarkItDown
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -55,9 +54,6 @@ os.makedirs(WORKSPACE_PATH, exist_ok=True)
 
 # Allowed file extensions for documents
 ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx', 'txt', 'png', 'jpg', 'jpeg', 'gif'}
-
-# Cache for markdown conversions
-markdown_cache = {}
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -573,26 +569,6 @@ def download_file(filename):
     
     except Exception as e:
         logger.error(f"Error downloading file {filename}: {str(e)}")
-        return jsonify({"error": str(e)}), 500
-
-@app.route("/files/<filename>/markdown", methods=["GET"])
-def get_file_markdown(filename):
-    """Convert a stored file to Markdown using MarkItDown"""
-    try:
-        filename = safe_filename(filename)
-        if filename in markdown_cache:
-            return jsonify({"markdown": markdown_cache[filename]})
-
-        filepath = os.path.join(WORKSPACE_PATH, filename)
-        if not os.path.exists(filepath):
-            return jsonify({"error": "File not found"}), 404
-
-        with open(filepath, "rb") as f:
-            md = MarkItDown().convert_stream(f)
-        markdown_cache[filename] = md
-        return jsonify({"markdown": md})
-    except Exception as e:
-        logger.error(f"Error converting {filename} to markdown: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @app.route("/files/<filename>", methods=["DELETE"])
