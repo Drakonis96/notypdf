@@ -112,6 +112,12 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialMessage, 
     if (prov === 'deepseek') defaultModel = 'deepseek-chat';
     setProvider(prov);
     setModel(defaultModel);
+    resetConversation();
+  };
+
+  const handleModelChange = (mod: TranslationModel) => {
+    setModel(mod);
+    resetConversation();
   };
 
   const sendMessage = async (textOverride?: string) => {
@@ -192,7 +198,7 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialMessage, 
           <select
             className="config-select"
             value={model}
-            onChange={(e) => setModel(e.target.value as TranslationModel)}
+            onChange={(e) => handleModelChange(e.target.value as TranslationModel)}
           >
             {getModelOptions().map(m => (
               <option key={m.value} value={m.value}>{m.label}</option>
