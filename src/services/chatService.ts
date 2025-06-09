@@ -1,9 +1,18 @@
 import apiKeyService from './apiKeyService';
 import { TranslationProvider, TranslationModel } from '../types';
 
+export type ChatFile = {
+  filename: string;
+  file_data: string;
+};
+
+export type ChatContentPart =
+  | { type: 'text'; text: string }
+  | { type: 'file'; file: ChatFile };
+
 export interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
-  content: string;
+  content: string | ChatContentPart[];
 }
 
 export interface StreamingChatOptions {

@@ -196,8 +196,17 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialMessage, 
           const combined = `[PAGE ${currentPage}]\n${markdownContext}\n[/PAGE]\n\n${toSend.trim()}`;
           messagesToSend = [...messages, { role: 'user', content: combined }];
         } else if (contextMode === 'full-pdf' && fileData) {
-          const combined = `[FILE:${currentFile?.name};base64]\n${fileData}\n[/FILE]\n\n${toSend.trim()}`;
-          messagesToSend = [...messages, { role: 'user', content: combined }];
+          if (provider === 'openai' || provider === 'openrouter') {
+            const dataUrl = `data:application/pdf;base64,${fileData}`;
+            const content = [
+              { type: 'text', text: toSend.trim() },
+              { type: 'file', file: { filename: currentFile?.name || 'document.pdf', file_data: dataUrl } },
+            ];
+            messagesToSend = [...messages, { role: 'user', content }];
+          } else {
+            const combined = `[FILE:${currentFile?.name};base64]\n${fileData}\n[/FILE]\n\n${toSend.trim()}`;
+            messagesToSend = [...messages, { role: 'user', content: combined }];
+          }
         } else {
           messagesToSend = [...messages, userMessage];
         }
