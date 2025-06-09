@@ -114,9 +114,3 @@
   justify-content: flex-end;
   gap: 8px;
 }
-
-.chat-status {
-  color: #666;
-  font-size: 14px;
-  margin-bottom: 8px;
-}
