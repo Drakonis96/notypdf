@@ -101,6 +101,7 @@ const ChatModal: React.FC<ChatModalProps> = ({
   const [provider, setProvider] = useState<AIProvider>("openai");
   const [model, setModel] = useState<AIModel>("gpt-4o-mini");
   const [documentMarkdown, setDocumentMarkdown] = useState("");
+  const [isStreaming, setIsStreaming] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -123,28 +124,53 @@ const ChatModal: React.FC<ChatModalProps> = ({
     if (!content) return;
     const userMsg: ChatMessage = { role: "user", content };
     const newMessages = [...messages, userMsg];
-    setMessages(newMessages);
+    setMessages([...newMessages, { role: "assistant", content: "" }]);
     setInput("");
+    setIsStreaming(true);
     try {
       const apiKey = await apiKeyService.getApiKey(provider);
       const conversation = newMessages
         .map((m) => `${m.role === "user" ? "User" : "Assistant"}: ${m.content}`)
         .join("\n");
       const prompt = `Document:\n${documentMarkdown}\n\nConversation:\n${conversation}`;
-      const reply = await aiCompletionService.completeText(prompt, {
+
+      await aiCompletionService.completeTextStreaming(prompt, {
         provider,
         model,
         apiKey,
+        onProgress: (partial) => {
+          setMessages((msgs) => {
+            const updated = [...msgs];
+            updated[updated.length - 1] = { role: "assistant", content: partial };
+            return updated;
+          });
+        },
+        onComplete: (full) => {
+          setMessages((msgs) => {
+            const updated = [...msgs];
+            updated[updated.length - 1] = { role: "assistant", content: full };
+            return updated;
+          });
+          setIsStreaming(false);
+        },
+        onError: (error: Error) => {
+          setMessages((msgs) => {
+            const updated = [...msgs];
+            updated[updated.length - 1] = {
+              role: "assistant",
+              content: `Error: ${error.message}`,
+            };
+            return updated;
+          });
+          setIsStreaming(false);
+        },
       });
-      setMessages([...newMessages, { role: "assistant", content: reply }]);
     } catch (err: any) {
       setMessages([
         ...newMessages,
-        {
-          role: "assistant",
-          content: `Error: ${err.message || "Failed to fetch"}`,
-        },
+        { role: "assistant", content: `Error: ${err.message || "Failed to fetch"}` },
       ]);
+      setIsStreaming(false);
     }
   };
 
@@ -219,8 +245,12 @@ const ChatModal: React.FC<ChatModalProps> = ({
             >
               <RotateCcw size={16} />
             </button>
-            <button className="btn btn-primary" onClick={sendMessage}>
-              Send
+            <button
+              className="btn btn-primary"
+              onClick={sendMessage}
+              disabled={isStreaming}
+            >
+              {isStreaming ? "Sending..." : "Send"}
             </button>
           </div>
         </div>
