@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
-import { Upload, FileText, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCcw, Lightbulb, Maximize, Minimize, BookOpen, FileIcon, Layout, Languages, Bookmark, X } from 'lucide-react';
+import { Upload, FileText, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCcw, Lightbulb, Maximize, Minimize, BookOpen, FileIcon, Layout, Languages, Bookmark, X, MessageCircle } from 'lucide-react';
 import DocumentManagerPanel from './DocumentManagerPanel';
 import { TranslationConfig } from '../types';
 import configService from '../services/configService';
@@ -14,12 +14,24 @@ interface PDFViewerProps {
   onFileUpload: (file: File) => void;
   onTextSelection: (text: string) => void;
   translationConfig: TranslationConfig;
+  chatMode: boolean;
+  onToggleChatMode: () => void;
   onFullscreenChange?: (isFullscreen: boolean, container: HTMLElement | null) => void;
   onPageTextExtracted?: (text: string, pageNumber: number) => void;
   onFileClose?: () => void;
 }
 
-const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelection, translationConfig, onFullscreenChange, onPageTextExtracted, onFileClose }) => {
+const PDFViewer: React.FC<PDFViewerProps> = ({
+  file,
+  onFileUpload,
+  onTextSelection,
+  translationConfig,
+  chatMode,
+  onToggleChatMode,
+  onFullscreenChange,
+  onPageTextExtracted,
+  onFileClose
+}) => {
   const [numPages, setNumPages] = useState<number>(0);
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [error, setError] = useState<string>('');
