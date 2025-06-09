@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import ReactMarkdown from 'react-markdown';
+import { Send, RotateCcw } from 'lucide-react';
 import chatService, { ChatMessage } from '../services/chatService';
 import apiKeyService from '../services/apiKeyService';
 import { markdownService } from '../services/markdownService';
@@ -258,15 +259,19 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialMessage, 
               className="btn btn-primary"
               onClick={() => sendMessage()}
               disabled={isStreaming || isContextLoading || !inputText.trim()}
+              aria-label="Send"
+              title="Send"
             >
-              Send
+              <Send size={16} />
             </button>
             <button
               className="btn btn-tertiary"
               onClick={resetConversation}
               disabled={isStreaming}
+              aria-label="Reset conversation"
+              title="Reset conversation"
             >
-              Reset
+              <RotateCcw size={16} />
             </button>
           </div>
         </div>
