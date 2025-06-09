@@ -414,6 +414,7 @@ function App() {
           isOpen={showChatModal}
           onClose={() => setShowChatModal(false)}
           initialMessage={chatInitialMessage}
+          currentFile={pdfFile}
         />
       )}
     </div>

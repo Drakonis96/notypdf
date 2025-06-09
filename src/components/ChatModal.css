@@ -94,3 +94,11 @@
   justify-content: flex-end;
 }
 
+.context-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  color: #666;
+}
+

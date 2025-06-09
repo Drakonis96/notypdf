@@ -3,13 +3,16 @@ import { createPortal } from 'react-dom';
 import ReactMarkdown from 'react-markdown';
 import chatService, { ChatMessage } from '../services/chatService';
 import apiKeyService from '../services/apiKeyService';
+import { markdownService } from '../services/markdownService';
 import { TranslationProvider, TranslationModel } from '../types';
+import LoadingSpinner from './LoadingSpinner';
 import './ChatModal.css';
 
 interface ChatModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialMessage?: string;
+  currentFile?: File | null;
 }
 
 const PROVIDER_OPTIONS: { label: string; value: TranslationProvider }[] = [
@@ -43,7 +46,7 @@ const DEEPSEEK_MODELS: { label: string; value: TranslationModel }[] = [
   { label: 'DeepSeek Reasoner', value: 'deepseek-reasoner' },
 ];
 
-const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialMessage }) => {
+const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialMessage, currentFile }) => {
   const [provider, setProvider] = useState<TranslationProvider>('openai');
   const [model, setModel] = useState<TranslationModel>('gpt-4o-mini');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -51,11 +54,33 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialMessage }
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingText, setStreamingText] = useState('');
   const [initialSent, setInitialSent] = useState(false);
+  const [markdownContext, setMarkdownContext] = useState('');
+  const [isContextLoading, setIsContextLoading] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isOpen && modalRef.current) modalRef.current.focus();
   }, [isOpen]);
+
+  useEffect(() => {
+    const loadContext = async () => {
+      if (isOpen && currentFile && currentFile.name.toLowerCase().endsWith('.pdf')) {
+        setIsContextLoading(true);
+        try {
+          const md = await markdownService.getMarkdown(currentFile.name);
+          setMarkdownContext(md);
+        } catch (err) {
+          console.error('Error loading markdown context:', err);
+          setMarkdownContext('');
+        } finally {
+          setIsContextLoading(false);
+        }
+      } else {
+        setMarkdownContext('');
+      }
+    };
+    loadContext();
+  }, [isOpen, currentFile]);
 
   useEffect(() => {
     if (isOpen && initialMessage && !initialSent) {
@@ -95,15 +120,18 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialMessage }
 
   const sendMessage = async (textOverride?: string) => {
     const toSend = textOverride ?? inputText;
-    if (!toSend.trim()) return;
+    if (!toSend.trim() || isContextLoading) return;
     try {
       const apiKey = await apiKeyService.getApiKey(provider);
-      const newMessages = [...messages, { role: 'user', content: toSend.trim() }];
-      setMessages(newMessages);
+      const userMessages = [...messages, { role: 'user', content: toSend.trim() }];
+      setMessages(userMessages);
       setInputText('');
       setIsStreaming(true);
       setStreamingText('');
-      await chatService.streamChat(newMessages, {
+      const messagesToSend = messages.length === 0 && markdownContext
+        ? [{ role: 'system', content: markdownContext }, ...userMessages]
+        : userMessages;
+      await chatService.streamChat(messagesToSend, {
         provider,
         model,
         apiKey,
@@ -111,7 +139,7 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialMessage }
         onComplete: (full) => {
           setIsStreaming(false);
           setStreamingText('');
-          setMessages([...newMessages, { role: 'assistant', content: full }]);
+          setMessages([...userMessages, { role: 'assistant', content: full }]);
         },
         onError: () => {
           setIsStreaming(false);
@@ -152,6 +180,11 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialMessage }
           </select>
         </div>
         <div className="chat-messages">
+          {isContextLoading && (
+            <div className="context-loading">
+              <LoadingSpinner size={16} /> Cargando contexto...
+            </div>
+          )}
           {messages.map((m, idx) => (
             <div key={idx} className={`chat-bubble ${m.role === 'user' ? 'user' : 'ai'}`}>
               <ReactMarkdown>{m.content}</ReactMarkdown>
@@ -166,7 +199,7 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialMessage }
         <div className="chat-input-section">
           <textarea value={inputText} onChange={(e) => setInputText(e.target.value)} rows={2} />
           <div className="chat-actions">
-            <button onClick={sendMessage} disabled={isStreaming || !inputText.trim()}>Send</button>
+            <button onClick={sendMessage} disabled={isStreaming || isContextLoading || !inputText.trim()}>Send</button>
             <button onClick={resetConversation} disabled={isStreaming}>Reset</button>
           </div>
         </div>
