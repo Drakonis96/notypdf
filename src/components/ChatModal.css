@@ -48,10 +48,16 @@
   gap: 8px;
   padding: 8px 12px;
   border-bottom: 1px solid #eee;
+  flex-wrap: wrap;
+  align-items: center;
 }
 
 .chat-config .config-select {
   flex: 1;
+}
+
+.token-input {
+  width: 80px;
 }
 
 .chat-messages {

@@ -10,18 +10,19 @@ export interface StreamingChatOptions {
   provider: TranslationProvider;
   model: TranslationModel;
   apiKey: string;
+  maxTokens?: number;
   onProgress?: (partial: string) => void;
   onComplete?: (full: string) => void;
   onError?: (err: Error) => void;
 }
 
 async function chatWithOpenAIStreaming(messages: ChatMessage[], options: StreamingChatOptions): Promise<void> {
-  const { model, apiKey, onProgress, onComplete, onError } = options;
+  const { model, apiKey, maxTokens, onProgress, onComplete, onError } = options;
   const url = 'https://api.openai.com/v1/chat/completions';
   const body = {
     model,
     messages,
-    max_tokens: 2048,
+    max_tokens: maxTokens ?? 2048,
     temperature: 0.2,
     stream: true,
   };
@@ -80,12 +81,12 @@ async function chatWithOpenAIStreaming(messages: ChatMessage[], options: Streami
 }
 
 async function chatWithOpenRouterStreaming(messages: ChatMessage[], options: StreamingChatOptions): Promise<void> {
-  const { model, apiKey, onProgress, onComplete, onError } = options;
+  const { model, apiKey, maxTokens, onProgress, onComplete, onError } = options;
   const url = 'https://openrouter.ai/api/v1/chat/completions';
   const body = {
     model,
     messages,
-    max_tokens: 2048,
+    max_tokens: maxTokens ?? 2048,
     temperature: 0.2,
     stream: true,
   };
@@ -135,12 +136,12 @@ async function chatWithOpenRouterStreaming(messages: ChatMessage[], options: Str
 }
 
 async function chatWithGeminiStreaming(messages: ChatMessage[], options: StreamingChatOptions): Promise<void> {
-  const { model, apiKey, onProgress, onComplete, onError } = options;
+  const { model, apiKey, maxTokens, onProgress, onComplete, onError } = options;
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?key=${apiKey}&alt=sse`;
   const contents = messages.map(m => ({ role: m.role === 'assistant' ? 'model' : m.role, parts: [{ text: m.content }] }));
   const body = {
     contents,
-    generationConfig: { temperature: 0.2, maxOutputTokens: 2048 },
+    generationConfig: { temperature: 0.2, maxOutputTokens: maxTokens ?? 2048 },
   };
   try {
     const response = await fetch(url, {
@@ -185,13 +186,13 @@ async function chatWithGeminiStreaming(messages: ChatMessage[], options: Streami
 }
 
 async function chatWithDeepSeekStreaming(messages: ChatMessage[], options: StreamingChatOptions): Promise<void> {
-  const { model, apiKey: apiKeyFromOptions, onProgress, onComplete, onError } = options;
+  const { model, apiKey: apiKeyFromOptions, maxTokens, onProgress, onComplete, onError } = options;
   const apiKey = apiKeyFromOptions || await apiKeyService.getApiKey('deepseek');
   const url = 'https://api.deepseek.com/v1/chat/completions';
   const body = {
     model,
     messages,
-    max_tokens: 2048,
+    max_tokens: maxTokens ?? 2048,
     temperature: 0.2,
     stream: true,
   };
