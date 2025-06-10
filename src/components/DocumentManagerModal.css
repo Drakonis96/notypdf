@@ -209,6 +209,41 @@
   box-shadow: none;
 }
 
+/* Archived Documents Button */
+.archived-view-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #6b7280;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.archived-view-button:hover:not(:disabled) {
+  background: #4b5563;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(75, 85, 99, 0.3);
+}
+
+.archived-view-button:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(75, 85, 99, 0.3);
+}
+
+.archived-view-button:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none;
+  box-shadow: none;
+}
+
 .drop-area {
   display: inline-flex;
   align-items: center;
@@ -404,6 +439,15 @@
 .delete-btn:hover {
   background: #fef2f2;
   color: #dc2626;
+}
+
+.archive-btn {
+  color: #6366f1;
+}
+
+.archive-btn:hover {
+  background: #eef2ff;
+  color: #4f46e5;
 }
 
 /* Empty State */

@@ -1,18 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { X, Upload, FileText, Trash2, Download, Calendar, Search, Play, Archive } from 'lucide-react';
+import { X, Upload, FileText, Trash2, Download, Calendar, Search, Play, Archive, ArchiveRestore } from 'lucide-react';
 import './DocumentManagerModal.css';
 import { fileService, FileInfo } from '../services/fileService';
 import ConfirmationModal from './ConfirmationModal';
-import DocumentArchiveModal from './DocumentArchiveModal';
 
-interface DocumentManagerModalProps {
+interface DocumentArchiveModalProps {
   isOpen: boolean;
   onClose: () => void;
   onFileUpload: (file: File) => void;
   currentFile?: File | null;
 }
 
-const DocumentManagerModal: React.FC<DocumentManagerModalProps> = ({
+const DocumentArchiveModal: React.FC<DocumentArchiveModalProps> = ({
   isOpen,
   onClose,
   onFileUpload,
@@ -31,7 +30,6 @@ const DocumentManagerModal: React.FC<DocumentManagerModalProps> = ({
     currentFileName: string;
   } | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
-  const [showArchiveModal, setShowArchiveModal] = useState(false);
 
   // Load documents from server on component mount
   useEffect(() => {
@@ -53,7 +51,7 @@ const DocumentManagerModal: React.FC<DocumentManagerModalProps> = ({
   const loadDocuments = async () => {
     try {
       setIsLoading(true);
-      const files = await fileService.listFiles();
+      const files = await fileService.listArchivedFiles();
       setDocuments(files);
     } catch (error) {
       console.error('Error loading documents:', error);
@@ -175,7 +173,7 @@ const DocumentManagerModal: React.FC<DocumentManagerModalProps> = ({
   const handleLoadDocument = async (doc: FileInfo) => {
     try {
       setIsLoading(true);
-      const url = fileService.getDownloadUrl(doc.name);
+      const url = fileService.getArchivedDownloadUrl(doc.name);
       const response = await fetch(url);
       
       if (!response.ok) {
@@ -198,7 +196,7 @@ const DocumentManagerModal: React.FC<DocumentManagerModalProps> = ({
   const handleDownloadDocument = async (doc: FileInfo, event: React.MouseEvent) => {
     event.stopPropagation();
     try {
-      await fileService.downloadAndOpenFile(doc.name);
+      await fileService.downloadAndOpenArchivedFile(doc.name);
     } catch (error) {
       console.error('Error downloading file:', error);
       alert('Failed to download file. Please try again.');
@@ -216,7 +214,7 @@ const DocumentManagerModal: React.FC<DocumentManagerModalProps> = ({
     
     try {
       setIsLoading(true);
-      await fileService.deleteFile(fileToDelete);
+      await fileService.deleteArchivedFile(fileToDelete);
       await loadDocuments(); // Refresh the list
       setShowDeleteConfirm(false);
       setFileToDelete(null);
@@ -228,15 +226,15 @@ const DocumentManagerModal: React.FC<DocumentManagerModalProps> = ({
     }
   };
 
-  const handleArchiveDocument = async (filename: string, event: React.MouseEvent) => {
+  const handleUnarchiveDocument = async (filename: string, event: React.MouseEvent) => {
     event.stopPropagation();
     try {
       setIsLoading(true);
-      await fileService.archiveFile(filename);
+      await fileService.unarchiveFile(filename);
       await loadDocuments();
     } catch (error) {
-      console.error('Error archiving file:', error);
-      alert('Failed to archive file. Please try again.');
+      console.error('Error unarchiving file:', error);
+      alert('Failed to unarchive file. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -249,7 +247,7 @@ const DocumentManagerModal: React.FC<DocumentManagerModalProps> = ({
 
   const handleClearAllFiles = () => {
     if (documents.length === 0) {
-      alert('No files to clear.');
+      alert('No archived files to clear.');
       return;
     }
     setShowClearAllConfirm(true);
@@ -258,12 +256,12 @@ const DocumentManagerModal: React.FC<DocumentManagerModalProps> = ({
   const confirmClearAll = async () => {
     try {
       setIsLoading(true);
-      const result = await fileService.deleteAllFiles();
+      const result = await fileService.clearArchivedFiles();
       
       if (result.success) {
         await loadDocuments(); // Refresh the list
         setShowClearAllConfirm(false);
-        alert(`Successfully cleared ${result.deletedCount} file(s).`);
+        alert(`Successfully cleared ${result.deletedCount} archived file(s).`);
       } else {
         throw new Error(result.message);
       }
@@ -327,7 +325,7 @@ const DocumentManagerModal: React.FC<DocumentManagerModalProps> = ({
         <div className="document-manager-header">
           <div className="header-title">
             <FileText size={24} />
-            <h2>Document Manager</h2>
+            <h2>Archived Documents</h2>
           </div>
           <button
             className="close-button"
@@ -372,7 +370,7 @@ const DocumentManagerModal: React.FC<DocumentManagerModalProps> = ({
             className="clear-all-button"
             onClick={handleClearAllFiles}
             disabled={isLoading || documents.length === 0}
-            title={documents.length === 0 ? "No files to clear" : `Clear all ${documents.length} files`}
+            title={documents.length === 0 ? 'No archived files to clear' : `Clear all ${documents.length} archived files`}
           >
             <Trash2 size={20} />
             <span>Clear All Files</span>
@@ -385,15 +383,6 @@ const DocumentManagerModal: React.FC<DocumentManagerModalProps> = ({
           >
             <Download size={20} />
             <span>Download All PDFs</span>
-          </button>
-          <button
-            className="archived-view-button"
-            onClick={() => setShowArchiveModal(true)}
-            disabled={isLoading}
-            title="View archived documents"
-          >
-            <Archive size={20} />
-            <span>Archived Documents</span>
           </button>
           <div
             className={`drop-area ${isDragOver ? 'drag-over' : ''}`}
@@ -480,12 +469,12 @@ const DocumentManagerModal: React.FC<DocumentManagerModalProps> = ({
                       </button>
                       <button
                         className="action-btn archive-btn"
-                        onClick={(e) => handleArchiveDocument(doc.name, e)}
-                        aria-label="Archive document"
-                        title="Archive document"
+                        onClick={(e) => handleUnarchiveDocument(doc.name, e)}
+                        aria-label="Unarchive document"
+                        title="Unarchive document"
                         disabled={isLoading}
                       >
-                        <Archive size={16} />
+                        <ArchiveRestore size={16} />
                       </button>
                     </div>
                   </div>
@@ -509,21 +498,15 @@ const DocumentManagerModal: React.FC<DocumentManagerModalProps> = ({
           isOpen={showClearAllConfirm}
           onConfirm={confirmClearAll}
           onClose={cancelClearAll}
-          title="Clear All Documents"
-          message={`Are you sure you want to delete ${documents.length} file${documents.length !== 1 ? 's' : ''}? This action cannot be undone.`}
+          title="Clear All Archived Documents"
+          message={`Are you sure you want to delete ${documents.length} file${documents.length !== 1 ? 's' : ''} from the archive? This action cannot be undone.`}
           confirmText="Clear All"
           cancelText="Cancel"
           isLoading={isLoading}
-        />
-        <DocumentArchiveModal
-          isOpen={showArchiveModal}
-          onClose={() => setShowArchiveModal(false)}
-          onFileUpload={onFileUpload}
-          currentFile={currentFile}
         />
       </div>
     </div>
   );
 };
 
-export default DocumentManagerModal;
+export default DocumentArchiveModal;

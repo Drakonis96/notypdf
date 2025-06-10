@@ -49,10 +49,15 @@ WORKSPACE_PATH = os.environ.get(
     os.path.join(os.getcwd(), "myworkspace"),
 )
 
+# Archived files directory inside the workspace
+ARCHIVE_PATH = os.path.join(WORKSPACE_PATH, "archive")
+
 # Ensure data directory exists
 os.makedirs(os.path.dirname(CONFIG_FILE_PATH), exist_ok=True)
 # Ensure workspace directory exists
 os.makedirs(WORKSPACE_PATH, exist_ok=True)
+# Ensure archive directory exists
+os.makedirs(ARCHIVE_PATH, exist_ok=True)
 
 # Initialize MarkItDown converter
 md_converter = MarkItDown()
@@ -408,9 +413,34 @@ def list_files():
                 })
         
         return jsonify({"files": files})
-    
+
     except Exception as e:
         logger.error(f"Error listing files: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/files/archived", methods=["GET"])
+def list_archived_files():
+    """List all files in the archive directory"""
+    try:
+        files = []
+        for filename in os.listdir(ARCHIVE_PATH):
+            if filename.lower().endswith('.md'):
+                continue
+            filepath = os.path.join(ARCHIVE_PATH, filename)
+            if os.path.isfile(filepath):
+                stat = os.stat(filepath)
+                files.append({
+                    "name": filename,
+                    "size": stat.st_size,
+                    "lastModified": datetime.fromtimestamp(stat.st_mtime).isoformat(),
+                    "type": filename.rsplit('.', 1)[1].lower() if '.' in filename else 'unknown',
+                })
+
+        return jsonify({"files": files})
+
+    except Exception as e:
+        logger.error(f"Error listing archived files: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @app.route("/files/upload", methods=["POST"])
@@ -613,6 +643,28 @@ def download_file(filename):
         logger.error(f"Error downloading file {filename}: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
+
+@app.route("/files/archived/<filename>", methods=["GET", "DELETE"])
+def archived_file_operations(filename):
+    """Download or delete a file from the archive directory"""
+    try:
+        filename = safe_filename(filename)
+        filepath = os.path.join(ARCHIVE_PATH, filename)
+
+        if not os.path.exists(filepath):
+            return jsonify({"error": "File not found"}), 404
+
+        if request.method == "DELETE":
+            os.remove(filepath)
+            logger.info(f"Archived file deleted successfully: {filename}")
+            return jsonify({"success": True, "message": f"File '{filename}' deleted"})
+
+        return send_file(filepath, as_attachment=True)
+
+    except Exception as e:
+        logger.error(f"Error processing archived file {filename}: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
 @app.route("/files/<filename>/markdown", methods=["GET"])
 def get_markdown(filename):
     """Return Markdown for a PDF file, generating it if needed."""
@@ -674,6 +726,44 @@ def delete_file(filename):
         logger.error(f"Error deleting file {filename}: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
+
+@app.route("/files/archive/<filename>", methods=["POST"])
+def archive_file(filename):
+    """Move a file from the workspace to the archive directory"""
+    try:
+        filename = safe_filename(filename)
+        src = os.path.join(WORKSPACE_PATH, filename)
+        dst = os.path.join(ARCHIVE_PATH, filename)
+
+        if not os.path.exists(src):
+            return jsonify({"error": "File not found"}), 404
+
+        os.rename(src, dst)
+        logger.info(f"File archived successfully: {filename}")
+        return jsonify({"success": True, "message": f"File '{filename}' archived"})
+    except Exception as e:
+        logger.error(f"Error archiving file {filename}: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/files/unarchive/<filename>", methods=["POST"])
+def unarchive_file(filename):
+    """Move a file from the archive directory back to the workspace"""
+    try:
+        filename = safe_filename(filename)
+        src = os.path.join(ARCHIVE_PATH, filename)
+        dst = os.path.join(WORKSPACE_PATH, filename)
+
+        if not os.path.exists(src):
+            return jsonify({"error": "File not found"}), 404
+
+        os.rename(src, dst)
+        logger.info(f"File unarchived successfully: {filename}")
+        return jsonify({"success": True, "message": f"File '{filename}' unarchived"})
+    except Exception as e:
+        logger.error(f"Error unarchiving file {filename}: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
 @app.route("/files/clear", methods=["DELETE"])
 def clear_all_files():
     """Delete all files from the workspace directory"""
@@ -716,6 +806,47 @@ def clear_all_files():
     
     except Exception as e:
         logger.error(f"Error clearing all files: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/files/archived/clear", methods=["DELETE"])
+def clear_all_archived_files():
+    """Delete all files from the archive directory"""
+    try:
+        deleted_files = []
+        failed_files = []
+
+        if os.path.exists(ARCHIVE_PATH):
+            for filename in os.listdir(ARCHIVE_PATH):
+                filepath = os.path.join(ARCHIVE_PATH, filename)
+                if os.path.isfile(filepath):
+                    try:
+                        os.remove(filepath)
+                        deleted_files.append(filename)
+                        logger.info(f"Archived file deleted: {filename}")
+                    except Exception as e:
+                        failed_files.append({"filename": filename, "error": str(e)})
+                        logger.error(f"Error deleting archived file {filename}: {str(e)}")
+
+        total_deleted = len(deleted_files)
+        total_failed = len(failed_files)
+
+        if total_failed == 0:
+            return jsonify({
+                "success": True,
+                "message": f"All archived files cleared successfully. {total_deleted} files deleted.",
+                "deleted_count": total_deleted
+            })
+        else:
+            return jsonify({
+                "success": False,
+                "message": f"Partially cleared: {total_deleted} files deleted, {total_failed} failed",
+                "deleted_count": total_deleted,
+                "failed_count": total_failed,
+                "failed_files": failed_files
+            }), 207
+    except Exception as e:
+        logger.error(f"Error clearing archived files: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @app.route("/files/test", methods=["GET"])
