@@ -129,6 +129,30 @@ class FileService {
   }
 
   /**
+   * Get list of archived files
+   */
+  async listArchivedFiles(): Promise<FileInfo[]> {
+    try {
+      const response = await fetch(`${this.baseUrl}/files/archived`);
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        const errorMessage = data.error || `Server error: ${response.status} ${response.statusText}`;
+        throw new Error(errorMessage);
+      }
+
+      const data: FileListResponse = await response.json();
+      return data.files;
+    } catch (error) {
+      console.error('Error listing archived files:', error);
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('Cannot connect to server. Please check if the backend is running.');
+      }
+      throw error;
+    }
+  }
+
+  /**
    * Delete a file from the server
    */
   async deleteFile(filename: string): Promise<void> {
@@ -143,6 +167,83 @@ class FileService {
       }
     } catch (error) {
       console.error('Error deleting file:', error);
+      throw error;
+    }
+  }
+
+  async deleteArchivedFile(filename: string): Promise<void> {
+    try {
+      const response = await fetch(`${this.baseUrl}/files/archived/${encodeURIComponent(filename)}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to delete file');
+      }
+    } catch (error) {
+      console.error('Error deleting archived file:', error);
+      throw error;
+    }
+  }
+
+  async clearArchivedFiles(): Promise<{ success: boolean; deletedCount: number; message: string }> {
+    try {
+      const response = await fetch(`${this.baseUrl}/files/archived/clear`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to delete archived files');
+      }
+
+      const data = await response.json();
+      return {
+        success: data.success,
+        deletedCount: data.deleted_count || 0,
+        message: data.message || ''
+      };
+    } catch (error) {
+      console.error('Error clearing archived files:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Archive a file on the server
+   */
+  async archiveFile(filename: string): Promise<void> {
+    try {
+      const response = await fetch(`${this.baseUrl}/files/archive/${encodeURIComponent(filename)}`, {
+        method: 'POST'
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to archive file');
+      }
+    } catch (error) {
+      console.error('Error archiving file:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Unarchive a file on the server
+   */
+  async unarchiveFile(filename: string): Promise<void> {
+    try {
+      const response = await fetch(`${this.baseUrl}/files/unarchive/${encodeURIComponent(filename)}`, {
+        method: 'POST'
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to unarchive file');
+      }
+    } catch (error) {
+      console.error('Error unarchiving file:', error);
       throw error;
     }
   }
@@ -193,6 +294,13 @@ class FileService {
   }
 
   /**
+   * Get the download URL for an archived file
+   */
+  getArchivedDownloadUrl(filename: string): string {
+    return `${this.baseUrl}/files/archived/${encodeURIComponent(filename)}`;
+  }
+
+  /**
    * Download a file and open it
    */
   async downloadAndOpenFile(filename: string): Promise<void> {
@@ -201,6 +309,16 @@ class FileService {
       window.open(url, '_blank');
     } catch (error) {
       console.error('Error opening file:', error);
+      throw error;
+    }
+  }
+
+  async downloadAndOpenArchivedFile(filename: string): Promise<void> {
+    try {
+      const url = this.getArchivedDownloadUrl(filename);
+      window.open(url, '_blank');
+    } catch (error) {
+      console.error('Error opening archived file:', error);
       throw error;
     }
   }
