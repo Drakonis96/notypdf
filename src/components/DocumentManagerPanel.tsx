@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Upload, FileText, Trash2, Download, Calendar, Search, Play } from 'lucide-react';
+import { Upload, FileText, Trash2, Download, Calendar, Search, Play, Archive } from 'lucide-react';
 import './DocumentManagerModal.css';
 import { fileService, FileInfo } from '../services/fileService';
 import ConfirmationModal from './ConfirmationModal';
+import DocumentArchiveModal from './DocumentArchiveModal';
 
 interface DocumentManagerPanelProps {
   onFileUpload: (file: File) => void;
@@ -19,6 +20,7 @@ const DocumentManagerPanel: React.FC<DocumentManagerPanelProps> = ({ onFileUploa
   const [uploadProgress, setUploadProgress] = useState<string>('');
   const [uploadDetails, setUploadDetails] = useState<{ current: number; total: number; currentFileName: string; } | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [showArchiveModal, setShowArchiveModal] = useState(false);
 
   useEffect(() => {
     loadDocuments();
@@ -209,6 +211,20 @@ const DocumentManagerPanel: React.FC<DocumentManagerPanelProps> = ({ onFileUploa
     }
   };
 
+  const handleArchiveDocument = async (filename: string, event: React.MouseEvent) => {
+    event.stopPropagation();
+    try {
+      setIsLoading(true);
+      await fileService.archiveFile(filename);
+      await loadDocuments();
+    } catch (error) {
+      console.error('Error archiving file:', error);
+      alert('Failed to archive file. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const cancelDelete = () => {
     setShowDeleteConfirm(false);
     setFileToDelete(null);
@@ -336,6 +352,15 @@ const DocumentManagerPanel: React.FC<DocumentManagerPanelProps> = ({ onFileUploa
             <Download size={20} />
             <span>Download All PDFs</span>
           </button>
+          <button
+            className="archived-view-button"
+            onClick={() => setShowArchiveModal(true)}
+            disabled={isLoading}
+            title="View archived documents"
+          >
+            <Archive size={20} />
+            <span>Archived Documents</span>
+          </button>
           <div
             className={`drop-area ${isDragOver ? 'drag-over' : ''}`}
             onDragOver={handleDragOver}
@@ -416,6 +441,15 @@ const DocumentManagerPanel: React.FC<DocumentManagerPanelProps> = ({ onFileUploa
                       >
                         <Trash2 size={16} />
                       </button>
+                      <button
+                        className="action-btn archive-btn"
+                        onClick={(e) => handleArchiveDocument(doc.name, e)}
+                        aria-label="Archive document"
+                        title="Archive document"
+                        disabled={isLoading}
+                      >
+                        <Archive size={16} />
+                      </button>
                     </div>
                   </div>
                 ))
@@ -441,6 +475,12 @@ const DocumentManagerPanel: React.FC<DocumentManagerPanelProps> = ({ onFileUploa
           confirmText="Clear All"
           cancelText="Cancel"
           isLoading={isLoading}
+        />
+        <DocumentArchiveModal
+          isOpen={showArchiveModal}
+          onClose={() => setShowArchiveModal(false)}
+          onFileUpload={onFileUpload}
+          currentFile={currentFile}
         />
       </div>
     </div>
