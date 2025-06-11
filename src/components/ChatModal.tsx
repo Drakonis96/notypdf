@@ -51,7 +51,7 @@ const DEEPSEEK_MODELS: { label: string; value: TranslationModel }[] = [
   { label: 'DeepSeek Reasoner', value: 'deepseek-reasoner' },
 ];
 
-type ContextMode = 'markdown' | 'full-pdf' | 'selected-page';
+type ContextMode = 'markdown' | 'full-pdf' | 'selected-page' | 'no-context';
 
 const PROVIDERS_WITH_FILE_SUPPORT: TranslationProvider[] = ['openai', 'openrouter', 'gemini'];
 
@@ -79,7 +79,7 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialMessage, 
   const [streamingText, setStreamingText] = useState('');
   const [markdownContext, setMarkdownContext] = useState('');
   const [fileData, setFileData] = useState('');
-  const [contextMode, setContextMode] = useState<ContextMode>('markdown');
+  const [contextMode, setContextMode] = useState<ContextMode>('selected-page');
   const [currentPage, setCurrentPage] = useState(1);
   const [isContextLoading, setIsContextLoading] = useState(false);
   const [limitTokens, setLimitTokens] = useState(false);
@@ -135,6 +135,9 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialMessage, 
             const txt = await getPageText(currentFile, currentPage);
             setMarkdownContext(txt);
             setFileData('');
+          } else if (contextMode === 'no-context') {
+            setMarkdownContext('');
+            setFileData('');
           }
         } catch (err) {
           console.error('Error loading context:', err);
@@ -181,7 +184,7 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialMessage, 
     setProvider(prov);
     setModel(defaultModel);
     if (contextMode === 'full-pdf' && !PROVIDERS_WITH_FILE_SUPPORT.includes(prov)) {
-      setContextMode('markdown');
+      setContextMode('selected-page');
     }
     resetConversation();
   };
@@ -319,7 +322,7 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialMessage, 
               <LoadingSpinner size={16} /> Cargando contexto...
             </div>
           )}
-          {!isContextLoading && (markdownContext || fileData) && (
+          {!isContextLoading && (markdownContext || fileData || contextMode === 'no-context') && (
             <div className="context-loaded" aria-label="Context loaded">
               <span className="checkmark">&#10003;</span>
               <select
@@ -331,7 +334,8 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialMessage, 
                 <option value="full-pdf" disabled={!PROVIDERS_WITH_FILE_SUPPORT.includes(provider)}>
                   Full PDF (large files)
                 </option>
-                <option value="selected-page">Selected page</option>
+                <option value="selected-page">Current page</option>
+                <option value="no-context">No context</option>
               </select>
             </div>
           )}
