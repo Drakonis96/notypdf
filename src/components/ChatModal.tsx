@@ -10,8 +10,7 @@ import { TranslationProvider, TranslationModel } from '../types';
 import LoadingSpinner from './LoadingSpinner';
 import './ChatModal.css';
 
-// Use locally hosted worker for faster PDF operations
-pdfjs.GlobalWorkerOptions.workerSrc = `/pdf.worker.min.js`;
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/legacy/build/pdf.worker.min.js`;
 
 interface ChatModalProps {
   isOpen: boolean;
