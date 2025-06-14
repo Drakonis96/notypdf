@@ -162,9 +162,9 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
   function toggleContinuousView() {
     const wasInContinuousView = isContinuousView;
     const currentPage = pageNumber;
-    
+
     setIsContinuousView(!isContinuousView);
-    
+
     // If switching from single page to continuous view, scroll to the current page
     if (!wasInContinuousView) {
       // Use setTimeout to ensure the pages are rendered before scrolling
@@ -183,6 +183,12 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
           });
         }
       }, 100);
+    } else {
+      // Switching from continuous view back to single page view.
+      // Reset the scroll position so the current page is visible.
+      if (pdfContainerRef.current) {
+        pdfContainerRef.current.scrollTo({ top: 0, behavior: 'auto' });
+      }
     }
   }
 
