@@ -19,13 +19,6 @@ services:
     networks:
       - default
 
-  kokoro:
-    build: ./kokoro-server
-    ports:
-      - "40001:40001"
-    networks:
-      - default
-
 networks:
   default:
     name: pdf-reader-network
