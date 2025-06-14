@@ -7,7 +7,7 @@ import configService from '../services/configService';
 import { translateTextStreaming } from '../services/translationService';
 import { fileService } from '../services/fileService';
 
-pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/legacy/build/pdf.worker.min.js`;
 
 interface PDFViewerProps {
   file: File | null;
