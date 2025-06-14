@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Upload, FileText, Trash2, Download, Calendar, Search, Play, Archive } from 'lucide-react';
+import { Upload, FileText, Trash2, Download, Calendar, Search, Play, Archive, FolderPlus, Folder } from 'lucide-react';
 import './DocumentManagerModal.css';
 import { fileService, FileInfo } from '../services/fileService';
 import ConfirmationModal from './ConfirmationModal';
@@ -21,6 +21,7 @@ const DocumentManagerPanel: React.FC<DocumentManagerPanelProps> = ({ onFileUploa
   const [uploadDetails, setUploadDetails] = useState<{ current: number; total: number; currentFileName: string; } | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [showArchiveModal, setShowArchiveModal] = useState(false);
+  const [isCreatingFolder, setIsCreatingFolder] = useState(false);
 
   useEffect(() => {
     loadDocuments();
@@ -238,6 +239,21 @@ const DocumentManagerPanel: React.FC<DocumentManagerPanelProps> = ({ onFileUploa
     setShowClearAllConfirm(true);
   };
 
+  const handleCreateFolder = async () => {
+    const name = prompt('Folder name');
+    if (!name) return;
+    try {
+      setIsCreatingFolder(true);
+      await fileService.createFolder(name);
+      await loadDocuments();
+    } catch (error) {
+      console.error('Error creating folder:', error);
+      alert('Failed to create folder');
+    } finally {
+      setIsCreatingFolder(false);
+    }
+  };
+
   const confirmClearAll = async () => {
     try {
       setIsLoading(true);
@@ -335,6 +351,15 @@ const DocumentManagerPanel: React.FC<DocumentManagerPanelProps> = ({ onFileUploa
             <span>{isLoading ? (uploadProgress || 'Uploading...') : 'Upload Documents'}</span>
           </label>
           <button
+            className="upload-button"
+            onClick={handleCreateFolder}
+            disabled={isLoading || isCreatingFolder}
+            title="Create new folder"
+          >
+            <FolderPlus size={20} />
+            <span>{isCreatingFolder ? 'Creating...' : 'New Folder'}</span>
+          </button>
+          <button
             className="clear-all-button"
             onClick={handleClearAllFiles}
             disabled={isLoading || documents.length === 0}
@@ -399,7 +424,7 @@ const DocumentManagerPanel: React.FC<DocumentManagerPanelProps> = ({ onFileUploa
                     className={`document-item ${currentFile?.name === doc.name ? 'current' : ''}`}
                   >
                     <div className="document-icon">
-                      <FileText size={20} />
+                      {doc.type === 'folder' ? <Folder size={20} /> : <FileText size={20} />}
                     </div>
                     <div className="document-info">
                       <div className="document-name" title={doc.name}>
@@ -414,24 +439,37 @@ const DocumentManagerPanel: React.FC<DocumentManagerPanelProps> = ({ onFileUploa
                       </div>
                     </div>
                     <div className="document-actions">
-                      <button
-                        className="action-btn load-btn"
-                        onClick={() => handleLoadDocument(doc)}
-                        aria-label="Load document"
-                        title="Load document into reader"
-                        disabled={isLoading}
-                      >
-                        <Play size={16} />
-                      </button>
-                      <button
-                        className="action-btn download-btn"
-                        onClick={(e) => handleDownloadDocument(doc, e)}
-                        aria-label="Download document"
-                        title="Download document"
-                        disabled={isLoading}
-                      >
-                        <Download size={16} />
-                      </button>
+                      {doc.type !== 'folder' && (
+                        <>
+                          <button
+                            className="action-btn load-btn"
+                            onClick={() => handleLoadDocument(doc)}
+                            aria-label="Load document"
+                            title="Load document into reader"
+                            disabled={isLoading}
+                          >
+                            <Play size={16} />
+                          </button>
+                          <button
+                            className="action-btn download-btn"
+                            onClick={(e) => handleDownloadDocument(doc, e)}
+                            aria-label="Download document"
+                            title="Download document"
+                            disabled={isLoading}
+                          >
+                            <Download size={16} />
+                          </button>
+                          <button
+                            className="action-btn archive-btn"
+                            onClick={(e) => handleArchiveDocument(doc.name, e)}
+                            aria-label="Archive document"
+                            title="Archive document"
+                            disabled={isLoading}
+                          >
+                            <Archive size={16} />
+                          </button>
+                        </>
+                      )}
                       <button
                         className="action-btn delete-btn"
                         onClick={(e) => handleDeleteDocument(doc.name, e)}
@@ -440,15 +478,6 @@ const DocumentManagerPanel: React.FC<DocumentManagerPanelProps> = ({ onFileUploa
                         disabled={isLoading}
                       >
                         <Trash2 size={16} />
-                      </button>
-                      <button
-                        className="action-btn archive-btn"
-                        onClick={(e) => handleArchiveDocument(doc.name, e)}
-                        aria-label="Archive document"
-                        title="Archive document"
-                        disabled={isLoading}
-                      >
-                        <Archive size={16} />
                       </button>
                     </div>
                   </div>

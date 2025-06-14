@@ -394,24 +394,31 @@ def clear_config():
 
 @app.route("/files", methods=["GET"])
 def list_files():
-    """List all files in the workspace directory"""
+    """List all files and folders in the workspace directory"""
     try:
         files = []
         for filename in os.listdir(WORKSPACE_PATH):
-            # Ignore generated markdown files
             if filename.lower().endswith('.md'):
                 continue
 
             filepath = os.path.join(WORKSPACE_PATH, filename)
-            if os.path.isfile(filepath):
-                stat = os.stat(filepath)
+            stat = os.stat(filepath)
+
+            if os.path.isdir(filepath):
+                files.append({
+                    "name": filename,
+                    "size": 0,
+                    "lastModified": datetime.fromtimestamp(stat.st_mtime).isoformat(),
+                    "type": "folder"
+                })
+            elif os.path.isfile(filepath):
                 files.append({
                     "name": filename,
                     "size": stat.st_size,
                     "lastModified": datetime.fromtimestamp(stat.st_mtime).isoformat(),
                     "type": filename.rsplit('.', 1)[1].lower() if '.' in filename else 'unknown'
                 })
-        
+
         return jsonify({"files": files})
 
     except Exception as e:
@@ -441,6 +448,30 @@ def list_archived_files():
 
     except Exception as e:
         logger.error(f"Error listing archived files: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/files/create-folder", methods=["POST"])
+def create_folder():
+    """Create a new folder inside the workspace directory"""
+    try:
+        data = request.get_json() or {}
+        folder_name = data.get("folderName")
+        if not folder_name:
+            return jsonify({"error": "folderName is required"}), 400
+
+        folder_name = safe_filename(folder_name)
+        folder_path = os.path.join(WORKSPACE_PATH, folder_name)
+
+        if os.path.exists(folder_path):
+            return jsonify({"error": "Folder already exists"}), 400
+
+        os.makedirs(folder_path, exist_ok=True)
+        logger.info(f"Folder created: {folder_path}")
+        return jsonify({"success": True, "folder": folder_name})
+
+    except Exception as e:
+        logger.error(f"Error creating folder {folder_name}: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @app.route("/files/upload", methods=["POST"])
