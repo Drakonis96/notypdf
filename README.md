@@ -1,6 +1,6 @@
 <!-- Centered logo -->
 <p align="center">
-  <img src="public/static/logo.png" alt="NotyPDF Logo" width="120" />
+  <img src="public/logo.png" alt="NotyPDF Logo" width="120" />
 </p>
 
 <h1 align="center">NotyPDF</h1>

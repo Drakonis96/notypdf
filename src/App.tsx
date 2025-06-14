@@ -324,7 +324,7 @@ function App() {
       <div className="container">
         <header className="header">
           <div className="header-content">
-            <img src="/static/logo.png" alt="Logo" className="header-logo" />
+            <img src="/logo.png" alt="Logo" className="header-logo" />
             <div className="header-text">
               <h1>NotyPDF</h1>
               <p>Seamlessly read PDFs and save selected text and annotations to your Notion database.</p>

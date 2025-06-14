@@ -2,7 +2,7 @@ const CACHE_NAME = 'notypdf-cache-v1';
 const URLS_TO_CACHE = [
   '/',
   '/index.html',
-  '/static/logo.png'
+  '/logo.png'
 ];
 
 self.addEventListener('install', event => {
