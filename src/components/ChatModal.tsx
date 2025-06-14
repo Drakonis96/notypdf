@@ -3,7 +3,6 @@ import { createPortal } from 'react-dom';
 import ReactMarkdown from 'react-markdown';
 import { Send, RotateCcw } from 'lucide-react';
 import { pdfjs } from 'react-pdf';
-import workerSrc from 'pdfjs-dist/build/pdf.worker.min.js';
 import chatService, { ChatMessage, ChatContentPart } from '../services/chatService';
 import apiKeyService from '../services/apiKeyService';
 import { markdownService } from '../services/markdownService';
@@ -11,7 +10,7 @@ import { TranslationProvider, TranslationModel } from '../types';
 import LoadingSpinner from './LoadingSpinner';
 import './ChatModal.css';
 
-pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/legacy/build/pdf.worker.min.js`;
 
 interface ChatModalProps {
   isOpen: boolean;
