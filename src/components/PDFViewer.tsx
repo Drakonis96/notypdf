@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
+import workerSrc from 'pdfjs-dist/build/pdf.worker.min.js';
 import { Upload, FileText, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCcw, Lightbulb, Maximize, Minimize, BookOpen, FileIcon, Layout, Languages, Bookmark, X } from 'lucide-react';
 import DocumentManagerPanel from './DocumentManagerPanel';
 import { TranslationConfig } from '../types';
@@ -7,7 +8,7 @@ import configService from '../services/configService';
 import { translateTextStreaming } from '../services/translationService';
 import { fileService } from '../services/fileService';
 
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/legacy/build/pdf.worker.min.js`;
+pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
 
 interface PDFViewerProps {
   file: File | null;
@@ -639,13 +640,16 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
                   title="Select text to send to Notion"
                   style={{ userSelect: 'text' }}
                 >
-                  {isContinuousView ? (
-                    // Continuous view - show all pages
-                    Array.from(new Array(numPages), (el, index) => (
+                  {Array.from(new Array(numPages), (el, index) => {
+                    const isVisible = isContinuousView || pageNumber === index + 1;
+                    return (
                       <div
                         key={`page_${index + 1}`}
                         ref={el => (pageRefs.current[index] = el)}
-                        style={{ marginBottom: '20px' }}
+                        style={{
+                          marginBottom: isVisible ? '20px' : '0px',
+                          display: isVisible ? 'block' : 'none'
+                        }}
                       >
                         <Page
                           pageNumber={index + 1}
@@ -654,26 +658,21 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
                           scale={scale}
                           width={pdfWidth}
                         />
-                        <div style={{ 
-                          textAlign: 'center', 
-                          marginTop: '10px', 
-                          fontSize: '12px', 
-                          color: '#666' 
-                        }}>
-                          Page {index + 1}
-                        </div>
+                        {isContinuousView && (
+                          <div
+                            style={{
+                              textAlign: 'center',
+                              marginTop: '10px',
+                              fontSize: '12px',
+                              color: '#666'
+                            }}
+                          >
+                            Page {index + 1}
+                          </div>
+                        )}
                       </div>
-                    ))
-                  ) : (
-                    // Single page view
-                    <Page
-                      pageNumber={pageNumber}
-                      renderTextLayer={true}
-                      renderAnnotationLayer={true}
-                      scale={scale}
-                      width={pdfWidth}
-                    />
-                  )}
+                    );
+                  })}
                 </div>
               </Document>
             </div>
