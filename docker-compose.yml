@@ -12,17 +12,9 @@ services:
       - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
       - NOTION_API_KEY=${NOTION_API_KEY}
     volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
       - ./data:/app/data
       - ./myworkspace:/myworkspace
     restart: unless-stopped
-    networks:
-      - default
-
-  kokoro:
-    build: ./kokoro-server
-    ports:
-      - "40001:40001"
     networks:
       - default
 

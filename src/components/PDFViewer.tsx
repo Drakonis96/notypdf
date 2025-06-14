@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
-import { Upload, FileText, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCcw, Lightbulb, Maximize, Minimize, BookOpen, FileIcon, BookCopy, Layout, Languages, Bookmark, X, Volume2 } from 'lucide-react';
-import { listVoices, speak } from '../services/ttsService';
+import { Upload, FileText, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCcw, Lightbulb, Maximize, Minimize, BookOpen, FileIcon, BookCopy, Layout, Languages, Bookmark, X } from 'lucide-react';
 import DocumentManagerPanel from './DocumentManagerPanel';
 import { TranslationConfig } from '../types';
 import configService from '../services/configService';
@@ -33,19 +32,12 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
   const [isDoublePageView, setIsDoublePageView] = useState<boolean>(false);
   const [toolbarPosition, setToolbarPosition] = useState<'top' | 'bottom'>('top');
   const [isExtractingText, setIsExtractingText] = useState<boolean>(false);
-  const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
-  const [voices, setVoices] = useState<string[]>([]);
-  const [selectedVoice, setSelectedVoice] = useState<string>('af_heart');
   const [skipPageInput, setSkipPageInput] = useState<string>("");
   const [bookmarkedPage, setBookmarkedPage] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pdfContainerRef = useRef<HTMLDivElement>(null);
   const pageRefs = useRef<(HTMLDivElement | null)[]>([]);
   const documentRef = useRef<any>(null);
-
-  useEffect(() => {
-    listVoices().then(setVoices).catch(err => console.error('Failed to load voices', err));
-  }, []);
 
   useEffect(() => {
     if (onPageChange) onPageChange(pageNumber);
@@ -283,33 +275,6 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
       setError('Failed to extract text from current page');
     } finally {
       setIsExtractingText(false);
-    }
-  }
-
-  async function getCurrentPageText(): Promise<string> {
-    if (!file) return '';
-    const loadingTask = pdfjs.getDocument(URL.createObjectURL(file));
-    const pdf = await loadingTask.promise;
-    const page = await pdf.getPage(pageNumber);
-    const textContent = await page.getTextContent();
-    return textContent.items.map((item: any) => item.str).join(' ').trim();
-  }
-
-  async function speakCurrentPage() {
-    if (isSpeaking) return;
-    try {
-      setIsSpeaking(true);
-      const text = await getCurrentPageText();
-      if (!text) return;
-      const blob = await speak(text, selectedVoice);
-      const url = URL.createObjectURL(blob);
-      const audio = new Audio(url);
-      audio.play();
-    } catch (err) {
-      console.error('Error speaking page:', err);
-      setError('Failed to generate speech');
-    } finally {
-      setIsSpeaking(false);
     }
   }
 
@@ -587,27 +552,6 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
                       <Languages size={14} />
                     </button>
                   )}
-                  {voices.length > 0 && (
-                    <select
-                      value={selectedVoice}
-                      onChange={(e) => setSelectedVoice(e.target.value)}
-                      className="config-select"
-                      style={{ height: 28 }}
-                    >
-                      {voices.map(v => (
-                        <option key={v} value={v}>{v}</option>
-                      ))}
-                    </select>
-                  )}
-                  <button
-                    className={`btn btn-compact btn-same-size ${isSpeaking ? 'btn-loading' : ''}`}
-                    style={{ minWidth: 32, minHeight: 32 }}
-                    onClick={speakCurrentPage}
-                    disabled={isSpeaking || !file}
-                    title={isSpeaking ? 'Generating audio...' : 'Read page aloud'}
-                  >
-                    <Volume2 size={14} />
-                  </button>
                   <button
                     className={`btn btn-compact btn-same-size ${bookmarkedPage === pageNumber ? 'btn-active' : ''}`}
                     style={{ minWidth: 32, minHeight: 32 }}
