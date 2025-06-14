@@ -28,7 +28,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
   const [isDragOver, setIsDragOver] = useState<boolean>(false);
   const [isFocusMode, setIsFocusMode] = useState<boolean>(false);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
-  const [isContinuousView, setIsContinuousView] = useState<boolean>(false);
+  const [viewMode, setViewMode] = useState<'single' | 'double' | 'continuous'>('single');
   const [toolbarPosition, setToolbarPosition] = useState<'top' | 'bottom'>('top');
   const [isExtractingText, setIsExtractingText] = useState<boolean>(false);
   const [skipPageInput, setSkipPageInput] = useState<string>("");
@@ -159,36 +159,38 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
     setIsFocusMode(!isFocusMode);
   }
 
-  function toggleContinuousView() {
-    const wasInContinuousView = isContinuousView;
+  function cycleViewMode() {
     const currentPage = pageNumber;
+    const previousMode = viewMode;
+    let nextMode: 'single' | 'double' | 'continuous';
 
-    setIsContinuousView(!isContinuousView);
+    if (viewMode === 'single') {
+      nextMode = 'double';
+      // Ensure we start on an odd page
+      setPageNumber(prev => (prev % 2 === 0 ? prev - 1 : prev));
+    } else if (viewMode === 'double') {
+      nextMode = 'continuous';
+    } else {
+      nextMode = 'single';
+    }
 
-    // If switching from single page to continuous view, scroll to the current page
-    if (!wasInContinuousView) {
-      // Use setTimeout to ensure the pages are rendered before scrolling
+    setViewMode(nextMode);
+
+    if (nextMode === 'continuous') {
+      // Scroll to the current page when entering continuous view
       setTimeout(() => {
         const targetPageRef = pageRefs.current[currentPage - 1];
         if (targetPageRef && pdfContainerRef.current) {
           const container = pdfContainerRef.current;
           const containerRect = container.getBoundingClientRect();
           const pageRect = targetPageRef.getBoundingClientRect();
-          
-          // Calculate scroll position to center the target page
           const scrollTop = container.scrollTop + (pageRect.top - containerRect.top) - 50;
-          container.scrollTo({
-            top: scrollTop,
-            behavior: 'smooth'
-          });
+          container.scrollTo({ top: scrollTop, behavior: 'smooth' });
         }
       }, 100);
-    } else {
-      // Switching from continuous view back to single page view.
-      // Reset the scroll position so the current page is visible.
-      if (pdfContainerRef.current) {
-        pdfContainerRef.current.scrollTo({ top: 0, behavior: 'auto' });
-      }
+    } else if (previousMode === 'continuous' && pdfContainerRef.current) {
+      // Leaving continuous view, reset scroll position
+      pdfContainerRef.current.scrollTo({ top: 0, behavior: 'auto' });
     }
   }
 
@@ -310,7 +312,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
 
   // Scroll handler to update pageNumber in continuous view
   React.useEffect(() => {
-    if (!isContinuousView || numPages === 0) return;
+    if (viewMode !== 'continuous' || numPages === 0) return;
     const container = pdfContainerRef.current;
     if (!container) return;
 
@@ -339,14 +341,14 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
     // Trigger once on mount
     handleScroll();
     return () => container.removeEventListener('scroll', handleScroll);
-  }, [isContinuousView, numPages]);
+  }, [viewMode, numPages]);
 
   // Effect to handle view mode changes and maintain page position
   React.useEffect(() => {
     // This effect ensures that page numbers are properly maintained
     // when switching between view modes. The actual scrolling is handled
-    // in the toggleContinuousView function for better control.
-  }, [isContinuousView, pageNumber]);
+    // in the cycleViewMode function for better control.
+  }, [viewMode, pageNumber]);
 
   if (!file) {
     return (
@@ -400,7 +402,11 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
                   <span className="file-name-centered">{file.name}</span>
                 </div>
                 <span style={{ color: '#888', fontWeight: 500, fontSize: '15px', margin: '0 6px' }}>–</span>
-                <span className="page-info-title" style={{ color: '#888', fontWeight: 500, fontSize: '15px' }}>Page {pageNumber} of {numPages}</span>
+                <span className="page-info-title" style={{ color: '#888', fontWeight: 500, fontSize: '15px' }}>
+                  {viewMode === 'double'
+                    ? `Pages ${pageNumber}-${Math.min(pageNumber + 1, numPages)} of ${numPages}`
+                    : `Page ${pageNumber} of ${numPages}`}
+                </span>
               </div>
               
               {/* Reorganized controls grid with navigation buttons in center */}
@@ -411,10 +417,22 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
                   <button
                     className="btn btn-compact btn-same-size"
                     style={{ minWidth: 32, minHeight: 32 }}
-                    onClick={toggleContinuousView}
-                    title={isContinuousView ? "Single page view" : "Continuous view"}
+                    onClick={cycleViewMode}
+                    title={
+                      viewMode === 'single'
+                        ? 'Double page view'
+                        : viewMode === 'double'
+                        ? 'Continuous view'
+                        : 'Single page view'
+                    }
                   >
-                    {isContinuousView ? <FileIcon size={14} /> : <BookOpen size={14} />}
+                    {viewMode === 'single' ? (
+                      <Layout size={14} />
+                    ) : viewMode === 'double' ? (
+                      <BookOpen size={14} />
+                    ) : (
+                      <FileIcon size={14} />
+                    )}
                   </button>
                   {/* Zoom controls */}
                   <button
@@ -452,8 +470,15 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
                   <button
                     className="btn btn-compact btn-same-size"
                     style={{ minWidth: 32, minHeight: 32 }}
-                    disabled={pageNumber <= 1 || isContinuousView}
-                    onClick={() => setPageNumber(page => Math.max(1, page - 1))}
+                    disabled={pageNumber <= 1 || viewMode === 'continuous'}
+                    onClick={() =>
+                      setPageNumber(page =>
+                        Math.max(
+                          1,
+                          page - (viewMode === 'double' ? 2 : 1)
+                        )
+                      )
+                    }
                     title="Previous page"
                   >
                     <ChevronLeft size={14} />
@@ -466,9 +491,12 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
                     value={skipPageInput}
                     onChange={e => setSkipPageInput(e.target.value.replace(/[^0-9]/g, ''))}
                     onKeyDown={e => {
-                      if (e.key === 'Enter' && !isContinuousView) {
-                        const page = parseInt(skipPageInput, 10);
+                      if (e.key === 'Enter' && viewMode !== 'continuous') {
+                        let page = parseInt(skipPageInput, 10);
                         if (!isNaN(page) && page >= 1 && page <= numPages) {
+                          if (viewMode === 'double' && page % 2 === 0) {
+                            page -= 1;
+                          }
                           setPageNumber(page);
                           setSkipPageInput("");
                         }
@@ -477,31 +505,50 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
                     className="btn btn-compact btn-same-size"
                     style={{ width: 180, minHeight: 32, textAlign: 'center' }}
                     placeholder="#"
-                    disabled={isContinuousView || numPages === 0}
-                    title={isContinuousView ? "No disponible en vista continua" : "Ir a página"}
+                    disabled={viewMode === 'continuous' || numPages === 0}
+                    title={viewMode === 'continuous' ? "No disponible en vista continua" : "Ir a página"}
                   />
                   <button
                     className="btn btn-compact btn-same-size"
                     style={{ minWidth: 32, minHeight: 32 }}
                     onClick={() => {
-                      if (!isContinuousView) {
-                        const page = parseInt(skipPageInput, 10);
+                      if (viewMode !== 'continuous') {
+                        let page = parseInt(skipPageInput, 10);
                         if (!isNaN(page) && page >= 1 && page <= numPages) {
+                          if (viewMode === 'double' && page % 2 === 0) {
+                            page -= 1;
+                          }
                           setPageNumber(page);
                           setSkipPageInput("");
                         }
                       }
                     }}
-                    disabled={isContinuousView || !skipPageInput || isNaN(Number(skipPageInput)) || Number(skipPageInput) < 1 || Number(skipPageInput) > numPages}
-                    title={isContinuousView ? "No disponible en vista continua" : "Ir a página"}
+                    disabled={
+                      viewMode === 'continuous' ||
+                      !skipPageInput ||
+                      isNaN(Number(skipPageInput)) ||
+                      Number(skipPageInput) < 1 ||
+                      Number(skipPageInput) > numPages
+                    }
+                    title={viewMode === 'continuous' ? "No disponible en vista continua" : "Ir a página"}
                   >
                     Ir
                   </button>
                   <button
                     className="btn btn-compact btn-same-size"
                     style={{ minWidth: 32, minHeight: 32 }}
-                    disabled={pageNumber >= numPages || isContinuousView}
-                    onClick={() => setPageNumber(page => Math.min(numPages, page + 1))}
+                    disabled={
+                      pageNumber >= numPages - (viewMode === 'double' ? 1 : 0) ||
+                      viewMode === 'continuous'
+                    }
+                    onClick={() =>
+                      setPageNumber(page =>
+                        Math.min(
+                          numPages - (viewMode === 'double' ? 1 : 0),
+                          page + (viewMode === 'double' ? 2 : 1)
+                        )
+                      )
+                    }
                     title="Next page"
                   >
                     <ChevronRight size={14} />
@@ -645,7 +692,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
                   title="Select text to send to Notion"
                   style={{ userSelect: 'text' }}
                 >
-                  {isContinuousView ? (
+                  {viewMode === 'continuous' ? (
                     // Continuous view - show all pages
                     Array.from(new Array(numPages), (el, index) => (
                       <div
@@ -660,16 +707,69 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
                           scale={scale}
                           width={pdfWidth}
                         />
-                        <div style={{ 
-                          textAlign: 'center', 
-                          marginTop: '10px', 
-                          fontSize: '12px', 
-                          color: '#666' 
-                        }}>
+                        <div
+                          style={{
+                            textAlign: 'center',
+                            marginTop: '10px',
+                            fontSize: '12px',
+                            color: '#666'
+                          }}
+                        >
                           Page {index + 1}
                         </div>
                       </div>
                     ))
+                  ) : viewMode === 'double' ? (
+                    // Double page view
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'center',
+                        gap: '20px',
+                        marginBottom: '20px'
+                      }}
+                    >
+                      <div>
+                        <Page
+                          pageNumber={pageNumber}
+                          renderTextLayer={true}
+                          renderAnnotationLayer={true}
+                          scale={scale}
+                          width={pdfWidth / 2 - 20}
+                        />
+                        <div
+                          style={{
+                            textAlign: 'center',
+                            marginTop: '10px',
+                            fontSize: '12px',
+                            color: '#666'
+                          }}
+                        >
+                          Page {pageNumber}
+                        </div>
+                      </div>
+                      {pageNumber + 1 <= numPages && (
+                        <div>
+                          <Page
+                            pageNumber={pageNumber + 1}
+                            renderTextLayer={true}
+                            renderAnnotationLayer={true}
+                            scale={scale}
+                            width={pdfWidth / 2 - 20}
+                          />
+                          <div
+                            style={{
+                              textAlign: 'center',
+                              marginTop: '10px',
+                              fontSize: '12px',
+                              color: '#666'
+                            }}
+                          >
+                            Page {pageNumber + 1}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   ) : (
                     // Single page view
                     <Page
