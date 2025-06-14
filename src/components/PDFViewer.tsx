@@ -645,37 +645,41 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
                   title="Select text to send to Notion"
                   style={{ userSelect: 'text' }}
                 >
-                  {Array.from(new Array(numPages), (el, index) => (
-                    <div
-                      key={`page_${index + 1}`}
-                      ref={el => (pageRefs.current[index] = el)}
-                      style={{
-                        marginBottom: '20px',
-                        display:
-                          isContinuousView || pageNumber === index + 1
-                            ? 'block'
-                            : 'none'
-                      }}
-                    >
-                      <Page
-                        pageNumber={index + 1}
-                        renderTextLayer={true}
-                        renderAnnotationLayer={true}
-                        scale={scale}
-                        width={pdfWidth}
-                      />
+                  {isContinuousView ? (
+                    // Continuous view - show all pages
+                    Array.from(new Array(numPages), (el, index) => (
                       <div
-                        style={{
-                          textAlign: 'center',
-                          marginTop: '10px',
-                          fontSize: '12px',
-                          color: '#666'
-                        }}
+                        key={`page_${index + 1}`}
+                        ref={el => (pageRefs.current[index] = el)}
+                        style={{ marginBottom: '20px' }}
                       >
-                        Page {index + 1}
+                        <Page
+                          pageNumber={index + 1}
+                          renderTextLayer={true}
+                          renderAnnotationLayer={true}
+                          scale={scale}
+                          width={pdfWidth}
+                        />
+                        <div style={{ 
+                          textAlign: 'center', 
+                          marginTop: '10px', 
+                          fontSize: '12px', 
+                          color: '#666' 
+                        }}>
+                          Page {index + 1}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    // Single page view
+                    <Page
+                      pageNumber={pageNumber}
+                      renderTextLayer={true}
+                      renderAnnotationLayer={true}
+                      scale={scale}
+                      width={pdfWidth}
+                    />
+                  )}
                 </div>
               </Document>
             </div>
