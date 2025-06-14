@@ -367,6 +367,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
 
   // Calculate the PDF width (same as <Page width=...>)
   const pdfWidth = window.innerWidth > 768 ? window.innerWidth - 380 : window.innerWidth - 40;
+  const pageWidth = pdfWidth * scale;
 
   return (
     <div className="pdf-container" ref={pdfContainerRef}>
@@ -387,7 +388,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
       )}
       <div style={{ position: 'relative', zIndex: isFocusMode ? 999 : 'auto' }}>
         {error && <div className="error">{error}</div>}
-        <div className="pdf-centered-container" style={{ width: pdfWidth, maxWidth: '100%', margin: '0' }}>
+        <div className="pdf-centered-container" style={{ width: pageWidth, maxWidth: '100%', margin: '0' }}>
           <div className={`pdf-layout pdf-layout-${toolbarPosition}`}
             style={{ width: '100%' }}
           >
@@ -661,8 +662,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
                         pageNumber={index + 1}
                         renderTextLayer={true}
                         renderAnnotationLayer={true}
-                        scale={scale}
-                        width={pdfWidth}
+                        width={pageWidth}
                       />
                       <div
                         style={{
