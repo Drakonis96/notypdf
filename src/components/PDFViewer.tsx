@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
-import { Upload, FileText, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCcw, Lightbulb, Maximize, Minimize, BookOpen, FileIcon, BookCopy, Layout, Languages, Bookmark, X } from 'lucide-react';
+import { Upload, FileText, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCcw, Lightbulb, Maximize, Minimize, BookOpen, FileIcon, Layout, Languages, Bookmark, X } from 'lucide-react';
 import DocumentManagerPanel from './DocumentManagerPanel';
 import { TranslationConfig } from '../types';
 import configService from '../services/configService';
@@ -29,7 +29,6 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
   const [isFocusMode, setIsFocusMode] = useState<boolean>(false);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [isContinuousView, setIsContinuousView] = useState<boolean>(false);
-  const [isDoublePageView, setIsDoublePageView] = useState<boolean>(false);
   const [toolbarPosition, setToolbarPosition] = useState<'top' | 'bottom'>('top');
   const [isExtractingText, setIsExtractingText] = useState<boolean>(false);
   const [skipPageInput, setSkipPageInput] = useState<string>("");
@@ -165,9 +164,6 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
     const currentPage = pageNumber;
 
     setIsContinuousView(!isContinuousView);
-    if (!isContinuousView) {
-      setIsDoublePageView(false);
-    }
 
     // If switching from single page to continuous view, scroll to the current page
     if (!wasInContinuousView) {
@@ -193,16 +189,6 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
       if (pdfContainerRef.current) {
         pdfContainerRef.current.scrollTo({ top: 0, behavior: 'auto' });
       }
-    }
-  }
-
-  function toggleDoublePageView() {
-    const wasDouble = isDoublePageView;
-    setIsDoublePageView(!isDoublePageView);
-    if (!wasDouble) {
-      setIsContinuousView(false);
-      // Ensure left page of the spread is odd
-      setPageNumber(prev => (prev % 2 === 0 ? prev - 1 : prev));
     }
   }
 
@@ -429,14 +415,6 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
                     title={isContinuousView ? "Single page view" : "Continuous view"}
                   >
                     {isContinuousView ? <FileIcon size={14} /> : <BookOpen size={14} />}
-                  </button>
-                  <button
-                    className="btn btn-compact btn-same-size"
-                    style={{ minWidth: 32, minHeight: 32 }}
-                    onClick={toggleDoublePageView}
-                    title={isDoublePageView ? "Single page view" : "Double page view"}
-                  >
-                    {isDoublePageView ? <FileIcon size={14} /> : <BookCopy size={14} />}
                   </button>
                   {/* Zoom controls */}
                   <button
@@ -665,12 +643,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
                   onTouchEnd={handleTouchEnd}
                   className="text-selection-active"
                   title="Select text to send to Notion"
-                  style={{
-                    userSelect: 'text',
-                    display: isDoublePageView ? 'flex' : 'block',
-                    flexWrap: 'wrap',
-                    justifyContent: 'center'
-                  }}
+                  style={{ userSelect: 'text' }}
                 >
                   {Array.from(new Array(numPages), (el, index) => (
                     <div
@@ -679,13 +652,9 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
                       style={{
                         marginBottom: '20px',
                         display:
-                          isContinuousView ||
-                          (isDoublePageView &&
-                            (index + 1 === pageNumber || index + 1 === pageNumber + 1)) ||
-                          (!isDoublePageView && pageNumber === index + 1)
-                            ? (isDoublePageView ? 'inline-block' : 'block')
-                            : 'none',
-                        width: isDoublePageView ? '50%' : 'auto'
+                          isContinuousView || pageNumber === index + 1
+                            ? 'block'
+                            : 'none'
                       }}
                     >
                       <Page
@@ -693,7 +662,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
                         renderTextLayer={true}
                         renderAnnotationLayer={true}
                         scale={scale}
-                        width={isDoublePageView ? (pdfWidth - 20) / 2 : pdfWidth}
+                        width={pdfWidth}
                       />
                       <div
                         style={{
