@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
-import workerSrc from 'pdfjs-dist/build/pdf.worker.min.js';
 import { Upload, FileText, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCcw, Lightbulb, Maximize, Minimize, BookOpen, FileIcon, Layout, Languages, Bookmark, X } from 'lucide-react';
 import DocumentManagerPanel from './DocumentManagerPanel';
 import { TranslationConfig } from '../types';
@@ -8,7 +7,7 @@ import configService from '../services/configService';
 import { translateTextStreaming } from '../services/translationService';
 import { fileService } from '../services/fileService';
 
-pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/legacy/build/pdf.worker.min.js`;
 
 interface PDFViewerProps {
   file: File | null;
