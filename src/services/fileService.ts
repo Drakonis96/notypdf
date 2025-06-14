@@ -128,6 +128,19 @@ class FileService {
     }
   }
 
+  async createFolder(folderName: string): Promise<void> {
+    const response = await fetch(`${this.baseUrl}/files/create-folder`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ folderName })
+    });
+
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      throw new Error(data.error || 'Failed to create folder');
+    }
+  }
+
   /**
    * Get list of archived files
    */
