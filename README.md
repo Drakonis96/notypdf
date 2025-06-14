@@ -255,6 +255,8 @@ If you have never used Docker before, follow these steps:
    container.
 7. Wait until you see a message that the server is running.
 8. Open your web browser and go to [http://localhost:5026](http://localhost:5026)
+9. The PDF.js worker is already copied from the `public` folder during the build
+   process, so no additional Docker or Compose configuration is required.
 
 If you prefer to run the container manually with `docker run` instead of using
 Docker Compose, make sure to mount the same folders so your configuration is
