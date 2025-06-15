@@ -24,6 +24,10 @@ interface TranslationModalProps {
   saving?: boolean;
   error?: string;
   onSendToChat?: (text: string) => void;
+  currentPdfPage?: number;
+  totalPdfPages?: number;
+  onNextPage?: () => void;
+  onPrevPage?: () => void;
 }
 
 const TranslationModal: React.FC<TranslationModalProps> = ({
@@ -44,7 +48,11 @@ const TranslationModal: React.FC<TranslationModalProps> = ({
   success = '',
   saving = false,
   error = '',
-  onSendToChat
+  onSendToChat,
+  currentPdfPage,
+  totalPdfPages,
+  onNextPage,
+  onPrevPage
 }) => {
   const [selectedText, setSelectedText] = useState<string>('');
   const [modalAnnotation, setModalAnnotation] = useState<string>(annotation);
@@ -253,7 +261,18 @@ const TranslationModal: React.FC<TranslationModalProps> = ({
               </p>
             </div>
           )}
-          <div 
+          {typeof currentPdfPage === 'number' && typeof totalPdfPages === 'number' && totalPdfPages > 0 && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+              <button className="btn btn-secondary" onClick={onPrevPage} disabled={currentPdfPage <= 1 || !onPrevPage}>
+                Previous Page
+              </button>
+              <span style={{ fontWeight: 500 }}>Page {currentPdfPage} / {totalPdfPages}</span>
+              <button className="btn btn-secondary" onClick={onNextPage} disabled={currentPdfPage >= totalPdfPages || !onNextPage}>
+                Next Page
+              </button>
+            </div>
+          )}
+          <div
             className="text-display"
             ref={textRef}
             onMouseUp={handleTextSelection}
