@@ -99,6 +99,13 @@ def safe_filename(filename):
 
     return filename
 
+def safe_join(base: str, *paths: str) -> str:
+    """Safely join one or more path components to a base directory."""
+    final_path = os.path.normpath(os.path.join(base, *paths))
+    if not os.path.abspath(final_path).startswith(os.path.abspath(base)):
+        raise ValueError('Invalid path')
+    return final_path
+
 def pdf_to_markdown(pdf_path: str, md_path: str) -> None:
     """Convert a PDF file to Markdown using MarkItDown."""
     result = md_converter.convert(pdf_path)
@@ -395,22 +402,26 @@ def clear_config():
 
 @app.route("/files", methods=["GET"])
 def list_files():
-    """List all files and folders in the workspace directory"""
+    """List all files and folders in the workspace directory or subfolders"""
     try:
+        rel_path = request.args.get("path", "").strip("/")
+        directory = safe_join(WORKSPACE_PATH, rel_path)
+
         files = []
-        for filename in os.listdir(WORKSPACE_PATH):
+        for filename in os.listdir(directory):
             if filename.lower().endswith('.md'):
                 continue
             # Skip the internal archive folder
-            if filename == os.path.basename(ARCHIVE_PATH):
+            if rel_path == "" and filename == os.path.basename(ARCHIVE_PATH):
                 continue
 
-            filepath = os.path.join(WORKSPACE_PATH, filename)
+            filepath = os.path.join(directory, filename)
             stat = os.stat(filepath)
 
             if os.path.isdir(filepath):
                 files.append({
                     "name": filename,
+                    "path": f"{rel_path}/{filename}".lstrip("/"),
                     "size": 0,
                     "lastModified": datetime.fromtimestamp(stat.st_mtime).isoformat(),
                     "type": "folder"
@@ -418,6 +429,7 @@ def list_files():
             elif os.path.isfile(filepath):
                 files.append({
                     "name": filename,
+                    "path": f"{rel_path}/{filename}".lstrip("/"),
                     "size": stat.st_size,
                     "lastModified": datetime.fromtimestamp(stat.st_mtime).isoformat(),
                     "type": filename.rsplit('.', 1)[1].lower() if '.' in filename else 'unknown'
@@ -661,13 +673,11 @@ def download_all_pdfs():
         logger.error(f"Error creating zip archive: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
-@app.route("/files/<filename>", methods=["GET"])
+@app.route("/files/<path:filename>", methods=["GET"])
 def download_file(filename):
     """Download a file from the workspace directory"""
     try:
-        # Sanitize the filename
-        filename = safe_filename(filename)
-        filepath = os.path.join(WORKSPACE_PATH, filename)
+        filepath = safe_join(WORKSPACE_PATH, filename)
         
         if not os.path.exists(filepath):
             return jsonify({"error": "File not found"}), 404
@@ -679,12 +689,11 @@ def download_file(filename):
         return jsonify({"error": str(e)}), 500
 
 
-@app.route("/files/archived/<filename>", methods=["GET", "DELETE"])
+@app.route("/files/archived/<path:filename>", methods=["GET", "DELETE"])
 def archived_file_operations(filename):
     """Download or delete a file from the archive directory"""
     try:
-        filename = safe_filename(filename)
-        filepath = os.path.join(ARCHIVE_PATH, filename)
+        filepath = safe_join(ARCHIVE_PATH, filename)
 
         if not os.path.exists(filepath):
             return jsonify({"error": "File not found"}), 404
@@ -700,20 +709,18 @@ def archived_file_operations(filename):
         logger.error(f"Error processing archived file {filename}: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
-@app.route("/files/<filename>/markdown", methods=["GET"])
+@app.route("/files/<path:filename>/markdown", methods=["GET"])
 def get_markdown(filename):
     """Return Markdown for a PDF file, generating it if needed."""
     try:
-        filename = safe_filename(filename)
         if not filename.lower().endswith('.pdf'):
             return jsonify({"error": "Only PDF files supported"}), 400
-
-        pdf_path = os.path.join(WORKSPACE_PATH, filename)
+        pdf_path = safe_join(WORKSPACE_PATH, filename)
         if not os.path.exists(pdf_path):
             return jsonify({"error": "File not found"}), 404
 
         md_filename = os.path.splitext(filename)[0] + '.md'
-        md_path = os.path.join(WORKSPACE_PATH, md_filename)
+        md_path = safe_join(WORKSPACE_PATH, md_filename)
 
         if not os.path.exists(md_path):
             try:
@@ -730,13 +737,11 @@ def get_markdown(filename):
         logger.error(f"Error retrieving markdown for {filename}: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
-@app.route("/files/<filename>", methods=["DELETE"])
+@app.route("/files/<path:filename>", methods=["DELETE"])
 def delete_file(filename):
     """Delete a file or folder from the workspace directory"""
     try:
-        # Sanitize the filename
-        filename = safe_filename(filename)
-        filepath = os.path.join(WORKSPACE_PATH, filename)
+        filepath = safe_join(WORKSPACE_PATH, filename)
 
         # Prevent deletion of the archive folder
         if os.path.abspath(filepath) == os.path.abspath(ARCHIVE_PATH):
@@ -757,7 +762,7 @@ def delete_file(filename):
         # If a PDF was deleted, remove its associated markdown file as well
         if filename.lower().endswith('.pdf'):
             md_filename = os.path.splitext(filename)[0] + '.md'
-            md_path = os.path.join(WORKSPACE_PATH, md_filename)
+            md_path = safe_join(WORKSPACE_PATH, md_filename)
             if os.path.exists(md_path):
                 try:
                     os.remove(md_path)
@@ -772,13 +777,12 @@ def delete_file(filename):
         return jsonify({"error": str(e)}), 500
 
 
-@app.route("/files/archive/<filename>", methods=["POST"])
+@app.route("/files/archive/<path:filename>", methods=["POST"])
 def archive_file(filename):
     """Move a file from the workspace to the archive directory"""
     try:
-        filename = safe_filename(filename)
-        src = os.path.join(WORKSPACE_PATH, filename)
-        dst = os.path.join(ARCHIVE_PATH, filename)
+        src = safe_join(WORKSPACE_PATH, filename)
+        dst = os.path.join(ARCHIVE_PATH, os.path.basename(filename))
 
         if not os.path.exists(src):
             return jsonify({"error": "File not found"}), 404
@@ -791,13 +795,12 @@ def archive_file(filename):
         return jsonify({"error": str(e)}), 500
 
 
-@app.route("/files/unarchive/<filename>", methods=["POST"])
+@app.route("/files/unarchive/<path:filename>", methods=["POST"])
 def unarchive_file(filename):
     """Move a file from the archive directory back to the workspace"""
     try:
-        filename = safe_filename(filename)
-        src = os.path.join(ARCHIVE_PATH, filename)
-        dst = os.path.join(WORKSPACE_PATH, filename)
+        src = safe_join(ARCHIVE_PATH, filename)
+        dst = safe_join(WORKSPACE_PATH, os.path.basename(filename))
 
         if not os.path.exists(src):
             return jsonify({"error": "File not found"}), 404
@@ -816,9 +819,9 @@ def move_files():
     try:
         data = request.get_json() or {}
         filenames = data.get("filenames", [])
-        destination = safe_filename(data.get("destination", ""))
+        destination = data.get("destination", "")
 
-        dest_dir = os.path.join(WORKSPACE_PATH, destination) if destination else WORKSPACE_PATH
+        dest_dir = safe_join(WORKSPACE_PATH, destination) if destination else WORKSPACE_PATH
 
         if destination and not os.path.isdir(dest_dir):
             return jsonify({"error": "Destination folder not found"}), 404
@@ -826,15 +829,15 @@ def move_files():
         moved = []
         errors = []
         for name in filenames:
-            fname = safe_filename(name)
-            src = os.path.join(WORKSPACE_PATH, fname)
+            src = safe_join(WORKSPACE_PATH, name)
+            fname = os.path.basename(name)
             if not os.path.exists(src):
                 errors.append({"file": fname, "error": "File not found"})
                 continue
             dst = os.path.join(dest_dir, fname)
             try:
                 os.rename(src, dst)
-                moved.append(fname)
+                moved.append(os.path.join(destination, fname).lstrip('/'))
             except Exception as e:
                 errors.append({"file": fname, "error": str(e)})
 

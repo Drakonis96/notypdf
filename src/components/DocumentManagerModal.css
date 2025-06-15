@@ -61,6 +61,36 @@
   color: #374151;
 }
 
+/* Navigation Bar */
+.navigation-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 24px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.navigation-bar button {
+  background: none;
+  border: none;
+  color: #007acc;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.navigation-bar button:disabled {
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.navigation-bar .path {
+  margin-left: auto;
+  font-size: 14px;
+  color: #6b7280;
+}
+
 /* Search Container */
 .search-container {
   padding: 20px 24px 16px;
