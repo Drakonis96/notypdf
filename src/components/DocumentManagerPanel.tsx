@@ -600,7 +600,10 @@ const DocumentManagerPanel: React.FC<DocumentManagerPanelProps> = ({ onFileUploa
         />
         <DocumentManagerModal
           isOpen={openFolderPath !== null}
-          onClose={() => setOpenFolderPath(null)}
+          onClose={() => {
+            setOpenFolderPath(null);
+            loadDocuments();
+          }}
           onFileUpload={onFileUpload}
           currentFile={currentFile}
           initialPath={openFolderPath || ''}
