@@ -164,42 +164,20 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
   function toggleContinuousView() {
     const wasInContinuousView = isContinuousView;
     const currentPage = pageNumber;
-
-    if (wasInContinuousView) {
-      // Determine which page is currently centered in the viewport
-      const container = pdfContainerRef.current;
-      if (container) {
-        let closestPage = pageNumber;
-        let minDistance = Infinity;
-        const containerRect = container.getBoundingClientRect();
-        const viewportCenter = containerRect.top + containerRect.height / 2;
-
-        pageRefs.current.forEach((ref, idx) => {
-          if (ref) {
-            const rect = ref.getBoundingClientRect();
-            const pageCenter = rect.top + rect.height / 2;
-            const distance = Math.abs(pageCenter - viewportCenter);
-            if (distance < minDistance) {
-              minDistance = distance;
-              closestPage = idx + 1;
-            }
-          }
-        });
-        setPageNumber(closestPage);
-      }
-    }
-
+    
     setIsContinuousView(!isContinuousView);
-
+    
+    // If switching from single page to continuous view, scroll to the current page
     if (!wasInContinuousView) {
-      // Switching from single page to continuous view
+      // Use setTimeout to ensure the pages are rendered before scrolling
       setTimeout(() => {
         const targetPageRef = pageRefs.current[currentPage - 1];
         if (targetPageRef && pdfContainerRef.current) {
           const container = pdfContainerRef.current;
           const containerRect = container.getBoundingClientRect();
           const pageRect = targetPageRef.getBoundingClientRect();
-
+          
+          // Calculate scroll position to center the target page
           const scrollTop = container.scrollTop + (pageRect.top - containerRect.top) - 50;
           container.scrollTo({
             top: scrollTop,
@@ -207,13 +185,6 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
           });
         }
       }, 100);
-    } else {
-      // Switching from continuous to single page view
-      setTimeout(() => {
-        if (pdfContainerRef.current) {
-          pdfContainerRef.current.scrollTo({ top: 0, behavior: 'auto' });
-        }
-      }, 0);
     }
   }
 
