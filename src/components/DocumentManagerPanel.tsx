@@ -5,6 +5,7 @@ import { fileService, FileInfo } from '../services/fileService';
 import ConfirmationModal from './ConfirmationModal';
 import DocumentArchiveModal from './DocumentArchiveModal';
 import CreateFolderModal from './CreateFolderModal';
+import DocumentManagerModal from './DocumentManagerModal';
 
 interface DocumentManagerPanelProps {
   onFileUpload: (file: File) => void;
@@ -25,6 +26,7 @@ const DocumentManagerPanel: React.FC<DocumentManagerPanelProps> = ({ onFileUploa
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   const [showFolderModal, setShowFolderModal] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
+  const [openFolderPath, setOpenFolderPath] = useState<string | null>(null);
 
   useEffect(() => {
     loadDocuments();
@@ -512,7 +514,17 @@ const DocumentManagerPanel: React.FC<DocumentManagerPanelProps> = ({ onFileUploa
                       </div>
                     </div>
                     <div className="document-actions">
-                      {doc.type !== 'folder' && (
+                      {doc.type === 'folder' ? (
+                        <button
+                          className="action-btn load-btn"
+                          onClick={() => setOpenFolderPath(doc.name)}
+                          aria-label="Open folder"
+                          title="Open folder"
+                          disabled={isLoading}
+                        >
+                          <Play size={16} />
+                        </button>
+                      ) : (
                         <>
                           <button
                             className="action-btn load-btn"
@@ -583,6 +595,13 @@ const DocumentManagerPanel: React.FC<DocumentManagerPanelProps> = ({ onFileUploa
           onClose={() => setShowArchiveModal(false)}
           onFileUpload={onFileUpload}
           currentFile={currentFile}
+        />
+        <DocumentManagerModal
+          isOpen={openFolderPath !== null}
+          onClose={() => setOpenFolderPath(null)}
+          onFileUpload={onFileUpload}
+          currentFile={currentFile}
+          initialPath={openFolderPath || ''}
         />
         <CreateFolderModal
           isOpen={showFolderModal}

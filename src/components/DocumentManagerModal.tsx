@@ -11,6 +11,8 @@ interface DocumentManagerModalProps {
   onClose: () => void;
   onFileUpload: (file: File) => void;
   currentFile?: File | null;
+  /** Path that should be opened when the modal is shown */
+  initialPath?: string;
 }
 
 const DocumentManagerModal: React.FC<DocumentManagerModalProps> = ({
@@ -18,6 +20,7 @@ const DocumentManagerModal: React.FC<DocumentManagerModalProps> = ({
   onClose,
   onFileUpload,
   currentFile,
+  initialPath = '',
 }) => {
   const [documents, setDocuments] = useState<FileInfo[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -36,7 +39,9 @@ const DocumentManagerModal: React.FC<DocumentManagerModalProps> = ({
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   const [showFolderModal, setShowFolderModal] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
-  const [currentPath, setCurrentPath] = useState('');
+  const [currentPath, setCurrentPath] = useState(
+    initialPath ? (initialPath.endsWith('/') ? initialPath : `${initialPath}/`) : ''
+  );
 
   const enterFolder = (folderPath: string) => {
     setCurrentPath(folderPath.endsWith('/') ? folderPath : folderPath + '/');
@@ -54,6 +59,17 @@ const DocumentManagerModal: React.FC<DocumentManagerModalProps> = ({
     setCurrentPath('');
     setSelectedFiles(new Set());
   };
+
+  // Reset path when modal opens or the initialPath prop changes
+  useEffect(() => {
+    if (isOpen) {
+      if (initialPath) {
+        setCurrentPath(initialPath.endsWith('/') ? initialPath : `${initialPath}/`);
+      } else {
+        setCurrentPath('');
+      }
+    }
+  }, [isOpen, initialPath]);
 
   // Load documents from server on component mount
   useEffect(() => {
