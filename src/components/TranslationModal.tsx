@@ -24,6 +24,8 @@ interface TranslationModalProps {
   saving?: boolean;
   error?: string;
   onSendToChat?: (text: string) => void;
+  onPrevPage?: () => void;
+  onNextPage?: () => void;
 }
 
 const TranslationModal: React.FC<TranslationModalProps> = ({
@@ -44,7 +46,9 @@ const TranslationModal: React.FC<TranslationModalProps> = ({
   success = '',
   saving = false,
   error = '',
-  onSendToChat
+  onSendToChat,
+  onPrevPage,
+  onNextPage
 }) => {
   const [selectedText, setSelectedText] = useState<string>('');
   const [modalAnnotation, setModalAnnotation] = useState<string>(annotation);
@@ -390,7 +394,21 @@ const TranslationModal: React.FC<TranslationModalProps> = ({
         </div>
         
         <div className="translation-modal-actions">
-          <button 
+          {(onPrevPage || onNextPage) && (
+            <div style={{ marginRight: 'auto', display: 'flex', gap: '8px' }}>
+              {onPrevPage && (
+                <button className="btn btn-secondary" onClick={onPrevPage} disabled={isStreaming || saving}>
+                  Previous Page
+                </button>
+              )}
+              {onNextPage && (
+                <button className="btn btn-secondary" onClick={onNextPage} disabled={isStreaming || saving}>
+                  Next Page
+                </button>
+              )}
+            </div>
+          )}
+          <button
             className="btn btn-primary"
             onClick={handleAddEverything}
             disabled={isStreaming || saving}

@@ -10,6 +10,7 @@ import configService from './services/configService';
 import notionService from './services/notionService';
 import translationService from './services/translationService';
 import apiKeyService from './services/apiKeyService';
+import { extractPageText, getNumPages } from './utils/pdfUtils';
 import './App.css';
 
 function App() {
@@ -49,9 +50,16 @@ function App() {
   const [appModalSaving, setAppModalSaving] = useState<boolean>(false);
   const [appModalSuccessMessage, setAppModalSuccessMessage] = useState<string>('');
   const [appModalError, setAppModalError] = useState<string>('');
+  const [appModalPageNumber, setAppModalPageNumber] = useState<number | null>(null);
+  const [totalPages, setTotalPages] = useState<number>(0);
 
   const [showChatModal, setShowChatModal] = useState<boolean>(false);
   const [chatInitialMessage, setChatInitialMessage] = useState<string | undefined>(undefined);
+
+  const handleNumPages = useCallback((n: number) => {
+    setTotalPages(n);
+  }, []);
+
 
   // Load configuration from server on component mount
   useEffect(() => {
@@ -108,8 +116,9 @@ function App() {
     setPdfFile(null);
   }, []);
 
-  const handleTextSelection = useCallback(async (text: string) => {
+  const handleTextSelection = useCallback(async (text: string, page?: number) => {
     setSelectedText(text);
+    setAppModalPageNumber(page ?? null);
     if (text.trim()) {
       setIsAppTranslationModalOpen(true);
       setAppModalError('');
@@ -188,10 +197,20 @@ function App() {
   }, [translationConfig]);
 
   const handlePageTextExtracted = useCallback(async (text: string, pageNumber: number) => {
-    // For page text extraction, we can use the same logic as text selection
-    await handleTextSelection(text);
-    // TODO: use pageNumber if needed for specific functionality
+    await handleTextSelection(text, pageNumber);
   }, [handleTextSelection]);
+
+  const handleModalPageNavigation = useCallback(async (direction: 'prev' | 'next') => {
+    if (!pdfFile || appModalPageNumber == null) return;
+    const targetPage = direction === 'next' ? appModalPageNumber + 1 : appModalPageNumber - 1;
+    if (targetPage < 1 || (totalPages && targetPage > totalPages)) return;
+    try {
+      const text = await extractPageText(pdfFile, targetPage);
+      await handleTextSelection(text, targetPage);
+    } catch (err: any) {
+      setAppModalError('Failed to extract page text');
+    }
+  }, [pdfFile, appModalPageNumber, totalPages, handleTextSelection]);
 
   const handleClearSelection = useCallback(() => {
     setSelectedText('');
@@ -342,6 +361,7 @@ function App() {
               onFullscreenChange={handleFullscreenChange}
               onPageTextExtracted={handlePageTextExtracted}
               onPageChange={setCurrentPageNumber}
+              onNumPages={handleNumPages}
               onFileClose={handleCloseFile}
             />
           </main>
@@ -401,6 +421,9 @@ function App() {
           onAddEverything={() => handleAppModalAddEverything('', '')}
           onAddSelection={(txt) => handleAppModalAddSelection(txt, '', '')}
           portalContainer={fullscreenContainer || document.body}
+          pageNumber={appModalPageNumber ? appModalPageNumber.toString() : ''}
+          onPrevPage={() => handleModalPageNavigation('prev')}
+          onNextPage={() => handleModalPageNavigation('next')}
           saving={appModalSaving}
           success={appModalSuccessMessage}
           error={appModalError}
