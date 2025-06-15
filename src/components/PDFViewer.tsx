@@ -17,10 +17,11 @@ interface PDFViewerProps {
   onFullscreenChange?: (isFullscreen: boolean, container: HTMLElement | null) => void;
   onPageTextExtracted?: (text: string, pageNumber: number) => void;
   onPageChange?: (pageNumber: number) => void;
+  onNumPages?: (numPages: number) => void;
   onFileClose?: () => void;
 }
 
-const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelection, translationConfig, onFullscreenChange, onPageTextExtracted, onPageChange, onFileClose }) => {
+const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelection, translationConfig, onFullscreenChange, onPageTextExtracted, onPageChange, onNumPages, onFileClose }) => {
   const [numPages, setNumPages] = useState<number>(0);
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [error, setError] = useState<string>('');
@@ -71,6 +72,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
   function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
     setNumPages(numPages);
     setError('');
+    if (onNumPages) onNumPages(numPages);
   }
 
   function onDocumentLoadError(error: Error) {
@@ -221,20 +223,25 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
     }
   }
 
-  async function extractCurrentPageText() {
+  async function extractCurrentPageText(targetPage?: number) {
     if (!file || !translationConfig.enabled || isExtractingText) {
       return;
     }
 
     try {
       setIsExtractingText(true);
+
+      if (typeof targetPage === 'number') {
+        setPageNumber(Math.min(Math.max(1, targetPage), numPages || targetPage));
+      }
       
       // Load the PDF document
       const loadingTask = pdfjs.getDocument(URL.createObjectURL(file));
       const pdf = await loadingTask.promise;
       
-      // Get the current page
-      const page = await pdf.getPage(pageNumber);
+      // Get the target page (default to current)
+      const pageIdx = targetPage ?? pageNumber;
+      const page = await pdf.getPage(pageIdx);
       const textContent = await page.getTextContent();
       
       // Extract text from text items
@@ -244,7 +251,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
         .trim();
       
       if (extractedText && onPageTextExtracted) {
-        onPageTextExtracted(extractedText, pageNumber);
+        onPageTextExtracted(extractedText, pageIdx);
       } else if (extractedText) {
         // If no callback provided, send text to translation selection
         onTextSelection(extractedText);
@@ -517,7 +524,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
                     <button
                       className={`btn btn-compact btn-same-size ${isExtractingText ? 'btn-loading' : ''}`}
                       style={{ minWidth: 32, minHeight: 32 }}
-                      onClick={extractCurrentPageText}
+                      onClick={() => extractCurrentPageText()}
                       disabled={isExtractingText || !file}
                       title={isExtractingText ? "Extracting text..." : "Extract page text for translation"}
                     >
