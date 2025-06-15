@@ -6,6 +6,7 @@ import ConfirmationModal from './ConfirmationModal';
 import DocumentArchiveModal from './DocumentArchiveModal';
 import CreateFolderModal from './CreateFolderModal';
 import DocumentManagerModal from './DocumentManagerModal';
+import MoveFilesModal from './MoveFilesModal';
 
 interface DocumentManagerPanelProps {
   onFileUpload: (file: File) => void;
@@ -25,6 +26,7 @@ const DocumentManagerPanel: React.FC<DocumentManagerPanelProps> = ({ onFileUploa
   const [showArchiveModal, setShowArchiveModal] = useState(false);
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   const [showFolderModal, setShowFolderModal] = useState(false);
+  const [showMoveModal, setShowMoveModal] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
   const [openFolderPath, setOpenFolderPath] = useState<string | null>(null);
 
@@ -446,9 +448,9 @@ const DocumentManagerPanel: React.FC<DocumentManagerPanelProps> = ({ onFileUploa
           </button>
           <button
             className="upload-button"
-            onClick={() => moveSelectedFiles('')}
+            onClick={() => setShowMoveModal(true)}
             disabled={isLoading || selectedFiles.size === 0}
-            title="Move selected files to main folder"
+            title="Move selected files"
           >
             <Folder size={20} />
           </button>
@@ -602,6 +604,11 @@ const DocumentManagerPanel: React.FC<DocumentManagerPanelProps> = ({ onFileUploa
           onFileUpload={onFileUpload}
           currentFile={currentFile}
           initialPath={openFolderPath || ''}
+        />
+        <MoveFilesModal
+          isOpen={showMoveModal}
+          onClose={() => setShowMoveModal(false)}
+          onMove={(dest) => { setShowMoveModal(false); moveSelectedFiles(dest); }}
         />
         <CreateFolderModal
           isOpen={showFolderModal}
