@@ -809,6 +809,40 @@ def unarchive_file(filename):
         logger.error(f"Error unarchiving file {filename}: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
+
+@app.route("/files/move", methods=["POST"])
+def move_files():
+    """Move one or more files into the specified folder inside the workspace"""
+    try:
+        data = request.get_json() or {}
+        filenames = data.get("filenames", [])
+        destination = safe_filename(data.get("destination", ""))
+
+        dest_dir = os.path.join(WORKSPACE_PATH, destination) if destination else WORKSPACE_PATH
+
+        if destination and not os.path.isdir(dest_dir):
+            return jsonify({"error": "Destination folder not found"}), 404
+
+        moved = []
+        errors = []
+        for name in filenames:
+            fname = safe_filename(name)
+            src = os.path.join(WORKSPACE_PATH, fname)
+            if not os.path.exists(src):
+                errors.append({"file": fname, "error": "File not found"})
+                continue
+            dst = os.path.join(dest_dir, fname)
+            try:
+                os.rename(src, dst)
+                moved.append(fname)
+            except Exception as e:
+                errors.append({"file": fname, "error": str(e)})
+
+        return jsonify({"success": len(errors) == 0, "moved": moved, "errors": errors})
+    except Exception as e:
+        logger.error(f"Error moving files: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
 @app.route("/files/clear", methods=["DELETE"])
 def clear_all_files():
     """Delete all files from the workspace directory"""
