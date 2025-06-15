@@ -5,6 +5,7 @@ import { fileService, FileInfo } from '../services/fileService';
 import ConfirmationModal from './ConfirmationModal';
 import DocumentArchiveModal from './DocumentArchiveModal';
 import CreateFolderModal from './CreateFolderModal';
+import MoveFilesModal from './MoveFilesModal';
 
 interface DocumentManagerModalProps {
   isOpen: boolean;
@@ -38,6 +39,7 @@ const DocumentManagerModal: React.FC<DocumentManagerModalProps> = ({
   const [showArchiveModal, setShowArchiveModal] = useState(false);
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   const [showFolderModal, setShowFolderModal] = useState(false);
+  const [showMoveModal, setShowMoveModal] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
   const [currentPath, setCurrentPath] = useState(
     initialPath ? (initialPath.endsWith('/') ? initialPath : `${initialPath}/`) : ''
@@ -518,9 +520,9 @@ const DocumentManagerModal: React.FC<DocumentManagerModalProps> = ({
           </button>
           <button
             className="upload-button"
-            onClick={() => moveSelectedFiles('')}
+            onClick={() => setShowMoveModal(true)}
             disabled={isLoading || selectedFiles.size === 0}
-            title="Move selected files to main folder"
+            title="Move selected files"
           >
             <Folder size={20} />
           </button>
@@ -663,6 +665,11 @@ const DocumentManagerModal: React.FC<DocumentManagerModalProps> = ({
           onClose={() => setShowArchiveModal(false)}
           onFileUpload={onFileUpload}
           currentFile={currentFile}
+        />
+        <MoveFilesModal
+          isOpen={showMoveModal}
+          onClose={() => setShowMoveModal(false)}
+          onMove={(dest) => { setShowMoveModal(false); moveSelectedFiles(dest); }}
         />
         <CreateFolderModal
           isOpen={showFolderModal}

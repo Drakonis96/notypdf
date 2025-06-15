@@ -467,6 +467,24 @@ def list_archived_files():
         return jsonify({"error": str(e)}), 500
 
 
+@app.route("/files/folders", methods=["GET"])
+def list_all_folders():
+    """Recursively list all folder paths relative to the workspace"""
+    try:
+        folder_paths = [""]
+        for dirpath, dirnames, _ in os.walk(WORKSPACE_PATH):
+            if dirpath.startswith(ARCHIVE_PATH):
+                continue
+            rel_dir = os.path.relpath(dirpath, WORKSPACE_PATH)
+            if rel_dir != ".":
+                folder_paths.append(rel_dir.replace(os.sep, "/"))
+        folder_paths = sorted(set(folder_paths))
+        return jsonify({"folders": folder_paths})
+    except Exception as e:
+        logger.error(f"Error listing folders: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route("/files/create-folder", methods=["POST"])
 def create_folder():
     """Create a new folder inside the workspace directory"""

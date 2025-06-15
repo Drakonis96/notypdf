@@ -154,6 +154,27 @@ class FileService {
     }
   }
 
+  async listFolders(): Promise<string[]> {
+    try {
+      const response = await fetch(`${this.baseUrl}/files/folders`);
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        const errorMessage = data.error || `Server error: ${response.status} ${response.statusText}`;
+        throw new Error(errorMessage);
+      }
+
+      const data = await response.json();
+      return Array.isArray(data.folders) ? data.folders : [];
+    } catch (error) {
+      console.error('Error listing folders:', error);
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('Cannot connect to server. Please check if the backend is running.');
+      }
+      throw error;
+    }
+  }
+
   /**
    * Get list of archived files
    */
