@@ -4,6 +4,7 @@ import './DocumentManagerModal.css';
 import { fileService, FileInfo } from '../services/fileService';
 import ConfirmationModal from './ConfirmationModal';
 import DocumentArchiveModal from './DocumentArchiveModal';
+import CreateFolderModal from './CreateFolderModal';
 
 interface DocumentManagerPanelProps {
   onFileUpload: (file: File) => void;
@@ -22,6 +23,7 @@ const DocumentManagerPanel: React.FC<DocumentManagerPanelProps> = ({ onFileUploa
   const [isDragOver, setIsDragOver] = useState(false);
   const [showArchiveModal, setShowArchiveModal] = useState(false);
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
+  const [showFolderModal, setShowFolderModal] = useState(false);
 
   useEffect(() => {
     loadDocuments();
@@ -239,13 +241,16 @@ const DocumentManagerPanel: React.FC<DocumentManagerPanelProps> = ({ onFileUploa
     setShowClearAllConfirm(true);
   };
 
-  const handleCreateFolder = async () => {
-    const name = prompt('Folder name');
-    if (!name) return;
+  const handleCreateFolder = () => {
+    setShowFolderModal(true);
+  };
+
+  const confirmCreateFolder = async (name: string) => {
     try {
       setIsCreatingFolder(true);
       await fileService.createFolder(name);
       await loadDocuments();
+      setShowFolderModal(false);
     } catch (error) {
       console.error('Error creating folder:', error);
       alert('Failed to create folder');
@@ -510,6 +515,12 @@ const DocumentManagerPanel: React.FC<DocumentManagerPanelProps> = ({ onFileUploa
           onClose={() => setShowArchiveModal(false)}
           onFileUpload={onFileUpload}
           currentFile={currentFile}
+        />
+        <CreateFolderModal
+          isOpen={showFolderModal}
+          onClose={() => setShowFolderModal(false)}
+          onCreate={confirmCreateFolder}
+          isLoading={isCreatingFolder}
         />
       </div>
     </div>
