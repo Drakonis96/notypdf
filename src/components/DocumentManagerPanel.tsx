@@ -406,18 +406,17 @@ const DocumentManagerPanel: React.FC<DocumentManagerPanelProps> = ({ onFileUploa
               disabled={isLoading}
               multiple
             />
-          <label htmlFor="file-upload-inline" className={`upload-button ${isLoading ? 'disabled' : ''}`}>
+          <label htmlFor="file-upload-inline" className={`upload-button ${isLoading ? 'disabled' : ''}`}
+            title={isLoading ? uploadProgress || 'Upload Documents' : 'Upload Documents'}>
             <Upload size={20} />
-            <span>{isLoading ? (uploadProgress || 'Uploading...') : 'Upload Documents'}</span>
           </label>
           <button
             className="upload-button"
             onClick={handleCreateFolder}
             disabled={isLoading || isCreatingFolder}
-            title="Create new folder"
+            title={isCreatingFolder ? 'Creating...' : 'New Folder'}
           >
             <FolderPlus size={20} />
-            <span>{isCreatingFolder ? 'Creating...' : 'New Folder'}</span>
           </button>
           <button
             className="clear-all-button"
@@ -426,7 +425,6 @@ const DocumentManagerPanel: React.FC<DocumentManagerPanelProps> = ({ onFileUploa
             title={documents.length === 0 ? 'No files to clear' : `Clear all ${documents.length} files`}
           >
             <Trash2 size={20} />
-            <span>Clear All Files</span>
           </button>
           <button
             className="download-all-button"
@@ -435,7 +433,6 @@ const DocumentManagerPanel: React.FC<DocumentManagerPanelProps> = ({ onFileUploa
             title="Download all PDFs as ZIP"
           >
             <Download size={20} />
-            <span>Download All PDFs</span>
           </button>
           <button
             className="archived-view-button"
@@ -444,7 +441,6 @@ const DocumentManagerPanel: React.FC<DocumentManagerPanelProps> = ({ onFileUploa
             title="View archived documents"
           >
             <Archive size={20} />
-            <span>Archived Documents</span>
           </button>
           <button
             className="upload-button"
@@ -453,7 +449,6 @@ const DocumentManagerPanel: React.FC<DocumentManagerPanelProps> = ({ onFileUploa
             title="Move selected files to main folder"
           >
             <Folder size={20} />
-            <span>Move to Main</span>
           </button>
           <div
             className={`drop-area ${isDragOver ? 'drag-over' : ''}`}

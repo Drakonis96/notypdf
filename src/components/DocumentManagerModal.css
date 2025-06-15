@@ -115,11 +115,12 @@
 .upload-button {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
   background: #007acc;
   color: white;
-  padding: 12px 20px;
-  border-radius: 8px;
+  border-radius: 50%;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -143,11 +144,12 @@
 .clear-all-button {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
   background: #ef4444;
   color: white;
-  padding: 12px 20px;
-  border-radius: 8px;
+  border-radius: 50%;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -178,11 +180,12 @@
 .download-all-button {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
   background: #10b981;
   color: white;
-  padding: 12px 20px;
-  border-radius: 8px;
+  border-radius: 50%;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -213,11 +216,12 @@
 .archived-view-button {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
   background: #6b7280;
   color: white;
-  padding: 12px 20px;
-  border-radius: 8px;
+  border-radius: 50%;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -522,7 +526,8 @@
   }
 
   .upload-button {
-    padding: 10px 16px;
+    width: 36px;
+    height: 36px;
     font-size: 13px;
   }
 
@@ -588,7 +593,8 @@
   }
 
   .upload-button {
-    padding: 8px 14px;
+    width: 32px;
+    height: 32px;
     font-size: 12px;
   }
 
