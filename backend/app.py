@@ -9,6 +9,7 @@ import tempfile
 import zipfile
 import re
 import unicodedata
+import shutil
 from translation import translation_service
 from markitdown import MarkItDown
 
@@ -728,7 +729,7 @@ def get_markdown(filename):
 
 @app.route("/files/<filename>", methods=["DELETE"])
 def delete_file(filename):
-    """Delete a file from the workspace directory"""
+    """Delete a file or folder from the workspace directory"""
     try:
         # Sanitize the filename
         filename = safe_filename(filename)
@@ -736,6 +737,11 @@ def delete_file(filename):
 
         if not os.path.exists(filepath):
             return jsonify({"error": "File not found"}), 404
+
+        if os.path.isdir(filepath):
+            shutil.rmtree(filepath)
+            logger.info(f"Folder deleted successfully: {filename}")
+            return jsonify({"success": True, "message": f"Folder '{filename}' deleted successfully"})
 
         os.remove(filepath)
         logger.info(f"File deleted successfully: {filename}")
@@ -752,7 +758,7 @@ def delete_file(filename):
                     logger.error(f"Error deleting markdown file {md_filename}: {md_err}")
 
         return jsonify({"success": True, "message": f"File '{filename}' deleted successfully"})
-    
+
     except Exception as e:
         logger.error(f"Error deleting file {filename}: {str(e)}")
         return jsonify({"error": str(e)}), 500
