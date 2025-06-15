@@ -35,6 +35,7 @@ const DocumentManagerModal: React.FC<DocumentManagerModalProps> = ({
   const [showArchiveModal, setShowArchiveModal] = useState(false);
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   const [showFolderModal, setShowFolderModal] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
 
   // Load documents from server on component mount
   useEffect(() => {
@@ -276,6 +277,60 @@ const DocumentManagerModal: React.FC<DocumentManagerModalProps> = ({
     }
   };
 
+  const toggleFileSelection = (name: string) => {
+    setSelectedFiles(prev => {
+      const next = new Set(prev);
+      if (next.has(name)) next.delete(name); else next.add(name);
+      return next;
+    });
+  };
+
+  const moveSelectedFiles = async (destination: string) => {
+    if (selectedFiles.size === 0) return;
+    try {
+      setIsLoading(true);
+      await fileService.moveFiles(Array.from(selectedFiles), destination);
+      await loadDocuments();
+      setSelectedFiles(new Set());
+    } catch (error) {
+      console.error('Error moving files:', error);
+      alert('Failed to move files.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDragStartFile = (event: React.DragEvent<HTMLDivElement>, name: string) => {
+    if (!selectedFiles.has(name)) {
+      setSelectedFiles(new Set([name]));
+    }
+    event.dataTransfer.setData('text/plain', Array.from(selectedFiles).join(','));
+  };
+
+  const handleFolderDrop = async (event: React.DragEvent<HTMLDivElement>, folder: string) => {
+    event.preventDefault();
+    const names = event.dataTransfer.getData('text/plain').split(',').filter(Boolean);
+    if (names.length === 0) return;
+    try {
+      setIsLoading(true);
+      await fileService.moveFiles(names, folder);
+      await loadDocuments();
+      setSelectedFiles(new Set());
+    } catch (error) {
+      console.error('Error moving files:', error);
+      alert('Failed to move files.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRootDrop = async (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    const names = event.dataTransfer.getData('text/plain').split(',').filter(Boolean);
+    if (names.length === 0) return;
+    await moveSelectedFiles('');
+  };
+
   const confirmClearAll = async () => {
     try {
       setIsLoading(true);
@@ -425,6 +480,15 @@ const DocumentManagerModal: React.FC<DocumentManagerModalProps> = ({
             <Archive size={20} />
             <span>Archived Documents</span>
           </button>
+          <button
+            className="upload-button"
+            onClick={() => moveSelectedFiles('')}
+            disabled={isLoading || selectedFiles.size === 0}
+            title="Move selected files to main folder"
+          >
+            <Folder size={20} />
+            <span>Move to Main</span>
+          </button>
           <div
             className={`drop-area ${isDragOver ? 'drag-over' : ''}`}
             onDragOver={handleDragOver}
@@ -452,7 +516,7 @@ const DocumentManagerModal: React.FC<DocumentManagerModalProps> = ({
               <p>Loading documents...</p>
             </div>
           ) : (
-            <div className="documents-list">
+            <div className="documents-list" onDragOver={(e) => e.preventDefault()} onDrop={handleRootDrop}>
               {filteredDocuments.length === 0 ? (
                 <div className="empty-state">
                   <FileText size={48} />
@@ -463,8 +527,17 @@ const DocumentManagerModal: React.FC<DocumentManagerModalProps> = ({
                 filteredDocuments.map((doc) => (
                   <div
                     key={doc.name}
-                    className={`document-item ${currentFile?.name === doc.name ? 'current' : ''}`}
+                    className={`document-item ${currentFile?.name === doc.name ? 'current' : ''} ${selectedFiles.has(doc.name) ? 'selected' : ''}`}
+                    draggable={doc.type !== 'folder'}
+                    onDragStart={(e) => handleDragStartFile(e, doc.name)}
+                    onDragOver={doc.type === 'folder' ? (e) => e.preventDefault() : undefined}
+                    onDrop={doc.type === 'folder' ? (e) => handleFolderDrop(e, doc.name) : undefined}
                   >
+                    <input
+                      type="checkbox"
+                      checked={selectedFiles.has(doc.name)}
+                      onChange={() => toggleFileSelection(doc.name)}
+                    />
                     <div className="document-icon">
                       {doc.type === 'folder' ? <Folder size={20} /> : <FileText size={20} />}
                     </div>

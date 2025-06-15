@@ -261,6 +261,18 @@ class FileService {
     }
   }
 
+  async moveFiles(filenames: string[], destination: string): Promise<void> {
+    const response = await fetch(`${this.baseUrl}/files/move`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filenames, destination })
+    });
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      throw new Error(data.error || 'Failed to move files');
+    }
+  }
+
   /**
    * Delete all files from the server
    */
