@@ -362,9 +362,12 @@ const DocumentArchiveModal: React.FC<DocumentArchiveModalProps> = ({
               disabled={isLoading}
               multiple
             />
-          <label htmlFor="file-upload" className={`upload-button ${isLoading ? 'disabled' : ''}`}>
+          <label
+            htmlFor="file-upload"
+            className={`upload-button ${isLoading ? 'disabled' : ''}`}
+            title={isLoading ? uploadProgress || 'Upload Documents' : 'Upload Documents'}
+          >
             <Upload size={20} />
-            <span>{isLoading ? (uploadProgress || 'Uploading...') : 'Upload Documents'}</span>
           </label>
           <button
             className="clear-all-button"
@@ -373,7 +376,6 @@ const DocumentArchiveModal: React.FC<DocumentArchiveModalProps> = ({
             title={documents.length === 0 ? 'No archived files to clear' : `Clear all ${documents.length} archived files`}
           >
             <Trash2 size={20} />
-            <span>Clear All Files</span>
           </button>
           <button
             className="download-all-button"
@@ -382,7 +384,6 @@ const DocumentArchiveModal: React.FC<DocumentArchiveModalProps> = ({
             title="Download all PDFs as ZIP"
           >
             <Download size={20} />
-            <span>Download All PDFs</span>
           </button>
           <div
             className={`drop-area ${isDragOver ? 'drag-over' : ''}`}
