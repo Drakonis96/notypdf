@@ -1,6 +1,8 @@
 // File service for managing document operations
 export interface FileInfo {
   name: string;
+  /** Relative path from the workspace root */
+  path: string;
   size: number;
   lastModified: string;
   type: string;
@@ -18,6 +20,13 @@ export interface FileListResponse {
 
 class FileService {
   private baseUrl = '/api';
+
+  private encodePath(path: string): string {
+    return path
+      .split('/')
+      .map(segment => encodeURIComponent(segment))
+      .join('/');
+  }
 
   /**
    * Upload a file to the server
@@ -107,9 +116,10 @@ class FileService {
   /**
    * Get list of all files from the server
    */
-  async listFiles(): Promise<FileInfo[]> {
+  async listFiles(path = ''): Promise<FileInfo[]> {
     try {
-      const response = await fetch(`${this.baseUrl}/files`);
+      const query = path ? `?path=${this.encodePath(path)}` : '';
+      const response = await fetch(`${this.baseUrl}/files${query}`);
       
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
@@ -118,7 +128,10 @@ class FileService {
       }
 
       const data: FileListResponse = await response.json();
-      return data.files;
+      return data.files.map(f => ({
+        ...f,
+        path: path ? `${path}/${f.name}` : f.name
+      }));
     } catch (error) {
       console.error('Error listing files:', error);
       if (error instanceof TypeError && error.message.includes('fetch')) {
@@ -155,7 +168,7 @@ class FileService {
       }
 
       const data: FileListResponse = await response.json();
-      return data.files;
+      return data.files.map(f => ({ ...f, path: f.name }));
     } catch (error) {
       console.error('Error listing archived files:', error);
       if (error instanceof TypeError && error.message.includes('fetch')) {
@@ -168,9 +181,9 @@ class FileService {
   /**
    * Delete a file from the server
    */
-  async deleteFile(filename: string): Promise<void> {
+  async deleteFile(path: string): Promise<void> {
     try {
-      const response = await fetch(`${this.baseUrl}/files/${encodeURIComponent(filename)}`, {
+      const response = await fetch(`${this.baseUrl}/files/${this.encodePath(path)}`, {
         method: 'DELETE',
       });
 
@@ -184,9 +197,9 @@ class FileService {
     }
   }
 
-  async deleteArchivedFile(filename: string): Promise<void> {
+  async deleteArchivedFile(path: string): Promise<void> {
     try {
-      const response = await fetch(`${this.baseUrl}/files/archived/${encodeURIComponent(filename)}`, {
+      const response = await fetch(`${this.baseUrl}/files/archived/${this.encodePath(path)}`, {
         method: 'DELETE'
       });
 
@@ -226,9 +239,9 @@ class FileService {
   /**
    * Archive a file on the server
    */
-  async archiveFile(filename: string): Promise<void> {
+  async archiveFile(path: string): Promise<void> {
     try {
-      const response = await fetch(`${this.baseUrl}/files/archive/${encodeURIComponent(filename)}`, {
+      const response = await fetch(`${this.baseUrl}/files/archive/${this.encodePath(path)}`, {
         method: 'POST'
       });
 
@@ -245,9 +258,9 @@ class FileService {
   /**
    * Unarchive a file on the server
    */
-  async unarchiveFile(filename: string): Promise<void> {
+  async unarchiveFile(path: string): Promise<void> {
     try {
-      const response = await fetch(`${this.baseUrl}/files/unarchive/${encodeURIComponent(filename)}`, {
+      const response = await fetch(`${this.baseUrl}/files/unarchive/${this.encodePath(path)}`, {
         method: 'POST'
       });
 
@@ -261,11 +274,11 @@ class FileService {
     }
   }
 
-  async moveFiles(filenames: string[], destination: string): Promise<void> {
+  async moveFiles(paths: string[], destination: string): Promise<void> {
     const response = await fetch(`${this.baseUrl}/files/move`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ filenames, destination })
+      body: JSON.stringify({ filenames: paths, destination })
     });
     if (!response.ok) {
       const data = await response.json().catch(() => ({}));
@@ -314,15 +327,15 @@ class FileService {
   /**
    * Get the download URL for a file
    */
-  getDownloadUrl(filename: string): string {
-    return `${this.baseUrl}/files/${encodeURIComponent(filename)}`;
+  getDownloadUrl(path: string): string {
+    return `${this.baseUrl}/files/${this.encodePath(path)}`;
   }
 
   /**
    * Get the download URL for an archived file
    */
-  getArchivedDownloadUrl(filename: string): string {
-    return `${this.baseUrl}/files/archived/${encodeURIComponent(filename)}`;
+  getArchivedDownloadUrl(path: string): string {
+    return `${this.baseUrl}/files/archived/${this.encodePath(path)}`;
   }
 
   /**

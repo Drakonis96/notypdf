@@ -36,6 +36,24 @@ const DocumentManagerModal: React.FC<DocumentManagerModalProps> = ({
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   const [showFolderModal, setShowFolderModal] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
+  const [currentPath, setCurrentPath] = useState('');
+
+  const enterFolder = (folderPath: string) => {
+    setCurrentPath(folderPath.endsWith('/') ? folderPath : folderPath + '/');
+    setSelectedFiles(new Set());
+  };
+
+  const goUp = () => {
+    const parts = currentPath.split('/').filter(Boolean);
+    parts.pop();
+    setCurrentPath(parts.length ? parts.join('/') + '/' : '');
+    setSelectedFiles(new Set());
+  };
+
+  const goHome = () => {
+    setCurrentPath('');
+    setSelectedFiles(new Set());
+  };
 
   // Load documents from server on component mount
   useEffect(() => {
@@ -43,7 +61,7 @@ const DocumentManagerModal: React.FC<DocumentManagerModalProps> = ({
       loadDocuments();
       testBackendConnection();
     }
-  }, [isOpen]);
+  }, [isOpen, currentPath]);
 
   const testBackendConnection = async () => {
     try {
@@ -57,7 +75,7 @@ const DocumentManagerModal: React.FC<DocumentManagerModalProps> = ({
   const loadDocuments = async () => {
     try {
       setIsLoading(true);
-      const files = await fileService.listFiles();
+      const files = await fileService.listFiles(currentPath);
       setDocuments(files);
     } catch (error) {
       console.error('Error loading documents:', error);
@@ -179,7 +197,7 @@ const DocumentManagerModal: React.FC<DocumentManagerModalProps> = ({
   const handleLoadDocument = async (doc: FileInfo) => {
     try {
       setIsLoading(true);
-      const url = fileService.getDownloadUrl(doc.name);
+      const url = fileService.getDownloadUrl(doc.path);
       const response = await fetch(url);
       
       if (!response.ok) {
@@ -202,16 +220,16 @@ const DocumentManagerModal: React.FC<DocumentManagerModalProps> = ({
   const handleDownloadDocument = async (doc: FileInfo, event: React.MouseEvent) => {
     event.stopPropagation();
     try {
-      await fileService.downloadAndOpenFile(doc.name);
+      await fileService.downloadAndOpenFile(doc.path);
     } catch (error) {
       console.error('Error downloading file:', error);
       alert('Failed to download file. Please try again.');
     }
   };
 
-  const handleDeleteDocument = (filename: string, event: React.MouseEvent) => {
+  const handleDeleteDocument = (path: string, event: React.MouseEvent) => {
     event.stopPropagation();
-    setFileToDelete(filename);
+    setFileToDelete(path);
     setShowDeleteConfirm(true);
   };
 
@@ -232,11 +250,11 @@ const DocumentManagerModal: React.FC<DocumentManagerModalProps> = ({
     }
   };
 
-  const handleArchiveDocument = async (filename: string, event: React.MouseEvent) => {
+  const handleArchiveDocument = async (path: string, event: React.MouseEvent) => {
     event.stopPropagation();
     try {
       setIsLoading(true);
-      await fileService.archiveFile(filename);
+      await fileService.archiveFile(path);
       await loadDocuments();
     } catch (error) {
       console.error('Error archiving file:', error);
@@ -277,10 +295,10 @@ const DocumentManagerModal: React.FC<DocumentManagerModalProps> = ({
     }
   };
 
-  const toggleFileSelection = (name: string) => {
+  const toggleFileSelection = (path: string) => {
     setSelectedFiles(prev => {
       const next = new Set(prev);
-      if (next.has(name)) next.delete(name); else next.add(name);
+      if (next.has(path)) next.delete(path); else next.add(path);
       return next;
     });
   };
@@ -300,9 +318,9 @@ const DocumentManagerModal: React.FC<DocumentManagerModalProps> = ({
     }
   };
 
-  const handleDragStartFile = (event: React.DragEvent<HTMLDivElement>, name: string) => {
-    if (!selectedFiles.has(name)) {
-      setSelectedFiles(new Set([name]));
+  const handleDragStartFile = (event: React.DragEvent<HTMLDivElement>, path: string) => {
+    if (!selectedFiles.has(path)) {
+      setSelectedFiles(new Set([path]));
     }
     event.dataTransfer.setData('text/plain', Array.from(selectedFiles).join(','));
   };
@@ -414,6 +432,12 @@ const DocumentManagerModal: React.FC<DocumentManagerModalProps> = ({
           </button>
         </div>
 
+        <div className="navigation-bar">
+          <button onClick={goUp} disabled={!currentPath}>Up</button>
+          <button onClick={goHome} disabled={!currentPath}>Home</button>
+          <span className="path">{currentPath || '/'}</span>
+        </div>
+
         {/* Search Bar */}
         <div className="search-container">
           <div className="search-input-wrapper">
@@ -521,17 +545,18 @@ const DocumentManagerModal: React.FC<DocumentManagerModalProps> = ({
               ) : (
                 filteredDocuments.map((doc) => (
                   <div
-                    key={doc.name}
-                    className={`document-item ${currentFile?.name === doc.name ? 'current' : ''} ${selectedFiles.has(doc.name) ? 'selected' : ''}`}
+                    key={doc.path}
+                    className={`document-item ${currentFile?.name === doc.name ? 'current' : ''} ${selectedFiles.has(doc.path) ? 'selected' : ''}`}
                     draggable={doc.type !== 'folder'}
-                    onDragStart={(e) => handleDragStartFile(e, doc.name)}
+                    onDragStart={(e) => handleDragStartFile(e, doc.path)}
                     onDragOver={doc.type === 'folder' ? (e) => e.preventDefault() : undefined}
-                    onDrop={doc.type === 'folder' ? (e) => handleFolderDrop(e, doc.name) : undefined}
+                    onDrop={doc.type === 'folder' ? (e) => handleFolderDrop(e, doc.path) : undefined}
+                    onClick={doc.type === 'folder' ? () => enterFolder(doc.path) : undefined}
                   >
                     <input
                       type="checkbox"
-                      checked={selectedFiles.has(doc.name)}
-                      onChange={() => toggleFileSelection(doc.name)}
+                      checked={selectedFiles.has(doc.path)}
+                      onChange={() => toggleFileSelection(doc.path)}
                     />
                     <div className="document-icon">
                       {doc.type === 'folder' ? <Folder size={20} /> : <FileText size={20} />}
@@ -571,7 +596,7 @@ const DocumentManagerModal: React.FC<DocumentManagerModalProps> = ({
                           </button>
                           <button
                             className="action-btn archive-btn"
-                            onClick={(e) => handleArchiveDocument(doc.name, e)}
+                            onClick={(e) => handleArchiveDocument(doc.path, e)}
                             aria-label="Archive document"
                             title="Archive document"
                             disabled={isLoading}
@@ -582,7 +607,7 @@ const DocumentManagerModal: React.FC<DocumentManagerModalProps> = ({
                       )}
                       <button
                         className="action-btn delete-btn"
-                        onClick={(e) => handleDeleteDocument(doc.name, e)}
+                        onClick={(e) => handleDeleteDocument(doc.path, e)}
                         aria-label="Delete document"
                         title="Delete document"
                         disabled={isLoading}
