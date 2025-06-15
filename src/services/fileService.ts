@@ -141,6 +141,22 @@ class FileService {
     }
   }
 
+  /**
+   * Recursively list all folder paths in the workspace
+   */
+  async listAllFolders(path = ''): Promise<string[]> {
+    const items = await this.listFiles(path);
+    let folders: string[] = [];
+    for (const item of items) {
+      if (item.type === 'folder') {
+        folders.push(item.path);
+        const sub = await this.listAllFolders(item.path);
+        folders = folders.concat(sub);
+      }
+    }
+    return folders;
+  }
+
   async createFolder(folderName: string): Promise<void> {
     const response = await fetch(`${this.baseUrl}/files/create-folder`, {
       method: 'POST',

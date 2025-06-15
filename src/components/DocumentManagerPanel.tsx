@@ -5,6 +5,7 @@ import { fileService, FileInfo } from '../services/fileService';
 import ConfirmationModal from './ConfirmationModal';
 import DocumentArchiveModal from './DocumentArchiveModal';
 import CreateFolderModal from './CreateFolderModal';
+import MoveFilesModal from './MoveFilesModal';
 
 interface DocumentManagerPanelProps {
   onFileUpload: (file: File) => void;
@@ -24,6 +25,7 @@ const DocumentManagerPanel: React.FC<DocumentManagerPanelProps> = ({ onFileUploa
   const [showArchiveModal, setShowArchiveModal] = useState(false);
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   const [showFolderModal, setShowFolderModal] = useState(false);
+  const [showMoveModal, setShowMoveModal] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -450,6 +452,14 @@ const DocumentManagerPanel: React.FC<DocumentManagerPanelProps> = ({ onFileUploa
           >
             <Folder size={20} />
           </button>
+          <button
+            className="move-folder-button"
+            onClick={() => setShowMoveModal(true)}
+            disabled={isLoading || selectedFiles.size === 0}
+            title="Move selected files to folder"
+          >
+            <FolderPlus size={20} />
+          </button>
           <div
             className={`drop-area ${isDragOver ? 'drag-over' : ''}`}
             onDragOver={handleDragOver}
@@ -589,6 +599,14 @@ const DocumentManagerPanel: React.FC<DocumentManagerPanelProps> = ({ onFileUploa
           onClose={() => setShowFolderModal(false)}
           onCreate={confirmCreateFolder}
           isLoading={isCreatingFolder}
+        />
+        <MoveFilesModal
+          isOpen={showMoveModal}
+          onClose={() => setShowMoveModal(false)}
+          onMove={async (dest) => {
+            await moveSelectedFiles(dest);
+            setShowMoveModal(false);
+          }}
         />
       </div>
     </div>
