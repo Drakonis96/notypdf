@@ -401,6 +401,9 @@ def list_files():
         for filename in os.listdir(WORKSPACE_PATH):
             if filename.lower().endswith('.md'):
                 continue
+            # Skip the internal archive folder
+            if filename == os.path.basename(ARCHIVE_PATH):
+                continue
 
             filepath = os.path.join(WORKSPACE_PATH, filename)
             stat = os.stat(filepath)
@@ -734,6 +737,11 @@ def delete_file(filename):
         # Sanitize the filename
         filename = safe_filename(filename)
         filepath = os.path.join(WORKSPACE_PATH, filename)
+
+        # Prevent deletion of the archive folder
+        if os.path.abspath(filepath) == os.path.abspath(ARCHIVE_PATH):
+            logger.warning("Attempt to delete archive folder prevented")
+            return jsonify({"error": "Archive folder cannot be deleted"}), 400
 
         if not os.path.exists(filepath):
             return jsonify({"error": "File not found"}), 404
