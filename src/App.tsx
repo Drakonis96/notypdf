@@ -5,9 +5,6 @@ import FloatingActionButton from './components/FloatingActionButton';
 import DocumentManagerModal from './components/DocumentManagerModal';
 import TranslationModal from './components/TranslationModal'; // Import TranslationModal
 import ChatModal from './components/ChatModal';
-import { pdfjs } from 'react-pdf';
-
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/legacy/build/pdf.worker.min.js`;
 import { NotionConfig, TranslationConfig, SavedDatabaseId } from './types';
 import configService from './services/configService';
 import notionService from './services/notionService';
@@ -52,10 +49,6 @@ function App() {
   const [appModalSaving, setAppModalSaving] = useState<boolean>(false);
   const [appModalSuccessMessage, setAppModalSuccessMessage] = useState<string>('');
   const [appModalError, setAppModalError] = useState<string>('');
-
-  // Page navigation state for translation modal
-  const [translationModalPage, setTranslationModalPage] = useState<number>(1);
-  const [translationModalTotalPages, setTranslationModalTotalPages] = useState<number>(0);
 
   const [showChatModal, setShowChatModal] = useState<boolean>(false);
   const [chatInitialMessage, setChatInitialMessage] = useState<string | undefined>(undefined);
@@ -194,51 +187,15 @@ function App() {
     }
   }, [translationConfig]);
 
-  const getPageText = useCallback(async (page: number): Promise<string> => {
-    if (!pdfFile) return '';
-    const pdf = await pdfjs.getDocument(URL.createObjectURL(pdfFile)).promise;
-    const pg = await pdf.getPage(page);
-    const tc = await pg.getTextContent();
-    return tc.items.map((i: any) => i.str).join(' ').trim();
-  }, [pdfFile]);
-
   const handlePageTextExtracted = useCallback(async (text: string, pageNumber: number) => {
-    setTranslationModalPage(pageNumber);
-    if (pdfFile) {
-      try {
-        const pdf = await pdfjs.getDocument(URL.createObjectURL(pdfFile)).promise;
-        setTranslationModalTotalPages(pdf.numPages);
-      } catch (err) {
-        console.error('Error loading PDF:', err);
-      }
-    }
+    // For page text extraction, we can use the same logic as text selection
     await handleTextSelection(text);
-  }, [handleTextSelection, pdfFile]);
-
-  const changeTranslationModalPage = useCallback(async (page: number) => {
-    if (page < 1 || (translationModalTotalPages && page > translationModalTotalPages)) return;
-    const text = await getPageText(page);
-    setTranslationModalPage(page);
-    await handleTextSelection(text);
-  }, [getPageText, handleTextSelection, translationModalTotalPages]);
-
-  const handleNextTranslationPage = useCallback(() => {
-    if (translationModalPage < translationModalTotalPages) {
-      changeTranslationModalPage(translationModalPage + 1);
-    }
-  }, [translationModalPage, translationModalTotalPages, changeTranslationModalPage]);
-
-  const handlePrevTranslationPage = useCallback(() => {
-    if (translationModalPage > 1) {
-      changeTranslationModalPage(translationModalPage - 1);
-    }
-  }, [translationModalPage, changeTranslationModalPage]);
+    // TODO: use pageNumber if needed for specific functionality
+  }, [handleTextSelection]);
 
   const handleClearSelection = useCallback(() => {
     setSelectedText('');
     setIsAppTranslationModalOpen(false);
-    setTranslationModalPage(1);
-    setTranslationModalTotalPages(0);
   }, []);
 
   const handleConfigChange = useCallback((config: NotionConfig) => {
@@ -289,10 +246,8 @@ function App() {
     setAppModalSuccessMessage('');
     setAppModalIsStreaming(false);
     setAppModalStreamingText('');
-    setTranslationModalPage(1);
-    setTranslationModalTotalPages(0);
     // Optionally clear selectedText if it should not persist for ConfigModal
-    // setSelectedText('');
+    // setSelectedText(''); 
   };
 
   // App-level modal "Add to Notion" handlers with actual implementation
@@ -449,10 +404,6 @@ function App() {
           saving={appModalSaving}
           success={appModalSuccessMessage}
           error={appModalError}
-          currentPdfPage={translationModalPage}
-          totalPdfPages={translationModalTotalPages}
-          onNextPage={handleNextTranslationPage}
-          onPrevPage={handlePrevTranslationPage}
           onSendToChat={(text) => {
             setChatInitialMessage(text);
             setShowChatModal(true);
