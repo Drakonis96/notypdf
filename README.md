@@ -13,6 +13,7 @@
 - [Description](#description)
 - [Feature Highlights](#feature-highlights)
 - [How It Works](#how-it-works)
+- [Screenshots](#screenshots)
 - [Getting Started](#getting-started)
 - [Advanced Features](#advanced-features)
 - [Progressive Web App](#progressive-web-app)
@@ -42,6 +43,29 @@ NotyPDF is a web-based helper for researchers and students. Upload your document
 3. **Select text** from the document.
 4. **Add an annotation or page number** if desired.
 5. **Save** the entry to your chosen Notion database.
+
+## Screenshots
+Below are some example screens from the application interface.
+
+<p align="center">
+  <img src="public/screenshot1.png" alt="Document manager" width="700" />
+</p>
+
+<p align="center">
+  <img src="public/screenshot2.png" alt="Tag configuration" width="700" />
+</p>
+
+<p align="center">
+  <img src="public/screenshot3.png" alt="Reference preview" width="700" />
+</p>
+
+<p align="center">
+  <img src="public/screenshot4.png" alt="Settings panel" width="700" />
+</p>
+
+<p align="center">
+  <img src="public/screenshot5.png" alt="Web capture extension" width="700" />
+</p>
 
 ## Getting Started
 Follow these steps to get NotyPDF running on your machine.
