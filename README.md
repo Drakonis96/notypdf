@@ -36,6 +36,7 @@ NotyPDF is a web-based helper for researchers and students. Upload your document
 - **Configuration Menu**: A tabbed interface to manage all settings.
 - **Backup & Restore**: Export or import the complete configuration at any time.
 - **Translation Support**: Optional AI‑powered translation services.
+- **Local PDF Worker**: The PDF rendering engine is served from the app for faster loading and offline use.
 
 ## How It Works
 1. **Load your PDF document** via the upload dialog or the document manager.

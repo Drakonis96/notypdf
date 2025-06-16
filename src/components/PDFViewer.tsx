@@ -7,7 +7,8 @@ import configService from '../services/configService';
 import { translateTextStreaming } from '../services/translationService';
 import { fileService } from '../services/fileService';
 
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/legacy/build/pdf.worker.min.js`;
+// Load the worker from the local public directory for faster start up
+pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
 
 interface PDFViewerProps {
   file: File | null;

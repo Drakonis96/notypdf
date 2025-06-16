@@ -10,7 +10,8 @@ import { TranslationProvider, TranslationModel } from '../types';
 import LoadingSpinner from './LoadingSpinner';
 import './ChatModal.css';
 
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/legacy/build/pdf.worker.min.js`;
+// Use local worker for improved performance and offline support
+pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
 
 interface ChatModalProps {
   isOpen: boolean;

@@ -1,6 +1,7 @@
 import { pdfjs } from 'react-pdf';
 
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/legacy/build/pdf.worker.min.js`;
+// Use the locally hosted worker to speed up loading
+pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
 
 export async function extractPageText(file: File, pageNumber: number): Promise<string> {
   const loadingTask = pdfjs.getDocument(URL.createObjectURL(file));
