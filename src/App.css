@@ -372,7 +372,7 @@
   padding: 16px 20px; /* Adjusted padding */
   border-top: 1px solid #eeeeee; /* Lighter border */
   background: #fcfcfc; /* Very light gray for footer */
-  justify-content: flex-end;
+  justify-content: center;
   flex-shrink: 0;
 }
 
@@ -482,6 +482,24 @@
   transform: none;
   background-color: #f0f0f0;
   border-color: #dddddd;
+}
+
+/* Icon buttons for translation modal */
+.modal-icon-btn {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 768px) {
+  .modal-icon-btn {
+    width: 44px;
+    height: 44px;
+  }
 }
 
 @keyframes pulse {

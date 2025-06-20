@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import ReactMarkdown from 'react-markdown';
-import { MessageCircle } from 'lucide-react';
+import { MessageCircle, PlusCircle, CheckCircle, ArrowLeftCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { TranslationConfig } from '../types';
 import SuccessMessage from './SuccessMessage';
 
@@ -395,44 +395,61 @@ const TranslationModal: React.FC<TranslationModalProps> = ({
         
         <div className="translation-modal-actions">
           {(onPrevPage || onNextPage) && (
-            <div style={{ marginRight: 'auto', display: 'flex', gap: '8px' }}>
+            <div style={{ display: 'flex', gap: '8px' }}>
               {onPrevPage && (
-                <button className="btn btn-secondary" onClick={onPrevPage} disabled={isStreaming || saving}>
-                  Previous Page
+                <button
+                  className="btn btn-secondary modal-icon-btn"
+                  onClick={onPrevPage}
+                  disabled={isStreaming || saving}
+                  aria-label="Previous page"
+                >
+                  <ChevronLeft size={24} />
                 </button>
               )}
               {onNextPage && (
-                <button className="btn btn-secondary" onClick={onNextPage} disabled={isStreaming || saving}>
-                  Next Page
+                <button
+                  className="btn btn-secondary modal-icon-btn"
+                  onClick={onNextPage}
+                  disabled={isStreaming || saving}
+                  aria-label="Next page"
+                >
+                  <ChevronRight size={24} />
                 </button>
               )}
             </div>
           )}
           <button
-            className="btn btn-primary"
+            className="btn btn-primary modal-icon-btn"
             onClick={handleAddEverything}
             disabled={isStreaming || saving}
+            aria-label="Add everything"
           >
-            {saving ? 'Saving...' : 'Add Everything'}
+            {saving ? <span>...</span> : <PlusCircle size={24} />}
           </button>
           <button
-            className="btn btn-secondary"
+            className="btn btn-secondary modal-icon-btn"
             onClick={handleAddSelection}
             disabled={!selectedText.trim() || isStreaming || saving}
+            aria-label="Add selection"
           >
-            {saving ? 'Saving...' : 'Add Selection'}
+            {saving ? <span>...</span> : <CheckCircle size={24} />}
           </button>
           {onSendToChat && (
-            <button className="btn btn-chat" onClick={handleSendToChat} disabled={isStreaming || saving}>
-              <MessageCircle size={16} />
-              <span style={{ marginLeft: '4px' }}>Send to chat</span>
+            <button
+              className="btn btn-chat modal-icon-btn"
+              onClick={handleSendToChat}
+              disabled={isStreaming || saving}
+              aria-label="Send to chat"
+            >
+              <MessageCircle size={24} />
             </button>
           )}
           <button
-            className="btn btn-tertiary"
+            className="btn btn-tertiary modal-icon-btn"
             onClick={handleClose}
+            aria-label="Return"
           >
-            Return
+            <ArrowLeftCircle size={24} />
           </button>
         </div>
       </div>
