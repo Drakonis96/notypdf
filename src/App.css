@@ -615,6 +615,7 @@
     flex-direction: column; /* Stack controls vertically on mobile */
     align-items: center;
     gap: 8px; /* Gap between control groups */
+    border-radius: 6px; /* Rounded corners */
   }
 
   .pdf-controls-bar .btn,
@@ -735,6 +736,7 @@
   width: 100%;
   transition: all 0.3s ease;
   box-shadow: 0 1px 3px rgba(0,0,0,0.05); /* Softer shadow */
+  border-radius: 6px; /* Rounded corners */
 }
 
 .pdf-controls-bar.pdf-controls-right {
@@ -3614,4 +3616,17 @@ input.btn-compact[type="number"] {
   text-align: center;
   background: #fff;
   margin: 0 2px;
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  .pdf-controls-bar {
+    background-color: #1a1a1a;
+    border-color: #333;
+  }
+
+  .pdf-controls-bar.pdf-controls-right {
+    background-color: #1a1a1a;
+    border-left-color: #333;
+  }
 }
