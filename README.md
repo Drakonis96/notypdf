@@ -106,15 +106,15 @@ If you're unfamiliar with GitHub:
    ```sh
    docker-compose up --build
    ```
-5. The first run creates `data` and `myworkspace` folders beside `docker-compose.yml`. Your configuration lives inside `data` so it persists when updating the container.
+5. On first run Docker creates persistent volumes named `data` and `workspace`. Your configuration in these volumes will remain when updating the container.
 6. Wait for the server to start, then open [http://localhost:5026](http://localhost:5026).
 
-If you prefer `docker run`, mount the same folders:
+If you prefer `docker run`, mount the same volumes:
 ```sh
 docker run -d \
   -p 5026:5026 \
-  -v $(pwd)/data:/app/data \
-  -v $(pwd)/myworkspace:/myworkspace \
+  -v notypdf_data:/app/data \
+  -v notypdf_workspace:/myworkspace \
   --name notypdf drakonis96/notypdf:latest
 ```
 

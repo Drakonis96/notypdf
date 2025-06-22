@@ -13,8 +13,8 @@ services:
       - NOTION_API_KEY=${NOTION_API_KEY}
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./data:/app/data
-      - ./myworkspace:/myworkspace
+      - data:/app/data
+      - workspace:/myworkspace
     restart: unless-stopped
     networks:
       - default
@@ -22,3 +22,7 @@ services:
 networks:
   default:
     name: pdf-reader-network
+
+volumes:
+  data:
+  workspace:
