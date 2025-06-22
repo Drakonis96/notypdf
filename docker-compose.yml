@@ -12,8 +12,8 @@ services:
       - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
       - NOTION_API_KEY=${NOTION_API_KEY}
     volumes:
-      - ./data:/app/data
-      - ./myworkspace:/myworkspace
+      - data:/app/data
+      - workspace:/myworkspace
     restart: unless-stopped
     networks:
       - default
@@ -21,3 +21,7 @@ services:
 networks:
   default:
     name: pdf-reader-network
+
+volumes:
+  data:
+  workspace:
