@@ -1,6 +1,6 @@
 import UIKit
 import Social
-import MobileCoreServices
+import UniformTypeIdentifiers
 
 class ShareViewController: UIViewController {
     override func viewDidLoad() {
@@ -10,8 +10,8 @@ class ShareViewController: UIViewController {
 
     private func handleSharedText() {
         guard let extensionItem = extensionContext?.inputItems.first as? NSExtensionItem else { return }
-        if let itemProvider = extensionItem.attachments?.first(where: { $0.hasItemConformingToTypeIdentifier(kUTTypeText as String) }) {
-            itemProvider.loadItem(forTypeIdentifier: kUTTypeText as String, options: nil) { (item, error) in
+        if let itemProvider = extensionItem.attachments?.first(where: { $0.hasItemConformingToTypeIdentifier(UTType.text.identifier) }) {
+            itemProvider.loadItem(forTypeIdentifier: UTType.text.identifier, options: nil) { (item, error) in
                 if let text = item as? String {
                     DispatchQueue.main.async {
                         self.sendText(text)
@@ -37,7 +37,7 @@ class ShareViewController: UIViewController {
         }
 
         guard let cfgURL = URL(string: "\(base)/api/config") else { return }
-        var cfgReq = authRequest(cfgURL)
+        let cfgReq = authRequest(cfgURL)
         URLSession.shared.dataTask(with: cfgReq) { data, _, _ in
             guard let data = data,
                   let cfg = try? JSONDecoder().decode(AppConfig.self, from: data),

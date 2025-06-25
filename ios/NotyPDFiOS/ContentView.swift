@@ -33,7 +33,7 @@ struct ContentView: View {
                                 Text(db.name ?? db.databaseId).tag(db.databaseId)
                             }
                         }
-                        .onChange(of: selectedDatabase) { _ in databaseChanged() }
+                        .onChange(of: selectedDatabase) { _, _ in databaseChanged() }
                     }
                 }
                 Section {
