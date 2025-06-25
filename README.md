@@ -191,7 +191,12 @@ Capture text from any website and send it to Notion using your NotyPDF configura
 5. Access extension settings and help directly from the popup.
 
 Using a reverse proxy lets the extension work from any browser, allowing you to add references to Notion even if the server isn’t running locally. The extension fetches your saved configuration and creates a new entry with the next identifier.
-
+## iOS Companion App
+The `ios` directory contains a minimal SwiftUI app that mirrors the Chrome extension.
+1. Open the folder in Xcode and run the **NotyPDFiOS** target.
+2. Configure your backend URL and credentials under **Settings**.
+3. Paste or share text and tap **Send to Notion**.
+A basic share extension is included for sending text from Safari or other apps.
 ---
 
 ## License
