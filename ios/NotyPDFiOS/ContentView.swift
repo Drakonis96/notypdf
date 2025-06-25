@@ -33,6 +33,7 @@ struct ContentView: View {
                                 Text(db.name ?? db.databaseId).tag(db.databaseId)
                             }
                         }
+                        .onChange(of: selectedDatabase) { _ in databaseChanged() }
                     }
                 }
                 Section {
@@ -59,8 +60,26 @@ struct ContentView: View {
                 case .success(let cfg):
                     databases = cfg.savedDatabaseIds
                     selectedDatabase = databases.first?.databaseId ?? ""
+                    if let first = selectedDatabase.isEmpty ? nil : selectedDatabase,
+                       let mapping = cfg.columnMappings[first],
+                       let pattern = mapping.identifierPattern {
+                        identifierPattern = pattern
+                    }
                 case .failure:
                     status = "Failed to load config"
+                }
+            }
+        }
+    }
+
+    func databaseChanged() {
+        let settings = BackendSettings(url: backendUrl, username: backendUser.isEmpty ? nil : backendUser, password: backendPass.isEmpty ? nil : backendPass)
+        ApiService.shared.loadConfig(settings: settings) { result in
+            DispatchQueue.main.async {
+                if case .success(let cfg) = result,
+                   let mapping = cfg.columnMappings[selectedDatabase],
+                   let pattern = mapping.identifierPattern {
+                    identifierPattern = pattern
                 }
             }
         }
