@@ -1,12 +1,4 @@
-import { SavedDatabaseId, NotionConfig, TagMapping } from '../types';
-
-export interface AppConfig {
-  savedDatabaseIds: SavedDatabaseId[];
-  columnMappings: Record<string, Partial<NotionConfig>>;
-  tagMappings?: Record<string, TagMapping>;
-  bookmarks?: Record<string, number>;
-  lastUpdated: string;
-}
+import { SavedDatabaseId, NotionConfig, TagMapping, AppConfig } from '../types';
 
 class ConfigService {
   private baseUrl: string;

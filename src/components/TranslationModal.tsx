@@ -159,7 +159,6 @@ const TranslationModal: React.FC<TranslationModalProps> = ({
   return createPortal(
     <div 
       className={`translation-modal-overlay ${portalContainer ? 'fullscreen-modal' : ''}`} 
-      onClick={handleClose}
       style={{
         // Increase z-index when rendered inside fullscreen container or when no specific portal container is given (implies it's a root modal)
         zIndex: (portalContainer || !portalContainer) ? 10001 : 9999 

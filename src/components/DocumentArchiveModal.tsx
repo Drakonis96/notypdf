@@ -149,16 +149,19 @@ const DocumentArchiveModal: React.FC<DocumentArchiveModalProps> = ({
 
   const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
+    event.stopPropagation(); // Evita que el evento se propague al contenedor padre
     setIsDragOver(true);
   };
 
   const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
+    event.stopPropagation(); // Evita que el evento se propague al contenedor padre
     setIsDragOver(false);
   };
 
   const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
+    event.stopPropagation(); // Evita que el evento se propague al contenedor padre
     setIsDragOver(false);
     const files = Array.from(event.dataTransfer.files);
     if (files.length > 0) {
@@ -316,7 +319,7 @@ const DocumentArchiveModal: React.FC<DocumentArchiveModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay">
       <div
         className="document-manager-modal"
         onClick={(e) => e.stopPropagation()}

@@ -664,6 +664,24 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
             </div>
           </div>
 
+          {/* Selection Modal Configuration */}
+          <div className="config-section">
+            <h3 className="config-section-title">Selection modal</h3>
+            
+            <div className="config-checkbox">
+              <input
+                type="checkbox"
+                id="showSelectionModal"
+                checked={!!translationConfig.showSelectionModal}
+                onChange={e => setTranslationConfig({ ...translationConfig, showSelectionModal: e.target.checked })}
+                className="config-checkbox-input"
+              />
+              <label htmlFor="showSelectionModal" className="config-checkbox-label">
+                Show selection modal
+              </label>
+            </div>
+          </div>
+
           {/* Translation Configuration */}
           <div className="config-section">
             <h3 className="config-section-title">Translation Options</h3>
@@ -740,19 +758,6 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
                     <option value="original">Send original text</option>
                     <option value="translated">Send translated text</option>
                   </select>
-                </div>
-
-                <div className="config-checkbox" style={{ marginTop: 8 }}>
-                  <input
-                    type="checkbox"
-                    id="showSelectionModal"
-                    checked={!!translationConfig.showSelectionModal}
-                    onChange={e => setTranslationConfig({ ...translationConfig, showSelectionModal: e.target.checked })}
-                    className="config-checkbox-input"
-                  />
-                  <label htmlFor="showSelectionModal" className="config-checkbox-label">
-                    Show selection modal when translation disabled
-                  </label>
                 </div>
 
                 <div className="config-field">

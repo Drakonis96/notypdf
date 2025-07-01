@@ -25,7 +25,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return createPortal(
-    <div className="translation-modal-overlay" onClick={onClose}>
+    <div className="translation-modal-overlay">
       <div 
         className="translation-modal"
         onClick={(e) => e.stopPropagation()}

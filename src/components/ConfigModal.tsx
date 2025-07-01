@@ -87,7 +87,7 @@ const ConfigModal: React.FC<ConfigModalProps> = ({
   };
 
   return (
-    <div className="config-modal-overlay" onClick={onClose}>
+    <div className="config-modal-overlay">
       <div className="config-modal" onClick={(e) => e.stopPropagation()}>
         {/* Header with Help and Close buttons */}
         <div className="config-modal-header">

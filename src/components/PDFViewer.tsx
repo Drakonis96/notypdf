@@ -6,6 +6,7 @@ import { TranslationConfig } from '../types';
 import configService from '../services/configService';
 import translationService, { translateTextStreaming } from '../services/translationService';
 import { fileService } from '../services/fileService';
+import apiKeyService from '../services/apiKeyService';
 import { renderPageToImage } from '../utils/pdfUtils';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/legacy/build/pdf.worker.min.js`;

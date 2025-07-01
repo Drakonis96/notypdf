@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import notionService from '../services/notionService';
-import configService, { AppConfig } from '../services/configService';
+import configService from '../services/configService';
 import aiCompletionService from '../services/aiCompletionService';
 import apiKeyService from '../services/apiKeyService';
-import { NotionConfig, NotionProperty, SavedDatabaseId, TagMapping, TranslationProvider, TranslationModel } from '../types';
+import { NotionConfig, NotionProperty, SavedDatabaseId, TagMapping, TranslationProvider, TranslationModel, AppConfig } from '../types';
 import { Trash2, Play } from 'lucide-react';
 
 interface TagConfigPanelProps {

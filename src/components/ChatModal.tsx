@@ -272,7 +272,7 @@ const ChatModal: React.FC<ChatModalProps> = ({ isOpen, onClose, initialMessage, 
   if (!isOpen) return null;
 
   return createPortal(
-    <div className="chat-modal-overlay" onClick={onClose}>
+    <div className="chat-modal-overlay">
       <div className="chat-modal" onClick={(e) => e.stopPropagation()} ref={modalRef} tabIndex={-1}>
         <div className="chat-header">
           <h3>Chat</h3>

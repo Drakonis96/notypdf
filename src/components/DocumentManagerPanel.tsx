@@ -143,16 +143,19 @@ const DocumentManagerPanel: React.FC<DocumentManagerPanelProps> = ({ onFileUploa
 
   const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
+    event.stopPropagation(); // Evita que el evento se propague al contenedor padre
     setIsDragOver(true);
   };
 
   const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
+    event.stopPropagation(); // Evita que el evento se propague al contenedor padre
     setIsDragOver(false);
   };
 
   const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
+    event.stopPropagation(); // Evita que el evento se propague al contenedor padre
     setIsDragOver(false);
     const files = Array.from(event.dataTransfer.files);
     if (files.length > 0) {
