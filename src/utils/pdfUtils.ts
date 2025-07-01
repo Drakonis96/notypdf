@@ -15,3 +15,20 @@ export async function getNumPages(file: File): Promise<number> {
   const pdf = await loadingTask.promise;
   return pdf.numPages;
 }
+
+export async function renderPageToImage(
+  file: File,
+  pageNumber: number,
+  scale = 2
+): Promise<string> {
+  const loadingTask = pdfjs.getDocument(URL.createObjectURL(file));
+  const pdf = await loadingTask.promise;
+  const page = await pdf.getPage(pageNumber);
+  const viewport = page.getViewport({ scale });
+  const canvas = document.createElement('canvas');
+  const context = canvas.getContext('2d');
+  canvas.width = viewport.width;
+  canvas.height = viewport.height;
+  await page.render({ canvasContext: context!, viewport }).promise;
+  return canvas.toDataURL('image/png');
+}

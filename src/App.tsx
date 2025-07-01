@@ -8,9 +8,10 @@ import ChatModal from './components/ChatModal';
 import { NotionConfig, TranslationConfig, SavedDatabaseId } from './types';
 import configService from './services/configService';
 import notionService from './services/notionService';
-import translationService from './services/translationService';
+import translationService, { DEFAULT_TRANSLATION_PROMPT } from './services/translationService';
 import apiKeyService from './services/apiKeyService';
 import { extractPageText, getNumPages } from './utils/pdfUtils';
+import SuccessMessage from './components/SuccessMessage';
 import './App.css';
 
 function App() {
@@ -40,6 +41,9 @@ function App() {
     model: '',
     targetLanguage: '',
     sendMode: 'original',
+    prompts: [DEFAULT_TRANSLATION_PROMPT],
+    promptIndex: 0,
+    showSelectionModal: false,
   });
 
   // State for App-level Translation Modal
@@ -55,6 +59,7 @@ function App() {
 
   const [showChatModal, setShowChatModal] = useState<boolean>(false);
   const [chatInitialMessage, setChatInitialMessage] = useState<string | undefined>(undefined);
+  const [copySuccess, setCopySuccess] = useState<string>('');
 
   const handleNumPages = useCallback((n: number) => {
     setTotalPages(n);
@@ -74,6 +79,14 @@ function App() {
             createdAt: new Date(item.createdAt)
           }));
           setSavedDatabaseIds(withDates);
+        }
+
+        if (config.translationPrompts) {
+          setTranslationConfig(tc => ({
+            ...tc,
+            prompts: config.translationPrompts || [DEFAULT_TRANSLATION_PROMPT],
+            promptIndex: config.selectedTranslationPromptIndex ?? 0
+          }));
         }
         
         // Load column mappings (if any stored configuration exists)
@@ -119,80 +132,93 @@ function App() {
   const handleTextSelection = useCallback(async (text: string, page?: number) => {
     setSelectedText(text);
     setAppModalPageNumber(page ?? null);
-    if (text.trim()) {
+
+    if (!text.trim()) {
+      setIsAppTranslationModalOpen(false);
+      return;
+    }
+
+    setAppModalError('');
+
+    if (translationConfig.enabled) {
       setIsAppTranslationModalOpen(true);
-      setAppModalError('');
-      
-      // Implement translation logic if translation is enabled
-      if (translationConfig.enabled) {
-        // Check if translation is fully configured
-        if (
-          translationConfig.targetLanguage &&
-          translationConfig.provider &&
-          translationConfig.model
-        ) {
-          // Translation is fully configured - auto-translate
-          try {
-            // Clear visual selection before showing modal
-            if (window.getSelection) {
-              window.getSelection()?.removeAllRanges();
-            }
-
-            const apiKey = await apiKeyService.getApiKey(translationConfig.provider);
-            if (!apiKey) {
-              throw new Error('Missing API key for selected translation provider');
-            }
-
-            // Use streaming for OpenAI, OpenRouter, Gemini, and DeepSeek
-            if (translationConfig.provider === 'openai' || translationConfig.provider === 'openrouter' || translationConfig.provider === 'gemini' || translationConfig.provider === 'deepseek') {
-              setAppModalIsStreaming(true);
-              setAppModalStreamingText('');
-              setAppModalTranslatedText('');
-
-              await translationService.translateTextStreaming(text, {
-                provider: translationConfig.provider,
-                model: translationConfig.model,
-                apiKey,
-                targetLanguage: translationConfig.targetLanguage,
-                onProgress: (partialText: string) => {
-                  setAppModalStreamingText(partialText);
-                },
-                onComplete: (fullText: string) => {
-                  setAppModalTranslatedText(fullText);
-                  setAppModalIsStreaming(false);
-                  setAppModalStreamingText('');
-                },
-                onError: (error: Error) => {
-                  setAppModalError('Translation failed: ' + error.message);
-                  setAppModalIsStreaming(false);
-                  setAppModalStreamingText('');
-                }
-              });
-            } else {
-              // Fallback to regular translation for other providers
-              const translated = await translationService.translateText(text, {
-                provider: translationConfig.provider,
-                model: translationConfig.model,
-                apiKey,
-                targetLanguage: translationConfig.targetLanguage,
-              });
-              setAppModalTranslatedText(translated);
-            }
-          } catch (err: any) {
-            setAppModalError('Translation failed: ' + (err.message || ''));
-            setAppModalIsStreaming(false);
-            setAppModalStreamingText('');
+      if (
+        translationConfig.targetLanguage &&
+        translationConfig.provider &&
+        translationConfig.model
+      ) {
+        try {
+          if (window.getSelection) {
+            window.getSelection()?.removeAllRanges();
           }
-        } else {
-          // Translation is enabled but not fully configured - show modal with original text
-          setAppModalTranslatedText(text);
+
+          const apiKey = await apiKeyService.getApiKey(translationConfig.provider);
+          if (!apiKey) {
+            throw new Error('Missing API key for selected translation provider');
+          }
+
+          if (
+            translationConfig.provider === 'openai' ||
+            translationConfig.provider === 'openrouter' ||
+            translationConfig.provider === 'gemini' ||
+            translationConfig.provider === 'deepseek'
+          ) {
+            setAppModalIsStreaming(true);
+            setAppModalStreamingText('');
+            setAppModalTranslatedText('');
+
+            await translationService.translateTextStreaming(text, {
+              provider: translationConfig.provider,
+              model: translationConfig.model,
+              apiKey,
+              targetLanguage: translationConfig.targetLanguage,
+              promptTemplate: translationConfig.prompts[translationConfig.promptIndex],
+              onProgress: (partialText: string) => {
+                setAppModalStreamingText(partialText);
+              },
+              onComplete: (fullText: string) => {
+                setAppModalTranslatedText(fullText);
+                setAppModalIsStreaming(false);
+                setAppModalStreamingText('');
+              },
+              onError: (error: Error) => {
+                setAppModalError('Translation failed: ' + error.message);
+                setAppModalIsStreaming(false);
+                setAppModalStreamingText('');
+              },
+            });
+          } else {
+            const translated = await translationService.translateText(text, {
+              provider: translationConfig.provider,
+              model: translationConfig.model,
+              apiKey,
+              targetLanguage: translationConfig.targetLanguage,
+              promptTemplate: translationConfig.prompts[translationConfig.promptIndex],
+            });
+            setAppModalTranslatedText(translated);
+          }
+        } catch (err: any) {
+          setAppModalError('Translation failed: ' + (err.message || ''));
+          setAppModalIsStreaming(false);
+          setAppModalStreamingText('');
         }
       } else {
-        // Translation is disabled - just show the original text
-        setAppModalTranslatedText('');
+        setAppModalTranslatedText(text);
       }
     } else {
-      setIsAppTranslationModalOpen(false);
+      if (translationConfig.showSelectionModal) {
+        setIsAppTranslationModalOpen(true);
+        setAppModalTranslatedText('');
+      } else {
+        try {
+          await navigator.clipboard.writeText(text);
+          setCopySuccess('Text copied to clipboard');
+          setTimeout(() => setCopySuccess(''), 2000);
+        } catch (err) {
+          console.error('Failed to copy text:', err);
+        }
+        setIsAppTranslationModalOpen(false);
+      }
     }
   }, [translationConfig]);
 
@@ -442,6 +468,11 @@ function App() {
           currentFile={pdfFile}
           currentPage={currentPageNumber}
         />
+      )}
+      {copySuccess && (
+        <div style={{ position: 'fixed', bottom: 20, right: 20 }}>
+          <SuccessMessage message={copySuccess} onClose={() => setCopySuccess('')} />
+        </div>
       )}
     </div>
   );

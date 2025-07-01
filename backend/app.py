@@ -63,6 +63,13 @@ os.makedirs(ARCHIVE_PATH, exist_ok=True)
 # Initialize MarkItDown converter
 md_converter = MarkItDown()
 
+# Default translation prompt template
+DEFAULT_TRANSLATION_PROMPT = (
+    "Translate the following text to {{target_language}}. "
+    "Format the translation as markdown, preserving paragraph breaks, titles, "
+    "and other formatting. Return only the translated text formatted as markdown.\n\n{{text}}"
+)
+
 # Allowed file extensions for documents
 ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx', 'txt', 'png', 'jpg', 'jpeg', 'gif'}
 
@@ -249,11 +256,15 @@ def load_config():
         if os.path.exists(CONFIG_FILE_PATH):
             with open(CONFIG_FILE_PATH, 'r') as f:
                 config = json.load(f)
-                # Ensure tagMappings key exists
+                # Ensure required keys exist
                 if "tagMappings" not in config:
                     config["tagMappings"] = {}
                 if "bookmarks" not in config:
                     config["bookmarks"] = {}
+                if "translationPrompts" not in config:
+                    config["translationPrompts"] = [DEFAULT_TRANSLATION_PROMPT]
+                if "selectedTranslationPromptIndex" not in config:
+                    config["selectedTranslationPromptIndex"] = 0
                 return config
         else:
             # Return default configuration
@@ -261,6 +272,8 @@ def load_config():
                 "savedDatabaseIds": [],
                 "columnMappings": {},
                 "tagMappings": {},
+                "translationPrompts": [DEFAULT_TRANSLATION_PROMPT],
+                "selectedTranslationPromptIndex": 0,
                 "bookmarks": {},
                 "lastUpdated": datetime.now().isoformat()
             }
@@ -309,6 +322,10 @@ def update_config():
             current_config["columnMappings"] = data["columnMappings"]
         if "tagMappings" in data:
             current_config["tagMappings"] = data["tagMappings"]
+        if "translationPrompts" in data:
+            current_config["translationPrompts"] = data["translationPrompts"]
+        if "selectedTranslationPromptIndex" in data:
+            current_config["selectedTranslationPromptIndex"] = data["selectedTranslationPromptIndex"]
         if "bookmarks" in data:
             current_config["bookmarks"] = data["bookmarks"]
         if save_config(current_config):
@@ -363,7 +380,14 @@ def restore_backup():
             return jsonify({"error": "Invalid JSON file"}), 400
         
         # Validate the backup data structure
-        required_keys = ["savedDatabaseIds", "columnMappings", "tagMappings", "bookmarks"]
+        required_keys = [
+            "savedDatabaseIds",
+            "columnMappings",
+            "tagMappings",
+            "translationPrompts",
+            "selectedTranslationPromptIndex",
+            "bookmarks",
+        ]
         if not all(key in backup_data for key in required_keys):
             return jsonify({"error": "Invalid backup file structure"}), 400
         
@@ -386,6 +410,8 @@ def clear_config():
             "savedDatabaseIds": [],
             "columnMappings": {},
             "tagMappings": {},
+            "translationPrompts": [DEFAULT_TRANSLATION_PROMPT],
+            "selectedTranslationPromptIndex": 0,
             "bookmarks": {},
             "lastUpdated": datetime.now().isoformat()
         }
@@ -1002,11 +1028,12 @@ def translate_text():
         provider = data.get("provider")
         model = data.get("model")
         target_language = data.get("target_language")
+        prompt_template = data.get("prompt")
         
         if not all([text, provider, model, target_language]):
             return jsonify({"error": "Text, provider, model, and target_language are required"}), 400
         
-        result = translation_service.translate(text, provider, model, target_language)
+        result = translation_service.translate(text, provider, model, target_language, prompt_template)
         return jsonify(result)
     
     except Exception as e:
