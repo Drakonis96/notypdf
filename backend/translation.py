@@ -6,6 +6,13 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+# Default translation prompt template
+DEFAULT_TRANSLATION_PROMPT = (
+    "Translate the following text to {{target_language}}. "
+    "Format the translation as markdown, preserving paragraph breaks, titles, "
+    "and other formatting. Return only the translated text formatted as markdown.\n\n{{text}}"
+)
+
 class TranslationService:
     def __init__(self):
         self.openai_api_key = os.environ.get("OPENAI_API_KEY")
@@ -22,6 +29,12 @@ class TranslationService:
             'deepseek': self.deepseek_api_key
         }
         return keys.get(provider)
+
+    def _build_prompt(self, template: Optional[str], text: str, target_language: str) -> str:
+        prompt_template = template or DEFAULT_TRANSLATION_PROMPT
+        prompt = prompt_template.replace("{{text}}", text)
+        prompt = prompt.replace("{{target_language}}", target_language)
+        return prompt
     
     def test_connection(self, provider: str, model: str) -> Dict[str, Any]:
         """Test connection to the specified translation provider"""
@@ -55,7 +68,7 @@ class TranslationService:
                 "message": f"❌ Connection test failed: {str(e)}"
             }
     
-    def translate(self, text: str, provider: str, model: str, target_language: str) -> Dict[str, Any]:
+    def translate(self, text: str, provider: str, model: str, target_language: str, prompt_template: Optional[str] = None) -> Dict[str, Any]:
         """Translate text using the specified provider"""
         try:
             api_key = self.get_api_key(provider)
@@ -66,13 +79,13 @@ class TranslationService:
                 }
             
             if provider == 'openai':
-                return self._translate_openai(text, model, target_language, api_key)
+                return self._translate_openai(text, model, target_language, api_key, prompt_template)
             elif provider == 'openrouter':
-                return self._translate_openrouter(text, model, target_language, api_key)
+                return self._translate_openrouter(text, model, target_language, api_key, prompt_template)
             elif provider == 'gemini':
-                return self._translate_gemini(text, model, target_language, api_key)
+                return self._translate_gemini(text, model, target_language, api_key, prompt_template)
             elif provider == 'deepseek':
-                return self._translate_deepseek(text, model, target_language, api_key)
+                return self._translate_deepseek(text, model, target_language, api_key, prompt_template)
             else:
                 return {
                     "success": False,
@@ -86,10 +99,10 @@ class TranslationService:
                 "message": f"Translation failed: {str(e)}"
             }
     
-    def _translate_openai(self, text: str, model: str, target_language: str, api_key: str) -> Dict[str, Any]:
+    def _translate_openai(self, text: str, model: str, target_language: str, api_key: str, prompt_template: Optional[str]) -> Dict[str, Any]:
         """Translate using OpenAI API"""
         url = "https://api.openai.com/v1/chat/completions"
-        prompt = f"Translate the following text to {target_language}. Format the translation as markdown, preserving paragraph breaks, titles, and other formatting. Return only the translated text formatted as markdown.\n\n{text}"
+        prompt = self._build_prompt(prompt_template, text, target_language)
         
         headers = {
             "Authorization": f"Bearer {api_key}",
@@ -121,10 +134,10 @@ class TranslationService:
             "message": f"OpenAI API error: {response.status_code} - {response.text}"
         }
     
-    def _translate_openrouter(self, text: str, model: str, target_language: str, api_key: str) -> Dict[str, Any]:
+    def _translate_openrouter(self, text: str, model: str, target_language: str, api_key: str, prompt_template: Optional[str]) -> Dict[str, Any]:
         """Translate using OpenRouter API"""
         url = "https://openrouter.ai/api/v1/chat/completions"
-        prompt = f"Translate the following text to {target_language}. Format the translation as markdown, preserving paragraph breaks, titles, and other formatting. Return only the translated text formatted as markdown.\n\n{text}"
+        prompt = self._build_prompt(prompt_template, text, target_language)
         
         headers = {
             "Authorization": f"Bearer {api_key}",
@@ -156,10 +169,10 @@ class TranslationService:
             "message": f"OpenRouter API error: {response.status_code} - {response.text}"
         }
     
-    def _translate_gemini(self, text: str, model: str, target_language: str, api_key: str) -> Dict[str, Any]:
+    def _translate_gemini(self, text: str, model: str, target_language: str, api_key: str, prompt_template: Optional[str]) -> Dict[str, Any]:
         """Translate using Gemini API"""
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
-        prompt = f"Translate the following text to {target_language}. Format the translation as markdown, preserving paragraph breaks, titles, and other formatting. Return only the translated text formatted as markdown.\n\n{text}"
+        prompt = self._build_prompt(prompt_template, text, target_language)
         
         headers = {
             "Content-Type": "application/json"
@@ -199,10 +212,10 @@ class TranslationService:
             "message": f"Gemini API error: {response.status_code} - {response.text}"
         }
     
-    def _translate_deepseek(self, text: str, model: str, target_language: str, api_key: str) -> Dict[str, Any]:
+    def _translate_deepseek(self, text: str, model: str, target_language: str, api_key: str, prompt_template: Optional[str]) -> Dict[str, Any]:
         """Translate using DeepSeek API"""
         url = "https://api.deepseek.com/chat/completions"
-        prompt = f"Translate the following text to {target_language}. Format the translation as markdown, preserving paragraph breaks, titles, and other formatting. Return only the translated text formatted as markdown.\n\n{text}"
+        prompt = self._build_prompt(prompt_template, text, target_language)
         
         headers = {
             "Authorization": f"Bearer {api_key}",

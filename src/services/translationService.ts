@@ -1,6 +1,9 @@
 import axios from 'axios';
 import apiKeyService from './apiKeyService';
 
+export const DEFAULT_TRANSLATION_PROMPT =
+  'Translate the following text to {{target_language}}. Format the translation as markdown, preserving paragraph breaks, titles, and other formatting. Return only the translated text formatted as markdown.\n\n{{text}}';
+
 // Helper function to ensure proper text formatting with line breaks
 function ensureProperLineBreaks(text: string): string {
   // Remove any extra spaces and normalize line breaks
@@ -22,6 +25,12 @@ function ensureProperLineBreaks(text: string): string {
   processedText = processedText.replace(/^(\d+\. .+)$/gm, '$1\n');
   
   return processedText;
+}
+
+function buildPrompt(template: string, text: string, targetLanguage: string): string {
+  return template
+    .replace(/{{text}}/g, text)
+    .replace(/{{target_language}}/g, targetLanguage);
 }
 
 // Translation service - placeholder for future implementation
@@ -46,12 +55,19 @@ export interface TranslationOptions {
   model: TranslationModel;
   apiKey: string;
   targetLanguage: string;
+  promptTemplate?: string;
 }
 
 export interface StreamingTranslationOptions extends TranslationOptions {
   onProgress?: (partialText: string) => void;
   onComplete?: (fullText: string) => void;
   onError?: (error: Error) => void;
+}
+
+export interface OcrOptions {
+  provider: TranslationProvider;
+  model: TranslationModel;
+  apiKey: string;
 }
 
 export async function translateText(
@@ -101,9 +117,9 @@ async function translateWithOpenAI(
   text: string,
   options: TranslationOptions
 ): Promise<string> {
-  const { model, apiKey, targetLanguage } = options;
+  const { model, apiKey, targetLanguage, promptTemplate = DEFAULT_TRANSLATION_PROMPT } = options;
   const url = 'https://api.openai.com/v1/chat/completions';
-  const prompt = `Translate the following text to ${targetLanguage}. Format the translation as markdown, preserving paragraph breaks, titles, and other formatting. Return only the translated text formatted as markdown.\n\n${text}`;
+  const prompt = buildPrompt(promptTemplate, text, targetLanguage);
   const body = {
     model,
     messages: [
@@ -134,9 +150,9 @@ async function translateWithOpenAIStreaming(
   text: string,
   options: StreamingTranslationOptions
 ): Promise<void> {
-  const { model, apiKey, targetLanguage, onProgress, onComplete, onError } = options;
+  const { model, apiKey, targetLanguage, onProgress, onComplete, onError, promptTemplate = DEFAULT_TRANSLATION_PROMPT } = options;
   const url = 'https://api.openai.com/v1/chat/completions';
-  const prompt = `Translate the following text to ${targetLanguage}. Format the translation as markdown, preserving paragraph breaks, titles, and other formatting. Return only the translated text formatted as markdown.\n\n${text}`;
+  const prompt = buildPrompt(promptTemplate, text, targetLanguage);
   
   const body = {
     model,
@@ -219,9 +235,9 @@ async function translateWithOpenRouter(
   text: string,
   options: TranslationOptions
 ): Promise<string> {
-  const { model, apiKey, targetLanguage } = options;
+  const { model, apiKey, targetLanguage, promptTemplate = DEFAULT_TRANSLATION_PROMPT } = options;
   const url = 'https://openrouter.ai/api/v1/chat/completions';
-  const prompt = `Translate the following text to ${targetLanguage}. Format the translation as markdown, preserving paragraph breaks, titles, and other formatting. Return only the translated text formatted as markdown.\n\n${text}`;
+  const prompt = buildPrompt(promptTemplate, text, targetLanguage);
   const body = {
     model,
     messages: [
@@ -252,9 +268,9 @@ async function translateWithOpenRouterStreaming(
   text: string,
   options: StreamingTranslationOptions
 ): Promise<void> {
-  const { model, apiKey, targetLanguage, onProgress, onComplete, onError } = options;
+  const { model, apiKey, targetLanguage, onProgress, onComplete, onError, promptTemplate = DEFAULT_TRANSLATION_PROMPT } = options;
   const url = 'https://openrouter.ai/api/v1/chat/completions';
-  const prompt = `Translate the following text to ${targetLanguage}. Format the translation as markdown, preserving paragraph breaks, titles, and other formatting. Return only the translated text formatted as markdown.\n\n${text}`;
+  const prompt = buildPrompt(promptTemplate, text, targetLanguage);
   
   const body = {
     model,
@@ -337,21 +353,9 @@ async function translateWithGemini(
   text: string,
   options: TranslationOptions
 ): Promise<string> {
-  const { model, apiKey, targetLanguage } = options;
+  const { model, apiKey, targetLanguage, promptTemplate = DEFAULT_TRANSLATION_PROMPT } = options;
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-  const prompt = `Translate the following text to ${targetLanguage}. 
-
-IMPORTANT FORMATTING RULES:
-- Each paragraph must be separated by TWO line breaks (\n\n)
-- Preserve the original paragraph structure
-- Use proper markdown formatting for titles, lists, etc.
-- Ensure sentences naturally wrap across multiple lines
-- Do NOT put everything on a single line
-- Return ONLY the translated text with proper line breaks
-
-Text to translate:
-
-${text}`;
+  const prompt = buildPrompt(promptTemplate, text, targetLanguage);
   const body = {
     contents: [
       {
@@ -390,21 +394,9 @@ async function translateWithGeminiStreaming(
   text: string,
   options: StreamingTranslationOptions
 ): Promise<void> {
-  const { model, apiKey, targetLanguage, onProgress, onComplete, onError } = options;
+  const { model, apiKey, targetLanguage, onProgress, onComplete, onError, promptTemplate = DEFAULT_TRANSLATION_PROMPT } = options;
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?key=${apiKey}&alt=sse`;
-  const prompt = `Translate the following text to ${targetLanguage}. 
-
-IMPORTANT FORMATTING RULES:
-- Each paragraph must be separated by TWO line breaks (\n\n)
-- Preserve the original paragraph structure
-- Use proper markdown formatting for titles, lists, etc.
-- Ensure sentences naturally wrap across multiple lines
-- Do NOT put everything on a single line
-- Return ONLY the translated text with proper line breaks
-
-Text to translate:
-
-${text}`;
+  const prompt = buildPrompt(promptTemplate, text, targetLanguage);
   
   const body = {
     contents: [
@@ -498,13 +490,13 @@ async function translateWithDeepSeek(
   text: string,
   options: TranslationOptions
 ): Promise<string> {
-  const { model, apiKey: apiKeyFromOptions, targetLanguage } = options;
+  const { model, apiKey: apiKeyFromOptions, targetLanguage, promptTemplate = DEFAULT_TRANSLATION_PROMPT } = options;
   // Get API key from backend if not provided
   const apiKey = apiKeyFromOptions || await apiKeyService.getApiKey('deepseek');
   // Hardcode DeepSeek API base URL
   const baseUrl = 'https://api.deepseek.com/v1';
   const url = `${baseUrl}/chat/completions`;
-  const prompt = `Translate the following text to ${targetLanguage}. Format the translation as markdown, preserving paragraph breaks, titles, and other formatting. Return only the translated text formatted as markdown.\n\n${text}`;
+  const prompt = buildPrompt(promptTemplate, text, targetLanguage);
   const body = {
     model,
     messages: [
@@ -535,13 +527,13 @@ async function translateWithDeepSeekStreaming(
   text: string,
   options: StreamingTranslationOptions
 ): Promise<void> {
-  const { model, apiKey: apiKeyFromOptions, targetLanguage, onProgress, onComplete, onError } = options;
+  const { model, apiKey: apiKeyFromOptions, targetLanguage, onProgress, onComplete, onError, promptTemplate = DEFAULT_TRANSLATION_PROMPT } = options;
   // Get API key from backend if not provided
   const apiKey = apiKeyFromOptions || await apiKeyService.getApiKey('deepseek');
   // Hardcode DeepSeek API base URL
   const baseUrl = 'https://api.deepseek.com/v1';
   const url = `${baseUrl}/chat/completions`;
-  const prompt = `Translate the following text to ${targetLanguage} and return only the translation.\n\n${text}`;
+  const prompt = buildPrompt(promptTemplate, text, targetLanguage);
   
   const body = {
     model,
@@ -620,9 +612,134 @@ async function translateWithDeepSeekStreaming(
   }
 }
 
+async function ocrImage(
+  dataUrl: string,
+  options: OcrOptions
+): Promise<string> {
+  switch (options.provider) {
+    case 'openai':
+      return ocrWithOpenAIVision(dataUrl, options);
+    case 'openrouter':
+      return ocrWithOpenRouterVision(dataUrl, options);
+    case 'gemini':
+      return ocrWithGemini(dataUrl, options);
+    default:
+      throw new Error('OCR not supported for this provider');
+  }
+}
+
+async function ocrWithOpenAIVision(
+  dataUrl: string,
+  options: OcrOptions
+): Promise<string> {
+  const { model, apiKey } = options;
+  const url = 'https://api.openai.com/v1/chat/completions';
+  const body = {
+    model,
+    messages: [
+      {
+        role: 'user',
+        content: [
+          { type: 'image_url', image_url: { url: dataUrl } },
+          {
+            type: 'text',
+            text:
+              'Extract the text in this image exactly. Preserve original paragraphs and line breaks.',
+          },
+        ],
+      },
+    ],
+    max_tokens: 2048,
+    temperature: 0,
+  };
+  const headers = {
+    Authorization: `Bearer ${apiKey}`,
+    'Content-Type': 'application/json',
+  };
+  const response = await axios.post(url, body, { headers });
+  const result = response.data;
+  if (result.choices && result.choices[0]?.message?.content) {
+    return result.choices[0].message.content.trim();
+  }
+  throw new Error('No OCR result from OpenAI');
+}
+
+async function ocrWithOpenRouterVision(
+  dataUrl: string,
+  options: OcrOptions
+): Promise<string> {
+  const { model, apiKey } = options;
+  const url = 'https://openrouter.ai/api/v1/chat/completions';
+  const body = {
+    model,
+    messages: [
+      {
+        role: 'user',
+        content: [
+          { type: 'image_url', image_url: { url: dataUrl } },
+          {
+            type: 'text',
+            text:
+              'Extract the text in this image exactly. Preserve original paragraphs and line breaks.',
+          },
+        ],
+      },
+    ],
+    max_tokens: 2048,
+    temperature: 0,
+  };
+  const headers = {
+    Authorization: `Bearer ${apiKey}`,
+    'Content-Type': 'application/json',
+  };
+  const response = await axios.post(url, body, { headers });
+  const result = response.data;
+  if (result.choices && result.choices[0]?.message?.content) {
+    return result.choices[0].message.content.trim();
+  }
+  throw new Error('No OCR result from OpenRouter');
+}
+
+async function ocrWithGemini(
+  dataUrl: string,
+  options: OcrOptions
+): Promise<string> {
+  const { model, apiKey } = options;
+  const base64 = dataUrl.split(',')[1];
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+  const body = {
+    contents: [
+      {
+        role: 'user',
+        parts: [
+          { inlineData: { mimeType: 'image/png', data: base64 } },
+          {
+            text:
+              'Extract the text in this image exactly. Preserve original paragraphs and line breaks.',
+          },
+        ],
+      },
+    ],
+  };
+  const headers = {
+    'Content-Type': 'application/json',
+  };
+  const response = await axios.post(url, body, { headers });
+  const result = response.data;
+  if (
+    result.candidates &&
+    result.candidates[0]?.content?.parts &&
+    result.candidates[0].content.parts[0]?.text
+  ) {
+    return result.candidates[0].content.parts[0].text.trim();
+  }
+  throw new Error('No OCR result from Gemini');
+}
+
 const translationService = {
   translateText,
   translateTextStreaming,
+  ocrImage,
 };
 
 export default translationService;

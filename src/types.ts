@@ -49,6 +49,9 @@ export interface TranslationConfig {
   model: TranslationModel;
   targetLanguage: string;
   sendMode: 'original' | 'translated';
+  prompts: string[];
+  promptIndex: number;
+  showSelectionModal?: boolean;
 }
 
 export interface TagMapping {
@@ -68,6 +71,8 @@ export interface AppConfig {
   savedDatabaseIds: SavedDatabaseId[];
   columnMappings: Record<string, Partial<NotionConfig>>;
   tagMappings?: Record<string, TagMapping>;
+  translationPrompts?: string[];
+  selectedTranslationPromptIndex?: number;
   bookmarks?: Record<string, number>;
   lastUpdated: string;
 }

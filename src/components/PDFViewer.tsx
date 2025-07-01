@@ -4,8 +4,9 @@ import { Upload, FileText, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCcw
 import DocumentManagerPanel from './DocumentManagerPanel';
 import { TranslationConfig } from '../types';
 import configService from '../services/configService';
-import { translateTextStreaming } from '../services/translationService';
+import translationService, { translateTextStreaming } from '../services/translationService';
 import { fileService } from '../services/fileService';
+import { renderPageToImage } from '../utils/pdfUtils';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/legacy/build/pdf.worker.min.js`;
 
@@ -260,6 +261,46 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
     } catch (error) {
       console.error('Error extracting text from page:', error);
       setError('Failed to extract text from current page');
+    } finally {
+      setIsExtractingText(false);
+    }
+  }
+
+  async function translateCurrentPage(targetPage?: number) {
+    if (!file || !translationConfig.enabled || isExtractingText) {
+      return;
+    }
+
+    try {
+      setIsExtractingText(true);
+
+      const pageIdx = targetPage ?? pageNumber;
+
+      if (typeof targetPage === 'number') {
+        setPageNumber(Math.min(Math.max(1, targetPage), numPages || targetPage));
+      }
+
+      try {
+        const imageData = await renderPageToImage(file, pageIdx, 2);
+        const apiKey = await apiKeyService.getApiKey(translationConfig.provider);
+        if (!apiKey) throw new Error('Missing API key');
+        const recognized = await translationService.ocrImage(imageData, {
+          provider: translationConfig.provider,
+          model: translationConfig.model,
+          apiKey,
+        });
+        if (recognized && onPageTextExtracted) {
+          onPageTextExtracted(recognized, pageIdx);
+        } else if (recognized) {
+          onTextSelection(recognized);
+        }
+      } catch (ocrErr) {
+        console.warn('OCR failed, falling back to text extraction:', ocrErr);
+        await extractCurrentPageText(pageIdx);
+      }
+    } catch (error) {
+      console.error('Error translating page:', error);
+      setError('Failed to translate page');
     } finally {
       setIsExtractingText(false);
     }
@@ -520,17 +561,15 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onFileUpload, onTextSelecti
                     <Lightbulb size={14} />
                   </button>
                   {/* Extract page text for translation */}
-                  {translationConfig.enabled && (
-                    <button
-                      className={`btn btn-compact btn-same-size ${isExtractingText ? 'btn-loading' : ''}`}
-                      style={{ minWidth: 32, minHeight: 32 }}
-                      onClick={() => extractCurrentPageText()}
-                      disabled={isExtractingText || !file}
-                      title={isExtractingText ? "Extracting text..." : "Extract page text for translation"}
-                    >
-                      <Languages size={14} />
-                    </button>
-                  )}
+                  <button
+                    className={`btn btn-compact btn-same-size ${isExtractingText ? 'btn-loading' : ''}`}
+                    style={{ minWidth: 32, minHeight: 32 }}
+                    onClick={() => translateCurrentPage()}
+                    disabled={isExtractingText || !file || !translationConfig.enabled}
+                    title={translationConfig.enabled ? (isExtractingText ? 'Processing page...' : 'Translate page via OCR') : 'Enable translation to use'}
+                  >
+                    <Languages size={14} />
+                  </button>
                   <button
                     className={`btn btn-compact btn-same-size ${bookmarkedPage === pageNumber ? 'btn-active' : ''}`}
                     style={{ minWidth: 32, minHeight: 32 }}

@@ -81,6 +81,7 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
   const [showDatabaseId, setShowDatabaseId] = useState<boolean>(false);
   const [isStreaming, setIsStreaming] = useState<boolean>(false);
   const [streamingText, setStreamingText] = useState<string>('');
+  const [promptInput, setPromptInput] = useState<string>('');
 
   // Helper: filter for dropdowns (title, rich_text, multi_select)
   const dropdownColumnTypes = ['title', 'rich_text', 'multi_select'];
@@ -140,6 +141,28 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
         sendMode: 'original' as 'original'
       });
     }
+  };
+
+  const handleAddPrompt = async () => {
+    if (!promptInput.trim()) return;
+    const newPrompts = [...translationConfig.prompts, promptInput.trim()];
+    setPromptInput('');
+    const newIndex = newPrompts.length - 1;
+    setTranslationConfig({ ...translationConfig, prompts: newPrompts, promptIndex: newIndex });
+    await configService.updateConfig({
+      translationPrompts: newPrompts,
+      selectedTranslationPromptIndex: newIndex,
+    });
+  };
+
+  const handleDeletePrompt = async (idx: number) => {
+    const newPrompts = translationConfig.prompts.filter((_, i) => i !== idx);
+    const newIndex = Math.max(0, Math.min(translationConfig.promptIndex, newPrompts.length - 1));
+    setTranslationConfig({ ...translationConfig, prompts: newPrompts, promptIndex: newIndex });
+    await configService.updateConfig({
+      translationPrompts: newPrompts,
+      selectedTranslationPromptIndex: newIndex,
+    });
   };
 
   const loadProperties = useCallback(async () => {
@@ -252,6 +275,7 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
                   model: translationConfig.model,
                   apiKey,
                   targetLanguage: translationConfig.targetLanguage,
+                  promptTemplate: translationConfig.prompts[translationConfig.promptIndex],
                   onProgress: (partialText: string) => {
                     setStreamingText(partialText);
                   },
@@ -273,6 +297,7 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
                   model: translationConfig.model,
                   apiKey,
                   targetLanguage: translationConfig.targetLanguage,
+                  promptTemplate: translationConfig.prompts[translationConfig.promptIndex],
                 });
                 setTranslatedText(translated);
                 setShowTranslationModal(true);
@@ -371,6 +396,7 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
           model: translationConfig.model,
           apiKey,
           targetLanguage: translationConfig.targetLanguage,
+          promptTemplate: translationConfig.prompts[translationConfig.promptIndex],
         });
       }
       const result = await notionService.saveTextWithIdentifier(config, textToSave);
@@ -715,6 +741,76 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
                     <option value="translated">Send translated text</option>
                   </select>
                 </div>
+
+                <div className="config-checkbox" style={{ marginTop: 8 }}>
+                  <input
+                    type="checkbox"
+                    id="showSelectionModal"
+                    checked={!!translationConfig.showSelectionModal}
+                    onChange={e => setTranslationConfig({ ...translationConfig, showSelectionModal: e.target.checked })}
+                    className="config-checkbox-input"
+                  />
+                  <label htmlFor="showSelectionModal" className="config-checkbox-label">
+                    Show selection modal when translation disabled
+                  </label>
+                </div>
+
+                <div className="config-field">
+                  <label className="config-label">Active Prompt</label>
+                  <select
+                    className="config-select"
+                    value={translationConfig.promptIndex}
+                    onChange={e => {
+                      const idx = parseInt(e.target.value);
+                      setTranslationConfig({ ...translationConfig, promptIndex: idx });
+                      configService.updateConfig({ selectedTranslationPromptIndex: idx });
+                    }}
+                  >
+                    {translationConfig.prompts.map((p, idx) => (
+                      <option key={idx} value={idx}>{`Prompt ${idx + 1}`}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="config-field">
+                  <label className="config-label">New Prompt</label>
+                  <textarea
+                    className="config-textarea"
+                    value={promptInput}
+                    onChange={e => setPromptInput(e.target.value)}
+                    rows={3}
+                  />
+                  <button
+                    className="config-btn config-btn-primary"
+                    type="button"
+                    onClick={handleAddPrompt}
+                    disabled={!promptInput.trim()}
+                    style={{ marginTop: 4 }}
+                  >
+                    Add Prompt
+                  </button>
+                </div>
+
+                {translationConfig.prompts.length > 0 && (
+                  <div className="config-field">
+                    <label className="config-label">Saved Prompts</label>
+                    <ul style={{ listStyle: 'none', padding: 0 }}>
+                      {translationConfig.prompts.map((p, idx) => (
+                        <li key={idx} style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
+                          <span style={{ flex: 1 }}>{p.slice(0, 60)}...</span>
+                          <button
+                            className="config-btn config-btn-danger"
+                            type="button"
+                            onClick={() => handleDeletePrompt(idx)}
+                            style={{ marginLeft: 8 }}
+                          >
+                            Delete
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </>
             )}
           </div>
